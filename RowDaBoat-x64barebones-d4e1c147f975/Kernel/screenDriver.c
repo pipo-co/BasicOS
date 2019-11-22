@@ -24,9 +24,9 @@ void setCursorPos(unsigned int x, unsigned int y){
 
 
 void putcharf(char c, unsigned int font, unsigned int background ){
-    if(cursorPosY>=screenHeight){
+    if(cursorPosY>=screenHeight)
         scrollDownOnce();
-    }
+    
     drawChar(cursorPosX*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, c, font, background);
     cursorPosX++;
     if(cursorPosX >= screenWidth){
