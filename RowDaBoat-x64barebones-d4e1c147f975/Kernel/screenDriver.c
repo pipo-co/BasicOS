@@ -6,16 +6,7 @@ unsigned int screenWidth;
 unsigned int screenHeight; 
 
 void putchar(char c){
-    if(cursorPosY>=screenHeight){
-        scrollDownOnce();
-    }
-    drawChar(cursorPosX*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, c, DEFAULT_FONT_COLOR, DEFAULT_BACKGROUND_COLOR);
-    cursorPosX++;
-    
-    if(cursorPosX >= screenWidth){
-        cursorPosX=0;
-        cursorPosY++;
-    }
+    putcharf(c, DEFAULT_FONT_COLOR, DEFAULT_BACKGROUND_COLOR );
 }
 
 void init_screen(){
@@ -58,8 +49,8 @@ void printStringf( char * string, unsigned int font, unsigned int background){
 }
 
 void scrollDownOnce(){
-    for(int j=0; j<verPixelCount()-CHAR_HEIGHT; j++){
-        for(int i=0; i<horPixelCount(); i++){
+    for(int j=0; j < verPixelCount() - CHAR_HEIGHT; j++){
+        for(int i=0; i < horPixelCount(); i++){
             copyPixel(i, j+CHAR_HEIGHT, i, j);
         }
     }
