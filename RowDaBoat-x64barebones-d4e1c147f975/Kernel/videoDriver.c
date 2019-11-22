@@ -50,15 +50,17 @@ void init_VM_Driver() {
 	horizontalPixelCount = screenData->width;
 }
 
-void drawPixel(unsigned int x, unsigned int y, int color)
-{
+void drawPixel(unsigned int x, unsigned int y, int color){
+
     char* screen = screenData->framebuffer; 
     unsigned where = (x + y*horizontalPixelCount) * numberOfColorBytes;
     screen[where] = color & 255;              // BLUE
     screen[where + 1] = (color >> 8) & 255;   // GREEN
     screen[where + 2] = (color >> 16) & 255;  // RED
 }
+
 void copyPixel(unsigned int xFrom, unsigned int yFrom, unsigned int xTo, unsigned int yTo){
+
 	char* screen = screenData->framebuffer;
 	
 	unsigned from = (xFrom + yFrom*horizontalPixelCount) * numberOfColorBytes;
@@ -70,6 +72,7 @@ void copyPixel(unsigned int xFrom, unsigned int yFrom, unsigned int xTo, unsigne
 }
 
 void drawChar(int x, int y, char character, int fontColor, int backgroundColor){
+	
 	if(x < 0 || x > horizontalPixelCount - CHAR_WIDTH || y < 0 || y > verticalPixelCount - CHAR_HEIGHT){
 		return;
 	}

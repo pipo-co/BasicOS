@@ -2,9 +2,12 @@
 #include <string.h>
 #include <lib.h>
 #include <moduleLoader.h>
-#include <naiveConsole.h>
 #include <videoDriver.h>
 #include <screenDriver.h>
+#include <idtLoader.h>
+#include <timerTick.h>
+
+
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;
@@ -51,8 +54,21 @@ void * initializeKernelBinary()
 int main()
 {	
 	init_screen();
-	printString("a");
-	printString("hola como andas");
+	load_idt();
+	char aux[5] ;
+	int current = 0;
+	int last = -1;
+	while (1){
+		current = ticks_elapsed();
+		if(current != last){
+			last = current;
+			uintToBase(ticks_elapsed(), aux, 10);
+			printString(aux);
+			putchar(' ');
+		}
+	}
+	
+	
 	return ((EntryPoint)sampleCodeModuleAddress)();
 
 }
