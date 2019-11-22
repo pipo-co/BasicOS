@@ -3,7 +3,8 @@
 #include <lib.h>
 #include <moduleLoader.h>
 #include <naiveConsole.h>
-
+#include <videoDriver.h>
+#include <screenDriver.h>
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;
@@ -91,6 +92,8 @@ int main()
 	ncPrintHex(((EntryPoint)sampleCodeModuleAddress)());
 	ncNewline();
 	ncNewline();
+	init_screen();
+	
 
 	ncPrint("  Sample data module at 0x");
 	ncPrintHex((uint64_t)sampleDataModuleAddress);

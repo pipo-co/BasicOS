@@ -1,0 +1,17 @@
+*.o
+*.bin
+proRun.sh
+*.sys
+x64BareBonesImage.img
+x64BareBonesImage.qcow2
+x64BareBonesImage.vmdk
+*.DS_Store
+settings.json
+.bash_history
+TPE.zip
+*.elf
+x64BareBone/.gdb_history
+x64BareBone/finLog.txt
+x64BareBone/makeLog.txt
+x64BareBone.zip
+x64BareBone/.gdb_history
