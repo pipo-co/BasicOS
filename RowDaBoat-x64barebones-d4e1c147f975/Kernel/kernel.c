@@ -93,6 +93,8 @@ int main()
 	ncNewline();
 	ncNewline();
 	init_screen();
+
+	printString("HOLA SOY TOBII");
 	
 
 	ncPrint("  Sample data module at 0x");
