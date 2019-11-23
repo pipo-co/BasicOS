@@ -55,28 +55,25 @@ void * initializeKernelBinary()
 int main()
 {	
 	init_screen();
-	load_idt();
-	char aux[5] ;
-	// int current = 0;
-	// int last = -1;
-	// while (1){
-	// 	current = ticks_elapsed();
-	// 	if(current != last){
-	// 		last = current;
-	// 		uintToBase(ticks_elapsed(), aux, 10);
-	// 		printString(aux);
-	// 		putchar(' ');
-	// 	}
-	// }
-	// char c;
-	// while(1){
-	// 	if((c = getKey())){
-	// 		putchar(c);
-	// 		putchar(' ');
-	// 	}
-	// }
+	putchar('\b');
+	printString("a");
+	printString("hola como andas");
+	putchar('\n');
+	setCursorPos(126,22);
+	printString("hola");
 	
+	putchar('\b');
+	putchar('\b');
+	putchar('\b');
+	putchar('\b');
+	putchar('\b');
+	putchar('\b');
 	
+	printString("guadaaa");
+	putchar('\b');
+	printString("como andas");
+	putchar('\t');
+	printString("tobi");
 	return ((EntryPoint)sampleCodeModuleAddress)();
 
 }
