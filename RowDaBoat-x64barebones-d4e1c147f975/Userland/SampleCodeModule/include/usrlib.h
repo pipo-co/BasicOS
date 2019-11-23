@@ -8,6 +8,8 @@
 
 uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
+
+//SysCalls
 extern void sysWrite(char * string, unsigned int font, unsigned int background);
 extern int getTicksElapsed();
 extern void drawPixel(unsigned int x, unsigned int y, int color);

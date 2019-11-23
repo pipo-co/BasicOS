@@ -6,11 +6,11 @@ unsigned int screenWidth;
 unsigned int screenHeight; 
 
 void putchar(char c){
-
     putcharf(c, DEFAULT_FONT_COLOR, DEFAULT_BACKGROUND_COLOR );
 }
 
 void init_screen(){
+    init_VM_Driver();
     screenWidth = horPixelCount() / CHAR_WIDTH;
     screenHeight = verPixelCount() / CHAR_HEIGHT; 
 } 
