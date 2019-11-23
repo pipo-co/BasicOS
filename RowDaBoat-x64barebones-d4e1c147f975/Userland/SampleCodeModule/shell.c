@@ -5,6 +5,7 @@
 #define MAX_FUNCTIONS 10
 #define MAX_ARGUMENTS_SIZE 5
 #define ESC 27
+enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
 
 //Vars
     typedef struct{
@@ -22,10 +23,12 @@
     static void loadFunction(char * string, int (*fn)(), char * desc);
     static int processInstruction(char * userInput);
     static void loadFunctions();
-    static int inforeg(int argcount, char * args[]);
     static int ticksElpased(int argcount, char * args[]);
     static int printArgs(int argcount, char * args[]);
     static int help(int argcount, char * args[]);
+    static int printRegs(int argcount, char * args[]);
+    static int printCurrentTime(int argcount, char * args[]);
+    static void printTime(enum time id);
 //End
 
 void startShell(){
@@ -83,10 +86,11 @@ static int processInstruction(char * userInput){
 }
 
 static void loadFunctions(){
-    loadFunction("inforeg",&inforeg, "Prints the value of all registers \n");
+    loadFunction("inforeg",&printRegs, "Prints all the registers \n");
     loadFunction("ticks",&ticksElpased, "Prints ticks elapsed from start.\nArg: -s for seconds elapsed \n");
     loadFunction("printArgs",&printArgs, "Prints all its arguments\n ");
     loadFunction("help",&help, "Prints the description of all functions \n");
+    loadFunction("clock",&printCurrentTime, "Prints the current time. Args:\n -h prints current hours. \n -m prints current minutes. \n -s prints current seconds.\n");
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -96,11 +100,6 @@ static void loadFunction(char * string, int (*fn)(), char * desc){
     functionsSize++;
 }
 
-//TODO
-static int inforeg(int argcount, char * args[]){
-    println("AINT DON YEET PAL");
-    return 0;
-}
 
 static int ticksElpased(int argcount, char * args[]){
     if(strcmp(args[0],"-s"))
@@ -124,5 +123,65 @@ static int help(int argcount, char * args[]){
         println(functions[i].name);
         println(functions[i].description);
     }
-    
+    return 0;
+}
+
+static int printRegs(int argcount, char * args[]){
+    static char * regNames[] = {
+        "RAX: ", "RBX: ", "RCX: ", "RDX: ", "RBP: ", "RDI: ", "RSI: ",
+        "R8: ", "R9: ", "R10: ", "R11: ", "R12: ", "R13: ", "R14: ", "R15: "
+    };
+	 uint64_t * regs = getRegs();
+	char buffer[20];
+    for (int i = 0; i < 15; i++){
+        uintToBase(regs[i],buffer,16);
+	    print(regNames[i]);
+	    println(buffer);
+    }
+    return 0;
+}
+
+static int printCurrentTime(int argcount, char * args[]){
+    if(argcount == 0){
+        printTime(HOURS);
+        putchar(':');
+        printTime(MINUTES);
+        putchar(':');
+        printTime(SECONDS);
+    }else{
+        if(strcmp(args[0],"-h"))
+            printTime(HOURS);
+        else if(strcmp(args[0],"-m"))
+            printTime(MINUTES);
+        else if(strcmp(args[0],"-s"))
+            printTime(SECONDS);
+        else
+            print("Wrong argument");
+    }
+    putchar('\n');
+    return 0;
+}
+
+static void printTime(enum time id){
+    char buffer[3];
+    int aux;
+    switch (id){
+    case SECONDS:
+        uintToBase(getTime(SECONDS),buffer,10);
+        break;
+    case MINUTES:
+        uintToBase(getTime(MINUTES),buffer,10);
+        break;
+    case HOURS:
+        aux = getTime(HOURS);
+        if(aux < 3)
+            aux = 24 - 3 + aux;
+        else
+            aux -= 3;
+        uintToBase(aux,buffer,10);
+        break;
+    default:
+        return;
+    }
+    print(buffer);
 }

@@ -1,5 +1,6 @@
 #include <videoDriver.h>
 
+
 unsigned int horizontalPixelCount = 1024;
 unsigned int verticalPixelCount = 768;
 unsigned int numberOfColorBytes = 3;
@@ -52,7 +53,7 @@ void init_VM_Driver() {
 
 void drawPixel(unsigned int x, unsigned int y, int color){
 
-    char* screen = screenData->framebuffer; 
+    char* screen = (char *) ( (uint64_t) screenData->framebuffer); 
     unsigned where = (x + y*horizontalPixelCount) * numberOfColorBytes;
     screen[where] = color & 255;              // BLUE
     screen[where + 1] = (color >> 8) & 255;   // GREEN
@@ -61,7 +62,7 @@ void drawPixel(unsigned int x, unsigned int y, int color){
 
 void copyPixel(unsigned int xFrom, unsigned int yFrom, unsigned int xTo, unsigned int yTo){
 
-	char* screen = screenData->framebuffer;
+	char* screen = (char *) ( (uint64_t) screenData->framebuffer);
 	
 	unsigned from = (xFrom + yFrom*horizontalPixelCount) * numberOfColorBytes;
 	unsigned to = (xTo + yTo*horizontalPixelCount) * numberOfColorBytes;

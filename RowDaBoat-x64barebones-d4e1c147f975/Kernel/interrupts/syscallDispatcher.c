@@ -3,6 +3,7 @@
 #include <videoDriver.h>
 #include <screenDriver.h>
 #include <keyboardDriver.h>
+#include <rtcDriver.h>
 
 
 uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx){
@@ -24,6 +25,8 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			return verPixelCount();
 		case 6:
 			return horPixelCount();
+		case 7:
+			return getTime(rsi);
 	}
 	return 0;
 }

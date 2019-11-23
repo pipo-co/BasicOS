@@ -1,4 +1,5 @@
 GLOBAL cpuVendor
+GLOBAL getRtc
 
 section .text
 	
@@ -25,3 +26,10 @@ cpuVendor:
 	mov rsp, rbp
 	pop rbp
 	ret
+;
+getRtc:
+    mov rax, rdi
+    out 70h, al
+    in al, 71h
+	ret
+;

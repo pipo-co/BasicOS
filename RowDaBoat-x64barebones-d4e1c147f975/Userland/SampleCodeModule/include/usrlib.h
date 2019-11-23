@@ -5,6 +5,7 @@
 #define CHAR_WIDTH 8
 #define CHAR_HEIGHT 16
 
+extern uint64_t * getRegs();
 
 uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
@@ -40,6 +41,6 @@ extern char getChar();
 extern void setCursorPos(unsigned int x, unsigned int y);
 extern int verticalPixelCount();
 extern int horizontalPixelCount();
-
+extern uint8_t getTime(uint64_t timeDescriptor);
 
 #endif

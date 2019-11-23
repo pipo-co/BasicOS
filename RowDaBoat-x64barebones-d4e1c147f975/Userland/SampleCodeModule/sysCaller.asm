@@ -7,6 +7,7 @@ GLOBAL getChar
 GLOBAL setCursorPos
 GLOBAL verticalPixelCount
 GLOBAL horizontalPixelCount
+GLOBAL getTime
 
 %macro pushState 0
 	push rbx
@@ -76,3 +77,6 @@ verticalPixelCount:
 
 horizontalPixelCount:
 	sysCaller 6
+
+getTime:
+	sysCaller 7
