@@ -6,6 +6,7 @@
 #include <screenDriver.h>
 #include <idtLoader.h>
 #include <timerTick.h>
+#include <keyboardDriver.h>
 
 
 extern uint8_t text;
@@ -56,17 +57,24 @@ int main()
 	init_screen();
 	load_idt();
 	char aux[5] ;
-	int current = 0;
-	int last = -1;
-	while (1){
-		current = ticks_elapsed();
-		if(current != last){
-			last = current;
-			uintToBase(ticks_elapsed(), aux, 10);
-			printString(aux);
-			putchar(' ');
-		}
-	}
+	// int current = 0;
+	// int last = -1;
+	// while (1){
+	// 	current = ticks_elapsed();
+	// 	if(current != last){
+	// 		last = current;
+	// 		uintToBase(ticks_elapsed(), aux, 10);
+	// 		printString(aux);
+	// 		putchar(' ');
+	// 	}
+	// }
+	// char c;
+	// while(1){
+	// 	if((c = getKey())){
+	// 		putchar(c);
+	// 		putchar(' ');
+	// 	}
+	// }
 	
 	
 	return ((EntryPoint)sampleCodeModuleAddress)();
