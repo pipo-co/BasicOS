@@ -3,7 +3,14 @@
 unsigned int cursorPosX = 0;
 unsigned int cursorPosY = 0;
 unsigned int screenWidth;
-unsigned int screenHeight; 
+unsigned int screenHeight;
+
+static int parseSpecialCharacter(char c, unsigned int background);
+static void backspace(unsigned int background);
+static void enter(unsigned int background);
+static void tab();
+static void scrollDownOnce(unsigned int background);
+
 
 void putchar(char c){
     putcharf(c, DEFAULT_FONT_COLOR, DEFAULT_BACKGROUND_COLOR );
@@ -25,48 +32,39 @@ void setCursorPos(unsigned int x, unsigned int y){
 
 
 void putcharf(char c, unsigned int font, unsigned int background ){
+    if(parseSpecialCharacter(c, background))
+        return;
+
     if(cursorPosY>=screenHeight)
-        scrollDownOnce();
-    if(parseSpecialCharacter(c, font, background)){
-        drawChar(cursorPosX*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, c, font, background);
+        scrollDownOnce(background);
+
+    drawChar(cursorPosX*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, c, font, background);
+
     cursorPosX++;
     if(cursorPosX >= screenWidth){
-        cursorPosX=0;
+        cursorPosX = 0;
         cursorPosY++;
     }
-    }
 }
-int parseSpecialCharacter(char c, unsigned int font, unsigned int background){
-    if(c=='\n'){
-        if(cursorPosY+1>=screenHeight)
-            scrollDownOnce();
-        else
-            setCursorPos(0,cursorPosY + 1);
-        return 0;
-    }
-    else if( c=='\b'){
-        if(cursorPosX==0 && cursorPosY==0)
+
+static int parseSpecialCharacter(char c, unsigned int background){
+    switch(c){
+        case '\n':
+            enter(background);
+            break;
+
+        case '\b':
+            backspace(background);
+            break;
+
+        case '\t':
+            tab();
+            break;
+
+        default:
             return 0;
-        if(cursorPosX == 0){
-            drawChar((screenWidth-1)*CHAR_WIDTH, (cursorPosY-1)*CHAR_HEIGHT, ' ', font, background);
-            setCursorPos(screenWidth-1, cursorPosY-1);
-        }else{
-            drawChar((cursorPosX-1)*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, ' ', font, background);
-            setCursorPos(cursorPosX-1, cursorPosY);
-        }
-        return 0;
     }
-    else if( c=='\t'){
-        if(cursorPosX +4 >=screenWidth)
-            setCursorPos(screenWidth-1, cursorPosY );
-        else
-        {
-            setCursorPos(cursorPosX+4, cursorPosY);
-        }
-        return 0;
-    }
-    else
-        return 1;
+    return 1;
 }
 
 void printString( char * string){
@@ -82,25 +80,51 @@ void printStringf( char * string, unsigned int font, unsigned int background){
     }
 }
 
-void scrollDownOnce(){
-    for(int j=0; j < verPixelCount() - CHAR_HEIGHT; j++){
-        for(int i=0; i < horPixelCount(); i++){
+static void scrollDownOnce(unsigned int background){
+    for(int j = 0; j < verPixelCount() - CHAR_HEIGHT; j++){
+        for(int i = 0; i < horPixelCount(); i++){
             copyPixel(i, j+CHAR_HEIGHT, i, j);
         }
     }
-    setCursorPos(0, screenHeight-1);
-    for(int i=0 ; i<screenWidth ; i++){
-        putchar(' ');
+    setCursorPos(0, screenHeight - 1);
+    for(int i = 0 ; i < screenWidth; i++){
+        putcharf(' ', 0, background);
     }
     setCursorPos(0, screenHeight-1);
 }
 
 void clearScreen(){
-    int x= cursorPosX;
-    int y= cursorPosY;
+    int x = cursorPosX;
+    int y = cursorPosY;
     setCursorPos(0,0);
-    for(int j=0; j<screenHeight*screenWidth; j++)
+    for(int j = 0; j < screenHeight*screenWidth; j++)
         putchar(' ');
 
     setCursorPos(x, y);
+}
+
+static void enter(unsigned int background){
+    if(cursorPosY + 1 >= screenHeight)
+        scrollDownOnce(background);
+    else
+        setCursorPos(0,cursorPosY + 1);
+}
+
+static void backspace(unsigned int background){
+    if(cursorPosX == 0 && cursorPosY == 0)
+            return;
+
+    if(cursorPosX == 0)
+        drawChar(cursorPosX*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, ' ', 0, background);
+    else{
+        drawChar((cursorPosX-1)*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, ' ', 0, background);
+        setCursorPos(cursorPosX-1, cursorPosY);
+    }
+}
+
+static void tab(){
+    if(cursorPosX + 4 >= screenWidth)
+        setCursorPos(screenWidth-1, cursorPosY);
+    else
+        setCursorPos(cursorPosX+4, cursorPosY);
 }

@@ -36,11 +36,11 @@ uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base){
 	return digits;
 }
 
-void print(const char* string){
+void print(char* string){
     printf(string, DEFAULT_FONT, DEFAULT_BACKGROUND);
 }
 
-void printf(const char* string, unsigned int fontColor, unsigned int backgroundcolor){
+void printf(char* string, unsigned int fontColor, unsigned int backgroundcolor){
     sysWrite(string,fontColor,backgroundcolor);
 }
 
@@ -54,7 +54,7 @@ void putcharf(char c, unsigned int fontColor, unsigned int backgroundcolor){
     printf(aux,fontColor,backgroundcolor);
 }
 
-void println(const char* string){
+void println(char* string){
     print(string);
     putchar('\n');
 }

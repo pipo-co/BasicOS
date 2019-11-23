@@ -8,15 +8,15 @@
 
 uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
-void print(const char* string);
+void print(char* string);
 
-void printf(const char* string, unsigned int fontColor, unsigned int backgroundcolor);
+void printf(char* string, unsigned int fontColor, unsigned int backgroundcolor);
 
 void putchar(char c);
 
 void putcharf(char c, unsigned int fontColor, unsigned int backgroundcolor);
 
-void println(const char* string);
+void println(char* string);
 
 void clearScreen();
 

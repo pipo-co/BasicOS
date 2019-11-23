@@ -18,10 +18,6 @@ void printString( char * string);
 
 void printStringf( char * string, unsigned int font, unsigned int background);
 
-void scrollDownOnce();
-
 void clearScreen();
-
-int parseSpecialCharacter(char c, unsigned int font, unsigned int background);
 
 #endif

@@ -3,9 +3,9 @@
 #include <shell.h>
 
 int main(){
-    for (int i = 0; i < 1500; i++)
-        for (int j = 0; j < 1500; j++)
-            drawPixel(i,j,(i*j % 50) + 0x00AA00);
+    // for (int i = 0; i < 1500; i++)
+    //     for (int j = 0; j < 1500; j++)
+    //         drawPixel(i,j,(i*j % 50) + 0x00AA00);
     // char aux[5];
     // int currentTick, lastTick = -1;
     // uintToBase(horizontalPixelCount(), aux, 10);
