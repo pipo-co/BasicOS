@@ -6,6 +6,7 @@ unsigned int screenWidth;
 unsigned int screenHeight; 
 
 void putchar(char c){
+
     putcharf(c, DEFAULT_FONT_COLOR, DEFAULT_BACKGROUND_COLOR );
 }
 
@@ -26,13 +27,46 @@ void setCursorPos(unsigned int x, unsigned int y){
 void putcharf(char c, unsigned int font, unsigned int background ){
     if(cursorPosY>=screenHeight)
         scrollDownOnce();
-    
-    drawChar(cursorPosX*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, c, font, background);
+    if(parseSpecialCharacter(c, font, background)){
+        drawChar(cursorPosX*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, c, font, background);
     cursorPosX++;
     if(cursorPosX >= screenWidth){
         cursorPosX=0;
         cursorPosY++;
     }
+    }
+}
+int parseSpecialCharacter(char c, unsigned int font, unsigned int background){
+    if(c=='\n'){
+        if(cursorPosY+1>=screenHeight)
+            scrollDownOnce();
+        else
+            setCursorPos(0,cursorPosY + 1);
+        return 0;
+    }
+    else if( c=='\b'){
+        if(cursorPosX==0 && cursorPosY==0)
+            return 0;
+        if(cursorPosX == 0){
+            drawChar((screenWidth-1)*CHAR_WIDTH, (cursorPosY-1)*CHAR_HEIGHT, ' ', font, background);
+            setCursorPos(screenWidth-1, cursorPosY-1);
+        }else{
+            drawChar((cursorPosX-1)*CHAR_WIDTH, cursorPosY*CHAR_HEIGHT, ' ', font, background);
+            setCursorPos(cursorPosX-1, cursorPosY);
+        }
+        return 0;
+    }
+    else if( c=='\t'){
+        if(cursorPosX +4 >=screenWidth)
+            setCursorPos(screenWidth-1, cursorPosY );
+        else
+        {
+            setCursorPos(cursorPosX+4, cursorPosY);
+        }
+        return 0;
+    }
+    else
+        return 1;
 }
 
 void printString( char * string){

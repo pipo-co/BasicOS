@@ -51,8 +51,25 @@ void * initializeKernelBinary()
 int main()
 {	
 	init_screen();
+	putchar('\b');
 	printString("a");
 	printString("hola como andas");
+	putchar('\n');
+	setCursorPos(126,22);
+	printString("hola");
+	
+	putchar('\b');
+	putchar('\b');
+	putchar('\b');
+	putchar('\b');
+	putchar('\b');
+	putchar('\b');
+	
+	printString("guadaaa");
+	putchar('\b');
+	printString("como andas");
+	putchar('\t');
+	printString("tobi");
 	return ((EntryPoint)sampleCodeModuleAddress)();
 
 }

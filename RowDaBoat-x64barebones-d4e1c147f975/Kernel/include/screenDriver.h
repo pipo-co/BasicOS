@@ -22,4 +22,6 @@ void scrollDownOnce();
 
 void clearScreen();
 
+int parseSpecialCharacter(char c, unsigned int font, unsigned int background);
+
 #endif
