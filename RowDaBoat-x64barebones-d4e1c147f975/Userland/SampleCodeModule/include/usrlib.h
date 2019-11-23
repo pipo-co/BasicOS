@@ -18,11 +18,17 @@ void putcharf(char c, unsigned int fontColor, unsigned int backgroundcolor);
 
 void println(char* string);
 
+void printint(uint64_t value);
+
 void clearScreen();
 
 int getScreenWidth();
 
 int getScreenHeight();
+
+int strcmp(char * s1, char * s2);
+
+int strlen(char * s);
 
 //SysCalls
 extern void sysWrite(char * string, unsigned int font, unsigned int background);

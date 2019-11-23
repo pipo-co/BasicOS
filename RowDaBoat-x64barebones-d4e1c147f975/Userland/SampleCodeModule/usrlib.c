@@ -59,6 +59,12 @@ void println(char* string){
     putchar('\n');
 }
 
+void printint(uint64_t value){
+	char buffer[40];
+	uintToBase(value,buffer,10);
+	print(buffer);
+}
+
 void clearScreen(){
     for (int i = 0; i < getScreenWidth() * getScreenHeight(); i++)
         putchar(' ');
@@ -71,4 +77,22 @@ int getScreenWidth(){
 
 int getScreenHeight(){
     return verticalPixelCount() / CHAR_HEIGHT;
+}
+
+int strcmp(char * s1, char * s2){
+	while(*s1 != 0 && *s2 != 0 && *s1 == *s2){
+		s1++;
+		s2++;
+	}
+
+	return *s1 == 0 && *s2 == 0;
+}
+
+int strlen(char * s){
+	int rta = 0;
+
+	while(*s)
+		rta++;
+
+	return rta;
 }
