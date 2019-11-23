@@ -1,4 +1,8 @@
 #include <stdint.h>
+#include <usrlib.h>
+
+#define DEFAULT_FONT 0xFFFFFF
+#define DEFAULT_BACKGROUND 0X000000
 
 uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base){
 	char *p = buffer;
@@ -30,4 +34,41 @@ uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base){
 	}
 
 	return digits;
+}
+
+void print(const char* string){
+    printf(string, DEFAULT_FONT, DEFAULT_BACKGROUND);
+}
+
+void printf(const char* string, unsigned int fontColor, unsigned int backgroundcolor){
+    sysWrite(string,fontColor,backgroundcolor);
+}
+
+void putchar(char c){
+    putcharf(c,DEFAULT_FONT,DEFAULT_BACKGROUND);
+}
+
+void putcharf(char c, unsigned int fontColor, unsigned int backgroundcolor){
+    char aux[2] = {0};
+    aux[0] = c;
+    printf(aux,fontColor,backgroundcolor);
+}
+
+void println(const char* string){
+    print(string);
+    putchar('\n');
+}
+
+void clearScreen(){
+    for (int i = 0; i < getScreenWidth() * getScreenHeight(); i++)
+        putchar(' ');
+        
+}
+
+int getScreenWidth(){
+    return horizontalPixelCount() / CHAR_WIDTH;
+}
+
+int getScreenHeight(){
+    return verticalPixelCount() / CHAR_HEIGHT;
 }
