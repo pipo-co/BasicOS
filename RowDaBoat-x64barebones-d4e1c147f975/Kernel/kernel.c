@@ -8,9 +8,6 @@
 #include <timerTick.h>
 #include <keyboardDriver.h>
 
-#include <soundDriver.h>
-
-
 extern uint8_t text;
 extern uint8_t rodata;
 extern uint8_t data;
@@ -57,7 +54,6 @@ int main()
 {	
 	init_screen();
 	load_idt();
-	beep();
 	return ((EntryPoint)sampleCodeModuleAddress)();
 
 }

@@ -14,7 +14,7 @@ int seconds_elapsed() {
 	return ticks / 18;
 }
 
-void timer_wait(int time){
+void timer_wait(uint16_t time){
 	int firstTick = ticks_elapsed();
 	while (ticks_elapsed() < firstTick + time);
 }

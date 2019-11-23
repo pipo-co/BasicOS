@@ -27,9 +27,9 @@ static void play_sound(uint32_t nFrequence) {
  }
  
  //Make a beep
- void beep() {
- 	 play_sound(1000);
- 	 timer_wait(10);
+ void beep(uint32_t nFrequence, uint16_t time) {
+ 	 play_sound(nFrequence);
+ 	 timer_wait(time);
  	 nosound();
           //set_PIT_2(old_frequency);
  }
