@@ -29,6 +29,7 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     static int printRegs(int argcount, char * args[]);
     static int printCurrentTime(int argcount, char * args[]);
     static void printTime(enum time id);
+    static int printmem(int argcount, char * args[]);
 //End
 
 void startShell(){
@@ -91,6 +92,7 @@ static void loadFunctions(){
     loadFunction("printArgs",&printArgs, "Prints all its arguments\n ");
     loadFunction("help",&help, "Prints the description of all functions \n");
     loadFunction("clock",&printCurrentTime, "Prints the current time. Args:\n -h prints current hours. \n -m prints current minutes. \n -s prints current seconds.\n");
+    loadFunction("printmem",&printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -184,4 +186,24 @@ static void printTime(enum time id){
         return;
     }
     print(buffer);
+}
+
+static int printmem(int argcount, char * args[]){
+    uint64_t num;
+    char buffer[50];
+    if(argcount < 1 || (num = hexstringToInt(args[0])) == 0 ){
+        println("invalid argument");
+        return 1;
+    }
+    uint8_t * address = (uint8_t *) num;
+
+    for (int i = 0; i < 4; i++){
+        for (int j = 0; j < 8; j++){
+            uintToBase(*(address + 8*i + j), buffer, 16);
+            print(buffer);
+            putchar(' ');
+        }
+        putchar('\n'); 
+    }
+    return 0;
 }

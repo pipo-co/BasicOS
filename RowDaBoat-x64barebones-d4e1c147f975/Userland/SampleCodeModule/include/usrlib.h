@@ -33,6 +33,10 @@ int strlen(char * s);
 
 int strtok(char * s, char delim, char * array[], int arraySize);
 
+int pow(int base, unsigned int exp);
+
+uint64_t hexstringToInt(char * s);
+
 //SysCalls
 extern void sysWrite(char * string, unsigned int font, unsigned int background);
 extern int getTicksElapsed();

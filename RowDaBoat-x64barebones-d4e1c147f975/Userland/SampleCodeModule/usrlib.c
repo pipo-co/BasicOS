@@ -91,7 +91,7 @@ int strcmp(char * s1, char * s2){
 int strlen(char * s){
 	int rta = 0;
 
-	while(*s)
+	while(*s++)
 		rta++;
 
 	return rta;
@@ -115,3 +115,33 @@ int strtok(char * s, char delim, char * array[], int arraySize){
 	return arrayIndex;
 } 
 
+int pow(int base, unsigned int exp){
+	int rta = 1;
+
+	for (int i = 0; i < exp; i++)
+		rta *= base;
+
+	return rta;
+	
+}
+
+uint64_t hexstringToInt(char * s){
+	int c;
+	uint64_t rta = 0;
+	
+	if(*s == '0' && *(s+1) == 'x')
+		s += 2;
+
+	int len = strlen(s);
+	
+	for (int i = 0; i < len; i++){
+		c = s[len - 1 - i] - '0';
+		if(c < 0 || c > 9){
+			c = s[len - 1 - i] - 'A' + 10;
+			if(c < 10 || c > 15)
+				return 0;
+		}
+		rta += c*pow(16, i);
+	}
+	return rta;
+}
