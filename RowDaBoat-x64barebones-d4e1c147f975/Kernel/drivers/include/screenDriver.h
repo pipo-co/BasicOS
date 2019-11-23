@@ -20,4 +20,6 @@ void printStringf( char * string, unsigned int font, unsigned int background);
 
 void clearScreen();
 
+void println(char * string);
+
 #endif

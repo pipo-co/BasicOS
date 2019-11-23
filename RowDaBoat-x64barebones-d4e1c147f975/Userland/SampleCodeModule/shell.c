@@ -30,6 +30,8 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     static int printCurrentTime(int argcount, char * args[]);
     static void printTime(enum time id);
     static int printmem(int argcount, char * args[]);
+    static int triggerException0(int argcount, char * args[]);
+    static int triggerException6(int argcount, char * args[]);
 //End
 
 void startShell(){
@@ -93,6 +95,8 @@ static void loadFunctions(){
     loadFunction("help",&help, "Prints the description of all functions \n");
     loadFunction("clock",&printCurrentTime, "Prints the current time. Args:\n -h prints current hours. \n -m prints current minutes. \n -s prints current seconds.\n");
     loadFunction("printmem",&printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
+    loadFunction("triggerException0",&triggerException0, "Triggers Exception number 0 \n");
+    loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -205,5 +209,18 @@ static int printmem(int argcount, char * args[]){
         }
         putchar('\n'); 
     }
+    return 0;
+}
+
+static int triggerException0(int argcount, char * args[]){
+    int a = 0;
+    int b = 4/a;
+    return b;
+}
+
+static int triggerException6(int argcount, char * args[]){
+    void (*function)();
+    function = 0;
+    function();
     return 0;
 }

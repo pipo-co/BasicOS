@@ -1,5 +1,7 @@
 GLOBAL cpuVendor
 GLOBAL getRtc
+GLOBAL inb
+GLOBAL outb
 
 section .text
 	
@@ -27,9 +29,21 @@ cpuVendor:
 	pop rbp
 	ret
 ;
+
 getRtc:
     mov rax, rdi
     out 70h, al
     in al, 71h
 	ret
 ;
+
+inb:
+	mov rdx,rdi	;port
+	in al,dx	;value
+	ret
+;
+outb:
+	mov rax, rsi ;value
+	mov rdx, rdi ;port
+	out dx, al
+	ret

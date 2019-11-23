@@ -3,11 +3,15 @@
 
 #include <stdint.h>
 
-void * memset(void * destination, int32_t character, uint64_t length);
-void * memcpy(void * destination, const void * source, uint64_t length);
+void * memset( void * destination, int32_t character, uint64_t length);
+void * memcpy( void * destination, const void * source, uint64_t length);
 
-uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
+uint32_t uintToBase( uint64_t value, char * buffer, uint32_t base);
 
-char *cpuVendor(char *result);
+extern uint8_t inb( uint16_t port);
+
+extern void outb(  uint16_t port, uint8_t value);
+
+char *cpuVendor( char *result);
 
 #endif

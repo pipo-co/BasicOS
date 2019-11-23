@@ -73,6 +73,12 @@ void printString( char * string){
         string++;
     }
 }
+
+void println(char * string){
+    printString(string);
+    putchar('\n');
+}
+
 void printStringf( char * string, unsigned int font, unsigned int background){
     while(*string){
         putcharf(*string, font, background);
