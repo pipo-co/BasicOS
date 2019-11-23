@@ -30,6 +30,8 @@ int strcmp(char * s1, char * s2);
 
 int strlen(char * s);
 
+int strtok(char * s, char delim, char * array[], int arraySize);
+
 //SysCalls
 extern void sysWrite(char * string, unsigned int font, unsigned int background);
 extern int getTicksElapsed();
@@ -38,5 +40,6 @@ extern char getChar();
 extern void setCursorPos(unsigned int x, unsigned int y);
 extern int verticalPixelCount();
 extern int horizontalPixelCount();
+
 
 #endif

@@ -96,3 +96,21 @@ int strlen(char * s){
 
 	return rta;
 }
+
+int strtok(char * s, char delim, char * array[], int arraySize){
+	int arrayIndex = 0;
+	if(*s != delim && *s != '\0')
+		array[arrayIndex++] = s;
+	while( *s != '\0' ){
+		if(*s == delim){
+			*s = 0;
+			if( *(s+1) != delim &&  (*(s+1) != '\0')){
+				if(arrayIndex >= arraySize)
+					return arrayIndex;
+				array[arrayIndex++] = s + 1;
+			}
+		}
+		s++;
+	}
+	return arrayIndex;
+} 

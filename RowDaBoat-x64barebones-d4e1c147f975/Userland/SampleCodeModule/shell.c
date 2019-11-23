@@ -1,26 +1,31 @@
 #include <shell.h>
 #include <usrlib.h>
 
-#define USER_INPUT_SIZE 20
+#define USER_INPUT_SIZE 50
 #define MAX_FUNCTIONS 10
+#define MAX_ARGUMENTS_SIZE 5
 #define ESC 27
 
 //Vars
     typedef struct{
-        int (*function)();
+        int (*function)(int argcount, char * args[]);
         char * name;
+        char * description;
     }functionPackage;
+    
     functionPackage functions[MAX_FUNCTIONS];
     int functionsSize = 0;
 
 //End
 //Protoripos
     static int readUserInput(char * buffer, int maxSize);
-    static void loadFunction(char * string, int (*fn)());
-    static void processInstruction(char * userInput);
+    static void loadFunction(char * string, int (*fn)(), char * desc);
+    static int processInstruction(char * userInput);
     static void loadFunctions();
-    static int inforeg();
-    static int ticksElpased();
+    static int inforeg(int argcount, char * args[]);
+    static int ticksElpased(int argcount, char * args[]);
+    static int printArgs(int argcount, char * args[]);
+    static int help(int argcount, char * args[]);
 //End
 
 void startShell(){
@@ -64,35 +69,60 @@ static int readUserInput(char * buffer, int maxSize){
     return 1;
 }
 
-static void processInstruction(char * userInput){
+static int processInstruction(char * userInput){
+    char * arguments[MAX_ARGUMENTS_SIZE];
+    int argCount = strtok(userInput,' ', arguments, MAX_ARGUMENTS_SIZE);
     for (int i = 0; i < functionsSize; i++){
-        if(strcmp(userInput, functions[i].name)){
-            return functions[i].function();
+        if(strcmp(arguments[0], functions[i].name)){
+            return functions[i].function(argCount - 1, arguments + 1);
         }
     }
     print(userInput);
     println(" not found");
+    return 1;
 }
 
 static void loadFunctions(){
-    loadFunction("inforeg",&inforeg);
-    loadFunction("ticks",&ticksElpased);
+    loadFunction("inforeg",&inforeg, "Prints the value of all registers \n");
+    loadFunction("ticks",&ticksElpased, "Prints ticks elapsed from start.\nArg: -s for seconds elapsed \n");
+    loadFunction("printArgs",&printArgs, "Prints all its arguments\n ");
+    loadFunction("help",&help, "Prints the description of all functions \n");
 }
 
-static void loadFunction(char * string, int (*fn)()){
+static void loadFunction(char * string, int (*fn)(), char * desc){
     functions[functionsSize].function = fn;
     functions[functionsSize].name = string;
+    functions[functionsSize].description = desc;
     functionsSize++;
 }
 
 //TODO
-static int inforeg(){
+static int inforeg(int argcount, char * args[]){
     println("AINT DON YEET PAL");
     return 0;
 }
 
-static int ticksElpased(){
-    printint(getTicksElapsed());
+static int ticksElpased(int argcount, char * args[]){
+    if(strcmp(args[0],"-s"))
+        printint(getTicksElapsed() / 18);
+    else
+        printint(getTicksElapsed());
     putchar('\n');
     return 0;
+}
+
+static int printArgs(int argcount, char * args[]){
+    for (int i = 0; i < argcount; i++)
+        println(args[i]);
+    
+    return 0;
+}
+
+static int help(int argcount, char * args[]){
+    for (int i = 0; i < functionsSize; i++){
+        print("Function :");
+        println(functions[i].name);
+        println(functions[i].description);
+    }
+    
 }
