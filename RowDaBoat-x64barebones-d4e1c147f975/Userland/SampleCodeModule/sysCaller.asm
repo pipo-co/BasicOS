@@ -8,7 +8,7 @@ GLOBAL setCursorPos
 GLOBAL verticalPixelCount
 GLOBAL horizontalPixelCount
 GLOBAL getTime
-GLOBAL beep
+GLOBAL sysBeep
 
 %macro pushState 0
 	push rbx
@@ -82,5 +82,5 @@ horizontalPixelCount:
 getTime:
 	sysCaller 7
 
-beep:
+sysBeep:
 	sysCaller 8

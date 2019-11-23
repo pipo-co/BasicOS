@@ -32,6 +32,7 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     static int printmem(int argcount, char * args[]);
     static int triggerException0(int argcount, char * args[]);
     static int triggerException6(int argcount, char * args[]);
+    static int playSound(int argcount, char * args[]);
 //End
 
 void startShell(){
@@ -97,6 +98,7 @@ static void loadFunctions(){
     loadFunction("printmem",&printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
     loadFunction("triggerException0",&triggerException0, "Triggers Exception number 0 \n");
     loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
+    loadFunction("beep",&playSound, "Plays a beep \n");
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -223,4 +225,8 @@ static int triggerException6(int argcount, char * args[]){
     function = 0;
     function();
     return 0;
+}
+
+static int playSound(int argcount, char * args[]){
+    sysBeep(1000,1);
 }

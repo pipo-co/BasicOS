@@ -46,6 +46,6 @@ extern void setCursorPos(unsigned int x, unsigned int y);
 extern int verticalPixelCount();
 extern int horizontalPixelCount();
 extern uint8_t getTime(uint64_t timeDescriptor);
-extern void beep(uint32_t nFrequence, uint16_t time);
+extern void sysBeep(uint32_t nFrequence, uint16_t time);
 
 #endif

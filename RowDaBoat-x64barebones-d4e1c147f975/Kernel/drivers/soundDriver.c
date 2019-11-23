@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <lib.h>
-#include <timerTick.h>
+#include <interrupts.h>
 //source: https://wiki.osdev.org/PC_Speaker
 static void play_sound(uint32_t nFrequence) {
  	uint32_t Div;
@@ -29,7 +29,9 @@ static void play_sound(uint32_t nFrequence) {
  //Make a beep
  void beep(uint32_t nFrequence, uint16_t time) {
  	 play_sound(nFrequence);
- 	 timer_wait(time);
+ 	 for (int i = 0; i < time; i++){
+		_hlt();
+	  }
  	 nosound();
           //set_PIT_2(old_frequency);
  }
