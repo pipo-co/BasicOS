@@ -2,10 +2,13 @@
 #include <usrlib.h>
 
 #define USER_INPUT_SIZE 50
-#define MAX_FUNCTIONS 10
+#define MAX_FUNCTIONS 12
 #define MAX_ARGUMENTS_SIZE 5
 #define ESC 27
+#define CURSOR_COLOR 0x00FF00
+
 enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
+enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, FS=740, G=784, GS=831 };
 
 //Vars
     typedef struct{
@@ -16,6 +19,8 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     
     functionPackage functions[MAX_FUNCTIONS];
     int functionsSize = 0;
+
+    int cursorTick = 0;
 
 //End
 //Protoripos
@@ -33,6 +38,11 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     static int triggerException0(int argcount, char * args[]);
     static int triggerException6(int argcount, char * args[]);
     static int playSound(int argcount, char * args[]);
+    static int playMusic(int argcount, char * args[]);
+    static int forElisa(int argcount, char * args[]);
+    static int Victory(int argcount, char * args[]);
+    static void turnOffCursor();
+    static void tickCursor();
 //End
 
 void startShell(){
@@ -53,24 +63,38 @@ static int readUserInput(char * buffer, int maxSize){
     
     int counter = 0;
     char c;
+    int currentTimerTick;
+    int lastTimerTick = -1;
     
     while((counter < maxSize - 1) && (c = getChar()) != '\n' ){
+
+        currentTimerTick = getTicksElapsed();
+        if(currentTimerTick != lastTimerTick && currentTimerTick % 10 == 0){
+            tickCursor();
+            lastTimerTick = currentTimerTick;
+        }
+
         if(c){
+            turnOffCursor();
 
             if(c == ESC)
                 return 0;
 
             if( c != '\b'){
                 putchar(c);
+
                 if(c == '\t')
                     c = ' ';
+
                 buffer[counter++] = c;
+
             } else if(counter > 0){
                 putchar('\b');
                 counter--;
             }
         }
     }
+    turnOffCursor();
     buffer[counter++] = '\0';
     putchar('\n');
     return 1;
@@ -99,6 +123,9 @@ static void loadFunctions(){
     loadFunction("triggerException0",&triggerException0, "Triggers Exception number 0 \n");
     loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
     loadFunction("beep",&playSound, "Plays a beep \n");
+    loadFunction("Lavander",&playMusic, "Plays an indie game's music\n");
+    loadFunction("Elisa", &forElisa, "Music for a student \n");
+    loadFunction("Music", &Victory, "Music for a student \n");
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -126,8 +153,22 @@ static int printArgs(int argcount, char * args[]){
 }
 
 static int help(int argcount, char * args[]){
+
+    if(argcount >= 1){
+        for (int i = 0; i < functionsSize; i++){
+            if(strcmp(functions[i].name, args[0])){
+                print("Function ");
+                println(functions[i].name);
+                println(functions[i].description);
+                return 0;
+            }
+        }
+        print(args[0]);
+        println(" is not a command. Here is a list of all commands:");
+    }
+
     for (int i = 0; i < functionsSize; i++){
-        print("Function :");
+        print("Function ");
         println(functions[i].name);
         println(functions[i].description);
     }
@@ -228,6 +269,176 @@ static int triggerException6(int argcount, char * args[]){
 }
 
 static int playSound(int argcount, char * args[]){
-    sysBeep(1000,1);
+    sysBeep(1000,5);
     return 0;
+}
+static int Victory(int argcount, char * args[]){
+    sysBeep(B/2,4);
+    sysBeep(A/2,4);
+    sysBeep(E/4,16);
+    sysBeep(A/2,4);
+    sysBeep(C,4);
+    sysBeep(D,8);
+    sysBeep(A/2,24);
+    sysBeep(C,16);
+    sysBeep(B/2,4);
+    sysBeep(C,4);
+    sysBeep(D,4);
+    sysBeep(G/2,4);
+    sysBeep(E,16);
+    sysBeep(D,16);
+
+    sysBeep(B/2,4);
+    sysBeep(A/2,4);
+    sysBeep(E/4,16);
+    sysBeep(A/2,4);
+    sysBeep(C,4);
+    sysBeep(D,8);
+    sysBeep(A/2,24);
+    sysBeep(C,16);
+    sysBeep(B/2,4);
+    sysBeep(C,4);
+    sysBeep(D,4);
+    sysBeep(G/2,4);
+    sysBeep(A/2,32);
+
+
+    
+}
+
+static int forElisa(int argcount, char * args[]){
+    sysBeep(E,6);
+    sysBeep(DS,6);
+    sysBeep(E,6);
+    sysBeep(E/2,6);
+    sysBeep(E,6);
+    sysBeep(DS,6);
+    sysBeep(E,6);
+    sysBeep(DS,6);
+    sysBeep(E,6);
+    sysBeep(B/2,6);
+    sysBeep(DS,6);
+    sysBeep(C,6);
+    sysBeep(A/2,12);
+    sysBeep(C/2,6);
+    sysBeep(E/2,6);
+    sysBeep(A/2,6);
+    sysBeep(B/2,12);
+    sysBeep(E/2,6);
+    sysBeep(GS/2,6);
+    sysBeep(B/2,6);
+    sysBeep(C,12);
+
+    sysBeep(E/2,6);
+    sysBeep(E,6);
+    sysBeep(DS,6);
+    sysBeep(E,6);
+    sysBeep(DS,6);
+    sysBeep(E,6);
+    sysBeep(DS,6);
+    sysBeep(E,6);
+    sysBeep(B/2,6);
+    sysBeep(DS,6);
+    sysBeep(C,6);
+    sysBeep(A/2,12);
+    sysBeep(C/2,6);
+    sysBeep(E/2,6);
+    sysBeep(A/2,6);
+    sysBeep(B/2,12);
+    sysBeep(E/2,6);
+    sysBeep(C,6);
+    sysBeep(B/2,6);
+    sysBeep(A/2,12);
+    
+    
+    
+}
+
+static int playMusic(int argcount, char * args[]){
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+
+    sysBeep(G,8);
+    sysBeep(E-30,8);
+    sysBeep(G,8);
+    sysBeep(E-30,8);
+
+    sysBeep(F,8);
+    sysBeep(D,8);
+    sysBeep(F,8);
+    sysBeep(D,8);
+
+    sysBeep(G,8);
+    sysBeep(F,8);
+    sysBeep(E,8);
+    sysBeep(B,8);
+    sysBeep(1140,8);
+    sysBeep(E,8);
+    sysBeep(C,8);
+    sysBeep(E,8);
+
+    sysBeep(G,8);
+    sysBeep(E-40,8);
+    sysBeep(G,8);
+    sysBeep(E-40,8);
+
+    sysBeep(F,8);
+    sysBeep(D,8);
+    sysBeep(F,8);
+    sysBeep(D,8);
+
+    sysBeep(B,8);
+    sysBeep(G,8);
+    sysBeep(F,8);
+    sysBeep(B,8);
+    sysBeep(1140,8);
+    sysBeep(E,8);
+    sysBeep(1140,8);
+    sysBeep(E,8);
+    
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    return 0;
+}
+static void tickCursor(){
+    if(cursorTick)
+        putchar('\b');
+    else
+        putcharf(' ', 0, CURSOR_COLOR);
+    
+    cursorTick = !cursorTick;
+}
+
+static void turnOffCursor(){
+    if(cursorTick)
+        putchar('\b');
+    cursorTick = 0;
 }
