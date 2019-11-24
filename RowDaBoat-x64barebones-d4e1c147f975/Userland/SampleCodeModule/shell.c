@@ -277,9 +277,7 @@ static void triggerException0(int argcount, char * args[]){
 }
 
 static void triggerException6(int argcount, char * args[]){
-    void (*function)();
-    function = 0;
-    function();
+    __asm__("ud2"); //https://mudongliang.github.io/x86/html/file_module_x86_id_318.html
 }
 
 static void playSound(int argcount, char * args[]){
