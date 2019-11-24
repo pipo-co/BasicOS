@@ -1,6 +1,7 @@
 /* sampleCodeModule.c */
 #include <usrlib.h>
 #include <shell.h>
+#include <arkanoid.h>
 
 int main(){
     // for (int i = 0; i < 1500; i++)
@@ -35,6 +36,6 @@ int main(){
     // }
 
     // while(1);
-    startShell();
+    startArkanoid();
     return 0;
 }

@@ -229,4 +229,5 @@ static int triggerException6(int argcount, char * args[]){
 
 static int playSound(int argcount, char * args[]){
     sysBeep(1000,1);
+    return 0;
 }
