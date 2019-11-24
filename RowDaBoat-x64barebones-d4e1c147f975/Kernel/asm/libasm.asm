@@ -2,6 +2,7 @@ GLOBAL cpuVendor
 GLOBAL getRtc
 GLOBAL inb
 GLOBAL outb
+GLOBAL getSampleCodeStackAdress
 
 section .text
 	
@@ -47,3 +48,8 @@ outb:
 	mov rdx, rdi ;port
 	out dx, al
 	ret
+;
+getSampleCodeStackAdress:
+	mov rax, rsp
+	ret
+;

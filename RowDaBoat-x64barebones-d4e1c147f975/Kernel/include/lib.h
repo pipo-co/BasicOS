@@ -12,7 +12,9 @@ extern uint8_t inb( uint16_t port);
 
 extern void outb(  uint16_t port, uint8_t value);
 
-char *cpuVendor( char *result);
+extern char *cpuVendor( char *result);
+
+extern uint64_t getSampleCodeStackAdress();
 
 int strilen(char * s);
 

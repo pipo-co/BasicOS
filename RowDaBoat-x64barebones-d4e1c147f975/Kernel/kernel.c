@@ -2,11 +2,9 @@
 #include <string.h>
 #include <lib.h>
 #include <moduleLoader.h>
-#include <videoDriver.h>
-#include <screenDriver.h>
 #include <idtLoader.h>
-#include <timerTick.h>
-#include <keyboardDriver.h>
+#include <exceptions.h>
+#include <screenDriver.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -54,6 +52,7 @@ int main()
 {	
 	init_screen();
 	load_idt();
+	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSampleCodeStackAdress()); 
 	return ((EntryPoint)sampleCodeModuleAddress)();
 
 }

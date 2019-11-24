@@ -1,14 +1,16 @@
-#include <stdint.h>
 #include <screenDriver.h>
 #include <lib.h>
 #include <interrupts.h>
 #include <keyboardDriver.h>
+#include <exceptions.h>
 
 #define ZERO_EXCEPTION_ID 0
 #define INVALID_OPCODE_EXCEPTION_ID 6
 
 static void zero_division(uint64_t * exceptionStackframe);
 static void invalid_opcode(uint64_t * exceptionStackframe);
+
+static uint64_t continueExecutionIP, continueExecutionSP;
 
 char * regs[] = {
 	"R15: ", "R14: ", "R13: ", "R12: ", "R11: ", "R10: ", "R9: ",
@@ -44,8 +46,8 @@ void exceptionDispatcher(int exception, uint64_t * exceptionStackframe) {
 static void zero_division(uint64_t * exceptionStackframe){
 	println("Exception 0: Division by 0");
 	printRegs(exceptionStackframe);
-	exceptionStackframe[15] = 0x400000;
-	exceptionStackframe[15+3] = 0x10CFC0;
+	exceptionStackframe[15] = continueExecutionIP;
+	exceptionStackframe[15+3] = continueExecutionSP;
 	printString("Restarting shell in ");
 	int aux;
 	for (int i = 60; i > 0; i--){
@@ -63,4 +65,11 @@ static void invalid_opcode(uint64_t * exceptionStackframe){
 	println("Exception 6: Invalid Opcode");
 	printRegs(exceptionStackframe);
 	while(1); //????
+}
+
+void initExceptionHandler(uint64_t ipAdress, uint64_t stackAdress){
+	continueExecutionIP = ipAdress;
+	continueExecutionSP = stackAdress;
+
+	
 }

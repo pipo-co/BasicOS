@@ -11,4 +11,6 @@ void Evangelion();
 
 void Lavander();
 
+void Sadness();
+
 #endif
