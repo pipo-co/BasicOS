@@ -2,7 +2,7 @@
 #include <usrlib.h>
 
 #define USER_INPUT_SIZE 50
-#define MAX_FUNCTIONS 14
+#define MAX_FUNCTIONS 15
 #define MAX_ARGUMENTS_SIZE 5
 #define ESC 27
 #define CURSOR_COLOR 0x00FF00
@@ -40,6 +40,8 @@ enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, F
     static int playSound(int argcount, char * args[]);
     static int Lavander(int argcount, char * args[]);
     static int forElisa(int argcount, char * args[]);
+    static int Victory(int argcount, char * args[]);
+    static int Evangelion(int argcount, char * args[]);
     static int Defeat(int argcount, char * args[]);
     static int Victory(int argcount, char * args[]);
     static void turnOffCursor();
@@ -125,7 +127,8 @@ static void loadFunctions(){
     loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
     loadFunction("beep",&playSound, "Plays a beep \n");
     loadFunction("Lavander",&Lavander, "Plays an indie game's music\n");
-    loadFunction("Elisa", &forElisa, "Music for a student \n"); 
+    loadFunction("Elisa", &forElisa, "Music for a student \n");
+    loadFunction("Evangelion", &Evangelion, "Evangelion theme \n"); 
     loadFunction("SadMusic", &Defeat, "Music to listen when you are sad \n");
     loadFunction("HappyMusic", &Victory, "Music to listen when you are happy \n");
 }
@@ -407,6 +410,37 @@ static int Defeat(int argcount, char * args[]){
     
 }
 
+static int Victory(int argcount, char * args[]){
+    sysBeep(B/2,4);
+    sysBeep(A/2,4);
+    sysBeep(E/4,16);
+    sysBeep(A/2,4);
+    sysBeep(C,4);
+    sysBeep(D,8);
+    sysBeep(A/2,24);
+    sysBeep(C,16);
+    sysBeep(B/2,4);
+    sysBeep(C,4);
+    sysBeep(D,4);
+    sysBeep(G/2,4);
+    sysBeep(E,16);
+    sysBeep(D,16);
+
+    sysBeep(B/2,4);
+    sysBeep(A/2,4);
+    sysBeep(E/4,16);
+    sysBeep(A/2,4);
+    sysBeep(C,4);
+    sysBeep(D,8);
+    sysBeep(A/2,24);
+    sysBeep(C,16);
+    sysBeep(B/2,4);
+    sysBeep(C,4);
+    sysBeep(D,4);
+    sysBeep(G/2,4);
+    sysBeep(A/2,32);
+}
+
 static int forElisa(int argcount, char * args[]){
     sysBeep(E,6);
     sysBeep(DS,6);
@@ -451,7 +485,34 @@ static int forElisa(int argcount, char * args[]){
     sysBeep(B/2,6);
     sysBeep(A/2,12);
     
-    
+    return 0;
+}
+
+static int Evangelion(int argcount, char * args[]){
+    sysBeep(C,10);
+    sysBeep(DS,6);
+    sysBeep(F,6);
+    sysBeep(DS,6);
+    sysBeep(F,4);
+    sysBeep(F,4);
+    sysBeep(F,4);
+    sysBeep(AS,6);
+    sysBeep(GS,4);
+    sysBeep(G,4);
+    sysBeep(F,4);
+    sysBeep(G,8);
+    sysBeep(G,6);
+    sysBeep(AS,6);
+    sysBeep(B+50,6);
+    sysBeep(F,8);
+    sysBeep(DS,4);
+    sysBeep(AS,4);
+    sysBeep(AS,4);
+    sysBeep(G,4);
+    sysBeep(AS,6);
+    sysBeep(AS,6);
+    sysBeep(B+50,16);
+
     return 0;
 }
 
