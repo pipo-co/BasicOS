@@ -33,7 +33,7 @@
     #define BRICK_PRESENT 1
     #define BRICK_BROKEN 0
 
-    #define INITIAL_LIVES 3
+    #define INITIAL_LIVES 1
 
     #define ESC 27
 
@@ -150,9 +150,12 @@ static int endGame(){
     
     if( lives <= 0){
         removeBall();
-        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
+        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 , verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
         print("You lost");
-        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
+        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 3, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
+        print("Bricks left: ");
+        printint(bricksLeft);
+        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 3);
         print("Press escape to leave or enter to restart");
         char c;
         while ((c = getChar()) != ESC){
@@ -171,6 +174,7 @@ static int endGame(){
             if (c == '\n')
                 restart();
         }
+
         return 1;
     }
     
