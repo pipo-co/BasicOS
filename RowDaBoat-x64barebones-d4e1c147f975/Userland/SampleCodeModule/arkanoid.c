@@ -1,5 +1,6 @@
 #include <arkanoid.h>
 #include <usrlib.h>
+#include <music.h>
 
 //Defines
     #define MIN_SCREEN_WIDTH 2*BRICKS_WIDTH
@@ -237,11 +238,12 @@ static void endGame(){
         print("Bricks left: ");
         printint(bricksLeft);
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 3);
+        Defeat();
     }else{
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
         println("You won!");
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
-        print("Press escape to leave or enter to restart");
+        Victory();
     }
 
     print("Press escape to leave or enter to restart");

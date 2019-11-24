@@ -52,10 +52,11 @@ getRegs:
     mov [regsSpace + 12*8], r13
     mov [regsSpace + 13*8], r14
     mov [regsSpace + 14*8], r15
-    ; mov [regsSpace + 15*8], [rsp - 8] ;supuestamente IP 
-    ; sub rsp, 8
-    ; mov [resb + 16*8], rsp ;supuestamente el valor que tenia rsp
-    ; add rsp, 8
+	mov rax, [rsp + 8] ;supuestamente IP
+    mov [regsSpace + 15*8], rax 
+    add rsp, 2*64
+	mov [regsSpace + 16*8], rsp ;supuestamente el valor que tenia rsp
+    sub rsp, 2*64
 
     mov rax, regsSpace
     ret
