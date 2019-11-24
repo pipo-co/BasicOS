@@ -33,6 +33,9 @@
     #define BRICK_BROKEN 0
 
     #define INITIAL_LIVES 3
+
+    #define ESC 27
+
 //End Defines
 
 typedef struct{
@@ -65,13 +68,23 @@ int movesPerTurn = 1;
     static void tryHorizontalBounce();
     static void exitGame();
     static void moveBall();
-    static void endGame();
+    static int endGame();
     static void printGUI();
+    static void restart();
 //Prototypes
 
 void startArkanoid(){
     initGame();
 
+    setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2);
+    printf("Move using A and D", 0x25d2e6, 0x000000);
+    setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
+    printf("Press enter to start!", 0x25d2e6, 0x000000);
+    while (getChar() != '\n');
+    clearScreen();
+    
+
+    
     printBricks();
     drawBall();
     drawBar();
@@ -117,22 +130,38 @@ static void play(){
         }
     }
 
-    endGame();
-    while (1);
-    
+    return endGame();    
 }
 
-static void endGame(){
+static int endGame(){
+    clearScreen();
     setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2);
     print("GAME OVER");
     
     if( lives <= 0){
         removeBall();
-        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 , verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
+        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
         print("You lost");
+        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
+        print("Press escape to leave or enter to restart");
+        char c;
+        while ((c = getChar()) != ESC){
+            if (c == '\n')
+                restart();
+        }
+
+        return 1;
     }else{
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
-        print("You won!");
+        println("You won!");
+        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
+        print("Press escape to leave or enter to restart");
+        char c;
+        while ((c = getChar()) != ESC){
+            if (c == '\n')
+                restart();
+        }
+        return 1;
     }
     
     
@@ -161,6 +190,11 @@ static void initGame(){
     bar_x = INITIAL_BAR_X;
     startTime = getTicksElapsed();
     initBall();
+}
+
+static void restart(){
+    clearScreen();
+    startArkanoid();
 }
 
 static void initBall(){
