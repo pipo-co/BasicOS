@@ -2,7 +2,7 @@
 #include <usrlib.h>
 
 #define USER_INPUT_SIZE 50
-#define MAX_FUNCTIONS 12
+#define MAX_FUNCTIONS 13
 #define MAX_ARGUMENTS_SIZE 5
 #define ESC 27
 #define CURSOR_COLOR 0x00FF00
@@ -41,6 +41,7 @@ enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, F
     static int playMusic(int argcount, char * args[]);
     static int forElisa(int argcount, char * args[]);
     static int Victory(int argcount, char * args[]);
+    static int Evangelion(int argcount, char * args[]);
     static void turnOffCursor();
     static void tickCursor();
 //End
@@ -126,6 +127,7 @@ static void loadFunctions(){
     loadFunction("Lavander",&playMusic, "Plays an indie game's music\n");
     loadFunction("Elisa", &forElisa, "Music for a student \n");
     loadFunction("Music", &Victory, "Music for a student \n");
+    loadFunction("Evangelion", &Evangelion, "Evangelion theme \n");
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -350,8 +352,35 @@ static int forElisa(int argcount, char * args[]){
     sysBeep(B/2,6);
     sysBeep(A/2,12);
     
-    
-    
+    return 0;
+}
+
+static int Evangelion(int argcount, char * args[]){
+    sysBeep(C,10);
+    sysBeep(DS,6);
+    sysBeep(F,6);
+    sysBeep(DS,6);
+    sysBeep(F,4);
+    sysBeep(F,4);
+    sysBeep(F,4);
+    sysBeep(AS,6);
+    sysBeep(GS,4);
+    sysBeep(G,4);
+    sysBeep(F,4);
+    sysBeep(G,8);
+    sysBeep(G,6);
+    sysBeep(AS,6);
+    sysBeep(B+50,6);
+    sysBeep(F,8);
+    sysBeep(DS,4);
+    sysBeep(AS,4);
+    sysBeep(AS,4);
+    sysBeep(G,4);
+    sysBeep(AS,6);
+    sysBeep(AS,6);
+    sysBeep(B+50,16);
+
+    return 0;
 }
 
 static int playMusic(int argcount, char * args[]){
