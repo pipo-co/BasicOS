@@ -27,6 +27,8 @@
 
     #define INVERT -1
 
+    #define INIT_SPEED 5
+
     #define BRICK_PRESENT 1
     #define BRICK_BROKEN 0
 
@@ -43,7 +45,7 @@ typedef struct{
 int bricks[BRICKS_PER_COLUMN][BRICKS_PER_ROW];
 ball_t ball;
 int bar_x, lives, bricksLeft, startTime;
-int speed = 3;
+int movesPerTurn = 1;
 
 //Prototypes
     static void drawBrick(int x, int y);
@@ -100,14 +102,14 @@ static void play(){
 
         currentTick = getTicksElapsed();
         if(currentTick != lastTick){
-            if(currentTick % 15 == 0){
+            if(currentTick % (15*18) == 0){
                 sysBeep(1000, 10);
-                if(speed * 2 < BRICKS_HEIGHT - 2)
-                    speed *= 2;
-                else
-                    speed = BRICKS_HEIGHT - 2;
-            }
-            moveBall();
+                if(movesPerTurn < 4)
+                    movesPerTurn++;
+        }
+            for (int i = 0; i < movesPerTurn; i++)
+                moveBall();
+
             printGUI();
             //while (getChar() != '\n');
             
@@ -162,10 +164,11 @@ static void initGame(){
 }
 
 static void initBall(){
-    ball.vx = speed;
-    ball.vy = speed;
+    ball.vx = INIT_SPEED;
+    ball.vy = INIT_SPEED;
     ball.xc = RADIUS * 1;
     ball.yc = RADIUS * 3;
+    movesPerTurn = 1;
 }
 //Print and Remove
     static void printBricks(){
