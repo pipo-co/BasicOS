@@ -10,17 +10,18 @@
     #define SCREEN_WIDTH 1024
     #define SCREEN_HEIGHT 768
 
-    #define GUI_HEIGHT BRICKS_HEIGHT
+    #define GUI_HEIGHT 16
     #define BRICKS_HEIGHT 32
     #define BRICKS_WIDTH 64
 
     #define BAR_WIDTH 128
     #define BAR_HEIGHT 32
-    #define BAR_Y RADIUS * 87
+    #define BAR_Y SCREEN_HEIGHT - BRICKS_HEIGHT * 2
+    #define INITIAL_BAR_X 500
 
-    #define BAR_MOVEMENT 5
+    #define BAR_MOVEMENT 12
 
-    #define RADIUS 8
+    #define RADIUS 12
 
     #define BALL_COLOR 0xffffff
 
@@ -28,6 +29,8 @@
 
     #define BRICK_PRESENT 1
     #define BRICK_BROKEN 0
+
+    #define INITIAL_LIVES 3
 //End Defines
 
 typedef struct{
@@ -39,26 +42,30 @@ typedef struct{
 
 int bricks[BRICKS_PER_COLUMN][BRICKS_PER_ROW];
 ball_t ball;
-int bar_x, lives;
+int bar_x, lives, bricksLeft, startTime;
+int speed = 3;
 
-
-static void drawBrick(int x, int y);
-static void tryVerticalBounce();
-static void drawBall();
-static void initBall();
-static void drawBar();
-static void play();
-static void removeBall();
-static void printBricks();
-static void initGame();
-static void removeBar();
-static void moveBarLeft();
-static void moveBarRight();
-static void midPointCircleDraw(int x_centre, int y_centre, int r, int color);
-static int gameOver();
-static void tryHorizontalBounce();
-static void exitGame();
-static void moveBall();
+//Prototypes
+    static void drawBrick(int x, int y);
+    static void tryVerticalBounce();
+    static void drawBall();
+    static void initBall();
+    static void drawBar();
+    static void play();
+    static void removeBall();
+    static void printBricks();
+    static void initGame();
+    static void removeBar();
+    static void moveBarLeft();
+    static void moveBarRight();
+    static void midPointCircleDraw(int x_centre, int y_centre, int r, int color);
+    static int gameOver();
+    static void tryHorizontalBounce();
+    static void exitGame();
+    static void moveBall();
+    static void endGame();
+    static void printGUI();
+//Prototypes
 
 void startArkanoid(){
     initGame();
@@ -66,13 +73,13 @@ void startArkanoid(){
     printBricks();
     drawBall();
     drawBar();
+    printGUI();
     play();
 }
 
 static void play(){
     
     int currentTick, lastTick = -1;
-    int speed = 1;
     char c;
 
     while (! gameOver()){
@@ -89,75 +96,74 @@ static void play(){
                 break;
             case '\t':
                 return exitGame();
-        }
-        
+        } 
 
         currentTick = getTicksElapsed();
-        if(currentTick != lastTick && (currentTick % speed) == 0){
+        if(currentTick != lastTick){
+            if(currentTick % 15 == 0){
+                sysBeep(1000, 10);
+                if(speed * 2 < BRICKS_HEIGHT - 2)
+                    speed *= 2;
+                else
+                    speed = BRICKS_HEIGHT - 2;
+            }
             moveBall();
+            printGUI();
             //while (getChar() != '\n');
             
             lastTick = currentTick;
         }
     }
+
+    endGame();
+    while (1);
+    
+}
+
+static void endGame(){
+    setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2);
+    print("GAME OVER");
+    
+    if( lives <= 0){
+        removeBall();
+        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 , verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
+        print("You lost");
+    }else{
+        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
+        print("You won!");
+    }
+    
     
 }
 
 static int gameOver(){
-    return 0;
+    return lives <= 0 || bricksLeft <= 0;
 }
 
 static void exitGame(){
 
 }
 
-static void moveBarLeft(){
-    if(bar_x >= BAR_MOVEMENT){
-        removeBar();
-        bar_x-= BAR_MOVEMENT;
-        drawBar();
-    }
-}
-static void moveBarRight(){
-    if(bar_x < SCREEN_WIDTH - BAR_MOVEMENT - BAR_WIDTH){
-        removeBar();
-        bar_x+= BAR_MOVEMENT;
-        drawBar();
-    }
-}
-
-static void moveBall(){
-    removeBall();
-    ball.xc += ball.vx;
-    ball.yc += ball.vy;
-    if(ball.yc < SCREEN_HEIGHT){
-        tryHorizontalBounce();
-        tryVerticalBounce();
-    }else{
-        lives--;
-        //updateLives();
-        initBall();
-    }
-    drawBall();
-}
-
 static void initGame(){
-    
+    bricksLeft = 0;
     for (int i = 0; i < BRICKS_PER_COLUMN; i++)
         for (int j = 0; j < BRICKS_PER_ROW; j++)
-            if(i != 2)
+            if(j <= 2 || j > 11)
                 bricks[i][j] = BRICK_BROKEN;
-            else
+            else{
                 bricks[i][j] = BRICK_PRESENT;
+                bricksLeft++;
+            }
 
-    lives = 3;
-    bar_x = 500;
+    lives = INITIAL_LIVES;
+    bar_x = INITIAL_BAR_X;
+    startTime = getTicksElapsed();
     initBall();
 }
 
 static void initBall(){
-    ball.vx = RADIUS;
-    ball.vy = RADIUS;
+    ball.vx = speed;
+    ball.vy = speed;
     ball.xc = RADIUS * 1;
     ball.yc = RADIUS * 3;
 }
@@ -190,7 +196,11 @@ static void initBall(){
     static void removeBrick(int row, int col){
         int x = col * BRICKS_WIDTH;
         int y = row * BRICKS_HEIGHT + GUI_HEIGHT;
+
         bricks[row][col] = BRICK_BROKEN;
+        bricksLeft--;
+        printGUI();
+
         for (int i = 0; i < BRICKS_WIDTH; i++){
             for (int j = 0; j < BRICKS_HEIGHT; j++){
                 drawPixel(x + i,y + j,0x000000);
@@ -237,6 +247,16 @@ static void initBall(){
                 drawPixel(x+i,y+j,0x000000);
             }   
         }
+    }
+
+    static void printGUI(){
+        setCursorPos(0,0);
+        print("Lives left: ");
+        printint(lives);
+        print("     Bricks Left: ");
+        printint(bricksLeft);
+        print("      TIME: ");
+        printint(getTicksElapsed() - startTime);
     }
 
     //https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
@@ -298,46 +318,79 @@ static void initBall(){
     }
 //End
 
-
-
-static void tryHorizontalBounce(){
-    if (ball.xc + RADIUS >= SCREEN_WIDTH ){
-        ball.vx *= INVERT;
-        ball.xc = SCREEN_WIDTH - RADIUS - 1;
-    }else if (ball.xc - RADIUS < 0){
-       ball.vx *= INVERT;
-       ball.xc = RADIUS;
-    }
-    
-    // else if(ball.yc < BRICKS_HEIGHT * BRICKS_PER_COLUMN + 1 + RADIUS){
-    //     if (bricks[(ball.yc - 1) / BRICKS_HEIGHT][(ball.xc + 1) / BRICKS_WIDTH] == BRICK_PRESENT ){
-    //         removeBrick((ball.yc - 1) / BRICKS_HEIGHT, (ball.xc + 1) / BRICKS_WIDTH);
-    //         ball.vx *= INVERT;
-    //     } else if(bricks[(ball.yc - 1) / BRICKS_HEIGHT][(ball.xc - 1) / BRICKS_WIDTH] == BRICK_PRESENT ){
-    //         removeBrick((ball.yc - 1) / BRICKS_HEIGHT, (ball.xc - 1) / BRICKS_WIDTH);
-    //         ball.vx *= INVERT;
-    //     }
-    // }
-}
-
-static void tryVerticalBounce(){
-    //CHOQUE CON TECHO
-    if(ball.yc - RADIUS < GUI_HEIGHT){
-        ball.vy *= INVERT;   
-        ball.yc = BRICKS_HEIGHT + RADIUS;
-    }//Choque con ladrillos
-    else if( ball.yc - RADIUS < GUI_HEIGHT + BRICKS_HEIGHT * BRICKS_PER_COLUMN ){
-        if ((ball.yc + RADIUS <= GUI_HEIGHT + BRICKS_HEIGHT * (BRICKS_PER_COLUMN - 1)) && bricks[(ball.yc + RADIUS - GUI_HEIGHT + 1) / BRICKS_HEIGHT][ball.xc / BRICKS_WIDTH] == BRICK_PRESENT ){
-            removeBrick((ball.yc) / BRICKS_HEIGHT, ball.xc / BRICKS_WIDTH);
-            ball.vy *= INVERT;
-            ball.yc = ( (ball.yc + RADIUS - GUI_HEIGHT + 1) / BRICKS_HEIGHT ) * BRICKS_HEIGHT - 1 - RADIUS + GUI_HEIGHT;
-        } else if(bricks[(ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT][ball.xc / BRICKS_WIDTH] == BRICK_PRESENT ){
-            removeBrick((ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT, ball.xc / BRICKS_WIDTH);
-            ball.vy *= INVERT;
-            ball.yc = (((ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT) + 1 ) * BRICKS_HEIGHT + GUI_HEIGHT + RADIUS;
+//Movement
+    static void moveBarLeft(){
+        if(bar_x >= BAR_MOVEMENT){
+            removeBar();
+            bar_x-= BAR_MOVEMENT;
+            drawBar();
         }
-    }else if( (ball.yc + RADIUS >= BAR_Y ) /*&& (ball.xc >= bar_x) && (ball.xc < bar_x + BAR_WIDTH)*/){
-        ball.vy *= INVERT;
-        ball.yc = BAR_Y - RADIUS - 1;
     }
-}
+
+    static void moveBarRight(){
+        if(bar_x < SCREEN_WIDTH - BAR_MOVEMENT - BAR_WIDTH){
+            removeBar();
+            bar_x+= BAR_MOVEMENT;
+            drawBar();
+        }
+    }
+
+    static void moveBall(){
+        removeBall();
+        ball.xc += ball.vx;
+        ball.yc += ball.vy;
+        if(ball.yc < SCREEN_HEIGHT){
+            tryHorizontalBounce();
+            tryVerticalBounce();
+        }else{
+            lives--;
+            printGUI();
+            initBall();
+        }
+        drawBall();
+    }
+
+    static void tryHorizontalBounce(){
+        if (ball.xc + RADIUS >= SCREEN_WIDTH ){
+            ball.vx *= INVERT;
+            ball.xc = SCREEN_WIDTH - RADIUS - 1;
+        }else if (ball.xc - RADIUS < 0){
+        ball.vx *= INVERT;
+        ball.xc = RADIUS;
+        }
+        else if(ball.yc - RADIUS < BRICKS_HEIGHT * BRICKS_PER_COLUMN  + GUI_HEIGHT ){
+            if (bricks[(ball.yc - GUI_HEIGHT) / BRICKS_HEIGHT][(ball.xc + RADIUS + 1) / BRICKS_WIDTH] == BRICK_PRESENT ){
+                removeBrick((ball.yc - GUI_HEIGHT) / BRICKS_HEIGHT,(ball.xc + RADIUS + 1) / BRICKS_WIDTH);
+                ball.vx *= INVERT;
+                ball.xc = ((ball.xc + RADIUS + 1) / BRICKS_WIDTH) * BRICKS_WIDTH - RADIUS - 1;
+            } else if(bricks[(ball.yc - GUI_HEIGHT) / BRICKS_HEIGHT][(ball.xc - RADIUS - 1) / BRICKS_WIDTH] == BRICK_PRESENT ){
+                removeBrick((ball.yc - GUI_HEIGHT) / BRICKS_HEIGHT, (ball.xc - RADIUS - 1) / BRICKS_WIDTH);
+                ball.vx *= INVERT;
+                ball.xc = ((ball.xc - RADIUS - 1) / BRICKS_WIDTH + 1 ) * BRICKS_WIDTH + RADIUS;
+            }
+        }
+    }
+
+    static void tryVerticalBounce(){
+        //CHOQUE CON TECHO
+        if(ball.yc - RADIUS < GUI_HEIGHT){
+            ball.vy *= INVERT;   
+            ball.yc = BRICKS_HEIGHT + RADIUS;
+        }//Choque con ladrillos
+        else if( ball.yc - RADIUS < GUI_HEIGHT + BRICKS_HEIGHT * BRICKS_PER_COLUMN ){
+            if ((ball.yc + RADIUS <= GUI_HEIGHT + BRICKS_HEIGHT * (BRICKS_PER_COLUMN - 1)) && bricks[(ball.yc + RADIUS - GUI_HEIGHT + 1) / BRICKS_HEIGHT][ball.xc / BRICKS_WIDTH] == BRICK_PRESENT ){
+                removeBrick((ball.yc) / BRICKS_HEIGHT, ball.xc / BRICKS_WIDTH);
+                ball.vy *= INVERT;
+                ball.yc = ( (ball.yc + RADIUS - GUI_HEIGHT + 1) / BRICKS_HEIGHT ) * BRICKS_HEIGHT - 1 - RADIUS + GUI_HEIGHT;
+            } else if(bricks[(ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT][ball.xc / BRICKS_WIDTH] == BRICK_PRESENT ){
+                removeBrick((ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT, ball.xc / BRICKS_WIDTH);
+                ball.vy *= INVERT;
+                ball.yc = (((ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT) + 1 ) * BRICKS_HEIGHT + GUI_HEIGHT + RADIUS;
+            }
+        }//Choque barra
+        else if( (ball.yc + RADIUS >= BAR_Y ) && (ball.xc >= bar_x) && (ball.xc < bar_x + BAR_WIDTH)){
+            ball.vy *= INVERT;
+            ball.yc = BAR_Y - RADIUS - 1;
+        }
+    }
+//Movement
