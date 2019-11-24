@@ -45,6 +45,7 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     static void playLavander(int argcount, char * args[]);
     static void playForElisa(int argcount, char * args[]);
     static void playDefeat(int argcount, char * args[]);
+    static void playSadness(int argcount, char * args[]);
     static void playVictory(int argcount, char * args[]);
     static void playEvangelion(int argcount, char * args[]);
 //End
@@ -140,8 +141,9 @@ static void loadFunctions(){
     loadFunction("Lavander",&playLavander, "Plays an indie game's music\n");
     loadFunction("Elisa", &playForElisa, "Music for a student \n");
     loadFunction("Evangelion", &playEvangelion, "Evangelion theme \n"); 
-    loadFunction("SadMusic", &playDefeat, "Music to listen when you are sad \n");
-    loadFunction("HappyMusic", &playVictory, "Music to listen when you are happy \n");
+    loadFunction("SadMusic", &playSadness, "Music to listen when you are sad \n");
+    loadFunction("Victory", &playVictory, "Music to listen when you win \n");
+    loadFunction("Defeat", &playDefeat, "Music to listen when you are happy \n");
 }
 
 static void loadFunction(char * string, void (*fn)(), char * desc){
@@ -320,6 +322,10 @@ static void playForElisa(int argcount, char * args[]){
 
 static void playEvangelion(int argcount, char * args[]){
     Evangelion();
+}
+
+static void playSadness(int argcount, char * args[]){
+    Sadness();
 }
 
 static void playDefeat(int argcount, char * args[]){

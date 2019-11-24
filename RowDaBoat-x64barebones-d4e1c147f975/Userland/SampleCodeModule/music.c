@@ -59,8 +59,40 @@ void Victory(){
     sysBeep(D/2,8);
     */
 }
-
 void Defeat(){
+    sysBeep(B/4,4);
+    sysBeep(A/4,4);
+    sysBeep(E/6,8);
+    sysBeep(A/4,4);
+    sysBeep(C/2,4);
+    sysBeep(D/2,6);
+    sysBeep(A/4,10);
+    sysBeep(C/2,6);
+    sysBeep(B/4,4);
+    sysBeep(C/2,4);
+    sysBeep(D/2,4);
+    sysBeep(G/4,4);
+    sysBeep(E/2,10);
+    sysBeep(D/2,10);
+    sysBeep(S,2);
+
+    sysBeep(B/4,4);
+    sysBeep(A/4,4);
+    sysBeep(E/8,8);
+    sysBeep(A/4,4);
+    sysBeep(C/2,4);
+    sysBeep(D/2,6);
+    sysBeep(A/4,10);
+    sysBeep(C/2,6);
+    sysBeep(B/4,4);
+    sysBeep(C/2,4);
+    sysBeep(D/2,4);
+    sysBeep(G/4,4);
+    sysBeep(A/4,10);
+    sysBeep(S,4);
+}
+
+void Sadness(){
    
     sysBeep(B/2,8);
     sysBeep(A/2,8);
