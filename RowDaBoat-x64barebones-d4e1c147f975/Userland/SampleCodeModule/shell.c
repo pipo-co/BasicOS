@@ -8,7 +8,7 @@
 #define CURSOR_COLOR 0x00FF00
 
 enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
-enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, FS=740, G=784, GS=831 };
+enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, FS=740, G=784, GS=831, S=250000 };
 
 //Vars
     typedef struct{
@@ -40,7 +40,7 @@ enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, F
     static int playSound(int argcount, char * args[]);
     static int playMusic(int argcount, char * args[]);
     static int forElisa(int argcount, char * args[]);
-    static int Victory(int argcount, char * args[]);
+    static int Defeat(int argcount, char * args[]);
     static void turnOffCursor();
     static void tickCursor();
 //End
@@ -124,8 +124,8 @@ static void loadFunctions(){
     loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
     loadFunction("beep",&playSound, "Plays a beep \n");
     loadFunction("Lavander",&playMusic, "Plays an indie game's music\n");
-    loadFunction("Elisa", &forElisa, "Music for a student \n");
-    loadFunction("Music", &Victory, "Music for a student \n");
+    loadFunction("Elisa", &forElisa, "Music for a student \n"); 
+    loadFunction("SadMusic", &Defeat, "Music to listen when you are sad \n");
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -272,37 +272,80 @@ static int playSound(int argcount, char * args[]){
     sysBeep(1000,5);
     return 0;
 }
-static int Victory(int argcount, char * args[]){
-    sysBeep(B/2,4);
-    sysBeep(A/2,4);
-    sysBeep(E/4,16);
-    sysBeep(A/2,4);
-    sysBeep(C,4);
-    sysBeep(D,8);
-    sysBeep(A/2,24);
-    sysBeep(C,16);
-    sysBeep(B/2,4);
-    sysBeep(C,4);
-    sysBeep(D,4);
-    sysBeep(G/2,4);
-    sysBeep(E,16);
-    sysBeep(D,16);
-
-    sysBeep(B/2,4);
-    sysBeep(A/2,4);
-    sysBeep(E/4,16);
-    sysBeep(A/2,4);
-    sysBeep(C,4);
-    sysBeep(D,8);
-    sysBeep(A/2,24);
-    sysBeep(C,16);
-    sysBeep(B/2,4);
-    sysBeep(C,4);
-    sysBeep(D,4);
-    sysBeep(G/2,4);
+static int Defeat(int argcount, char * args[]){
+   
+    sysBeep(B/2,8);
+    sysBeep(A/2,8);
+    sysBeep(E/4,24);
+    sysBeep(A/2,8);
+    sysBeep(C,8);
+    sysBeep(D,20);
     sysBeep(A/2,32);
+    sysBeep(C,20);
+    sysBeep(B/2,8);
+    sysBeep(C,8);
+    sysBeep(D,8);
+    sysBeep(G/2,8);
+    sysBeep(E,20);
+    sysBeep(D,20);
 
+    sysBeep(B/2,8);
+    sysBeep(A/2,8);
+    sysBeep(E/4,24);
+    sysBeep(A/2,8);
+    sysBeep(C,8);
+    sysBeep(D,20);
+    sysBeep(A/2,32);
+    sysBeep(C,20);
+    sysBeep(B/2,8);
+    sysBeep(C,8);
+    sysBeep(D,8);
+    sysBeep(G/2,8);
+    sysBeep(A/2,32);
+    sysBeep(S,16);
 
+    sysBeep(S,8);
+    sysBeep(A/2,8);
+    sysBeep(B/2,8);
+    sysBeep(C,8);
+    sysBeep(D,8);
+    sysBeep(E,8);
+    sysBeep(A/2,8);
+    sysBeep(C,16);
+    sysBeep(B/2,24);
+    sysBeep(A/2,32);
+    sysBeep(S,16);
+
+    sysBeep(C,8);
+    sysBeep(D,8);
+    sysBeep(C,8);
+    sysBeep(B/2,8);
+    sysBeep(S,6);
+    sysBeep(A/2,8);
+    sysBeep(E,16);
+    sysBeep(S,6);
+    sysBeep(E,20);
+    sysBeep(D,20);
+    sysBeep(S,8);
+    sysBeep(D,8);
+    sysBeep(E,8);
+    sysBeep(A/2,8);
+    sysBeep(C,16);
+    sysBeep(B/2,8);
+    sysBeep(A/2,32);
+    sysBeep(C,8);
+    sysBeep(D,8);
+    sysBeep(C,8);
+    sysBeep(B/2,16);
+    sysBeep(E/4,16);
+    sysBeep(A/2,24);
+    sysBeep(F/2,8);
+    sysBeep(A/2,8);
+    sysBeep(D,16);
+    sysBeep(B/2,16);
+    sysBeep(G/2,16);
+    sysBeep(A/2,32);
+    return 0;
     
 }
 
@@ -351,7 +394,7 @@ static int forElisa(int argcount, char * args[]){
     sysBeep(A/2,12);
     
     
-    
+    return 0;
 }
 
 static int playMusic(int argcount, char * args[]){
