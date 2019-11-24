@@ -33,7 +33,7 @@
     #define BRICK_PRESENT 1
     #define BRICK_BROKEN 0
 
-    #define INITIAL_LIVES 1
+    #define INITIAL_LIVES 3
 
     #define ESC 27
 
