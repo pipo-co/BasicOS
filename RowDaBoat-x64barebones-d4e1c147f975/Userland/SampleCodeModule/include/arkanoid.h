@@ -5,4 +5,6 @@ enum gameMode{NEW_GAME=0, CONTINUE};
 
 void startArkanoid(enum gameMode mode);
 
+int gameAlreadyStarted();
+
 #endif

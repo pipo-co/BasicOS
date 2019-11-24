@@ -1,8 +1,9 @@
 #include <shell.h>
 #include <usrlib.h>
+#include <arkanoid.h>
 
 #define USER_INPUT_SIZE 50
-#define MAX_FUNCTIONS 12
+#define MAX_FUNCTIONS 20
 #define MAX_ARGUMENTS_SIZE 5
 #define ESC 27
 #define CURSOR_COLOR 0x00FF00
@@ -43,6 +44,7 @@ enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, F
     static int Victory(int argcount, char * args[]);
     static void turnOffCursor();
     static void tickCursor();
+    static int arkanoid(int argcount, char * args[]);
 //End
 
 void startShell(){
@@ -83,8 +85,16 @@ static int readUserInput(char * buffer, int maxSize){
             if( c != '\b'){
                 putchar(c);
 
-                if(c == '\t')
+                if(c == '\t'){ //Tecla para arrancar arkanoid si hay un juego empezado.
+                    if(gameAlreadyStarted()){
+                        startArkanoid(CONTINUE);
+                        buffer[0] = 0;
+                        counter = 0;
+                        return 1;
+                    }
+
                     c = ' ';
+                }
 
                 buffer[counter++] = c;
 
@@ -126,6 +136,8 @@ static void loadFunctions(){
     loadFunction("Lavander",&playMusic, "Plays an indie game's music\n");
     loadFunction("Elisa", &forElisa, "Music for a student \n");
     loadFunction("Music", &Victory, "Music for a student \n");
+    loadFunction("arkanoid", &arkanoid, "Arkanoid Game! Args:\n No args for new game.\n -c to continue last game.\n");
+    
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -428,6 +440,7 @@ static int playMusic(int argcount, char * args[]){
     sysBeep(F-7,8);
     return 0;
 }
+
 static void tickCursor(){
     if(cursorTick)
         putchar('\b');
@@ -441,4 +454,16 @@ static void turnOffCursor(){
     if(cursorTick)
         putchar('\b');
     cursorTick = 0;
+}
+
+static int arkanoid(int argcount, char * args[]){
+    if(argcount == 0)
+        startArkanoid(NEW_GAME);
+    else if (strcmp(args[0], "-c"))
+        startArkanoid(CONTINUE); 
+    else 
+        println("Wrong Arguments");
+    
+    
+    return 0;
 }

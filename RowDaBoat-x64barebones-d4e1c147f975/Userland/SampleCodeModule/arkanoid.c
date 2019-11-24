@@ -37,6 +37,8 @@
 
     #define ESC 27
 
+    #define TICKS_PER_SEC 18
+
     #define INIT_MOVES_PER_TURN 2
     #define MAX_MOVES_PER_TURN 4
 //End Defines
@@ -51,7 +53,8 @@ typedef struct{
 
 int bricks[BRICKS_PER_COLUMN][MAX_BRICKS_PER_ROW];
 ball_t ball;
-int bar_x, lives, bricksLeft, startTime;
+int bar_x, lives, bricksLeft, ticksElapsedSinceStart;
+int gameStarted = 0;
 int movesPerTurn = INIT_MOVES_PER_TURN;
 
 //Prototypes
@@ -70,7 +73,6 @@ int movesPerTurn = INIT_MOVES_PER_TURN;
     static void midPointCircleDraw(int x_centre, int y_centre, int r, int color);
     static int gameOver();
     static void tryHorizontalBounce();
-    static void exitGame();
     static void moveBall();
     static void endGame();
     static void printGUI();
@@ -79,20 +81,28 @@ int movesPerTurn = INIT_MOVES_PER_TURN;
     static int welcomeScreen(enum gameMode mode);
 //Prototypes
 
+int gameAlreadyStarted(){
+    return gameStarted;
+}
+
 void startArkanoid(enum gameMode mode){
-    clearScreen();
-    
     if(initScreenInfo())
         return;
 
-    if(mode == NEW_GAME)
+    clearScreen();
+
+    if(welcomeScreen(mode)){
+        clearScreen();
+        return;
+    }
+
+    if(mode == NEW_GAME || (mode == CONTINUE && gameStarted == 0))
         initGame();
     else if(gameOver())
         endGame();
 
     //por si se arrepiente de jugar
-    if(welcomeScreen(mode))
-        return;
+    
     
     printBricks();
     drawBall();
@@ -103,10 +113,8 @@ void startArkanoid(enum gameMode mode){
 
 static int welcomeScreen(enum gameMode mode){
     setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2);
-    if(mode == NEW_GAME)
+    if(mode == NEW_GAME || gameStarted == 0 )
         printf("Move using A and D", 0x25d2e6, 0x000000);
-    else
-        printf("To continue playing: ", 0x25d2e6, 0x000000);
     setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
     printf("Press enter to start!", 0x25d2e6, 0x000000);
 
@@ -150,10 +158,10 @@ static void initGame(){
             bricks[i][j] = BRICK_PRESENT;
             bricksLeft++;
         }
-
+    gameStarted = 1;
     lives = INITIAL_LIVES;
     bar_x = initial_bar_x;
-    startTime = getTicksElapsed();
+    ticksElapsedSinceStart = 0;
     initBall();
 }
 
@@ -175,16 +183,17 @@ static void play(){
                 moveBarRight();
                 break;
             case '\t':
-                return exitGame();
+                clearScreen();
+                return;
         } 
 
         currentTick = getTicksElapsed();
         if(currentTick != lastTick){
-            if(movesPerTurn <= MAX_MOVES_PER_TURN && currentTick % (15*18) == 0){
+            ticksElapsedSinceStart++;
+            if(movesPerTurn <= MAX_MOVES_PER_TURN && ticksElapsedSinceStart % (15*TICKS_PER_SEC) == 0){
                 sysBeep(880, 5);
                 movesPerTurn++;
             }
-
             for (int i = 0; i < movesPerTurn; i++)
                 moveBall();
 
@@ -194,8 +203,7 @@ static void play(){
             lastTick = currentTick;
         }
     }
-
-    return endGame();    
+    endGame();   
 }
 
 static void endGame(){
@@ -232,9 +240,6 @@ static void endGame(){
 
 static int gameOver(){
     return lives <= 0 || bricksLeft <= 0;
-}
-
-static void exitGame(){
 }
 
 static void restart(){
@@ -338,7 +343,7 @@ static void initBall(){
         print("     Bricks Left: ");
         printint(bricksLeft);
         print("      TIME: ");
-        printint(getTicksElapsed() - startTime);
+        printint(ticksElapsedSinceStart);
     }
 
     //https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
