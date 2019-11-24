@@ -14,4 +14,6 @@ extern void outb(  uint16_t port, uint8_t value);
 
 char *cpuVendor( char *result);
 
+int strilen(char * s);
+
 #endif

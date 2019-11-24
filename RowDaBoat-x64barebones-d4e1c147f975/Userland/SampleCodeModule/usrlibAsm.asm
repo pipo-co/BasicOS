@@ -1,4 +1,5 @@
 GLOBAL getRegs
+EXTERN printRegs
 
 SECTION .text
 
@@ -52,13 +53,15 @@ getRegs:
     mov [regsSpace + 12*8], r13
     mov [regsSpace + 13*8], r14
     mov [regsSpace + 14*8], r15
-	mov rax, [rsp + 8] ;supuestamente IP
-    mov [regsSpace + 15*8], rax 
-    add rsp, 2*64
+	mov rax, [rsp] ;supuestamente IP
+    mov [regsSpace + 15*8], rax
+    add rsp, 8
 	mov [regsSpace + 16*8], rsp ;supuestamente el valor que tenia rsp
-    sub rsp, 2*64
+    sub rsp, 8
 
-    mov rax, regsSpace
+    mov rdi, regsSpace
+	call printRegs
+
     ret
 
 

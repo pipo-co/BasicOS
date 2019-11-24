@@ -5,8 +5,6 @@
 #define CHAR_WIDTH 8
 #define CHAR_HEIGHT 16
 
-extern uint64_t * getRegs();
-
 uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 
 void print(char* string);

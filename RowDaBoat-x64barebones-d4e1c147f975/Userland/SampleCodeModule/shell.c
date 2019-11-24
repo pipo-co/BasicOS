@@ -25,6 +25,8 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
 
 //End
 //Protoripos
+    extern void getRegs(int argcount, char * args[]);
+
     static int readUserInput(char * buffer, int maxSize);
     static void loadFunction(char * string, void (*fn)(), char * desc);
     static void processInstruction(char * userInput);
@@ -32,7 +34,7 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     static void ticksElpased(int argcount, char * args[]);
     static void printArgs(int argcount, char * args[]);
     static void help(int argcount, char * args[]);
-    static void printRegs(int argcount, char * args[]);
+    void printRegs(uint64_t * regs);
     static void printCurrentTime(int argcount, char * args[]);
     static void printTime(enum time id);
     static void printmem(int argcount, char * args[]);
@@ -127,7 +129,7 @@ static void processInstruction(char * userInput){
 }
 
 static void loadFunctions(){
-    loadFunction("inforeg",&printRegs, "Prints all the registers \n");
+    loadFunction("inforeg",&getRegs, "Prints all the registers \n");
     loadFunction("ticks",&ticksElpased, "Prints ticks elapsed from start.\nArg: -s for seconds elapsed \n");
     loadFunction("printArgs",&printArgs, "Prints all its arguments\n ");
     loadFunction("help",&help, "Prints the description of all functions \n");
@@ -187,13 +189,13 @@ static void help(int argcount, char * args[]){
     }
 }
 
-static void printRegs(int argcount, char * args[]){
-    static char * regNames[] = {
+void printRegs(uint64_t * regs){
+     static char * regNames[] = {
         "RAX: ", "RBX: ", "RCX: ", "RDX: ", "RBP: ", "RDI: ", "RSI: ",
         "R8: ", "R9: ", "R10: ", "R11: ", "R12: ", "R13: ", "R14: ", "R15: ",
         "IP: ", "RSP: "
     };
-	 uint64_t * regs = getRegs();
+
 	char buffer[20];
     for (int i = 0; i < 17; i++){
         uintToBase(regs[i],buffer,16);
