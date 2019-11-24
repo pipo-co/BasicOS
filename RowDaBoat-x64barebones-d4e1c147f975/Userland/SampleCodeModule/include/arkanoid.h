@@ -1,6 +1,8 @@
 #ifndef __ARKANOID_H__
 #define __ARKANOID_H__
 
-void startArkanoid();
+enum gameMode{NEW_GAME=0, CONTINUE};
+
+void startArkanoid(enum gameMode mode);
 
 #endif

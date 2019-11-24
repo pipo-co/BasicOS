@@ -5,11 +5,11 @@
     #define MIN_SCREEN_WIDTH 2*BRICKS_WIDTH
     #define MAX_SCREEN_WIDTH MAX_BRICKS_PER_ROW*BRICKS_WIDTH
     #define MIN_SCREEN_HEIGHT GUI_HEIGHT + 3*BRICKS_HEIGHT + 2*BRICKS_HEIGHT + 8*RADIUS
-
-    #define BRICKS_PER_COLUMN 3
-
-    #define MAX_BRICKS_PER_ROW 64
+    
     #define MIN_BRICKS_PER_ROW 2
+    
+    #define MAX_BRICKS_PER_ROW 64
+    #define BRICKS_PER_COLUMN 3
 
     #define BACKGROUND_COLOR 0x000000
 
@@ -41,14 +41,13 @@
     #define MAX_MOVES_PER_TURN 4
 //End Defines
 
+int screen_height, screen_width, bricks_per_row, initial_bar_x, bar_y;
 typedef struct{
     int xc;
     int yc;
     char vx;
     char vy;
 } ball_t;
-
-int screen_height, screen_width, bricks_per_row, initial_bar_x, bar_y;
 
 int bricks[BRICKS_PER_COLUMN][MAX_BRICKS_PER_ROW];
 ball_t ball;
@@ -73,33 +72,89 @@ int movesPerTurn = INIT_MOVES_PER_TURN;
     static void tryHorizontalBounce();
     static void exitGame();
     static void moveBall();
-    static int endGame();
+    static void endGame();
     static void printGUI();
     static void restart();
     static int initScreenInfo();
+    static int welcomeScreen(enum gameMode mode);
 //Prototypes
 
-void startArkanoid(){
-    
-    if(initScreenInfo())
-        return; //null
-
-    initGame();
-
-    setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2);
-    printf("Move using A and D", 0x25d2e6, 0x000000);
-    setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
-    printf("Press enter to start!", 0x25d2e6, 0x000000);
-    while (getChar() != '\n');
+void startArkanoid(enum gameMode mode){
     clearScreen();
     
+    if(initScreenInfo())
+        return;
 
+    if(mode == NEW_GAME)
+        initGame();
+    else if(gameOver())
+        endGame();
+
+    //por si se arrepiente de jugar
+    if(welcomeScreen(mode))
+        return;
     
     printBricks();
     drawBall();
     drawBar();
     printGUI();
     play();
+}
+
+static int welcomeScreen(enum gameMode mode){
+    setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2);
+    if(mode == NEW_GAME)
+        printf("Move using A and D", 0x25d2e6, 0x000000);
+    else
+        printf("To continue playing: ", 0x25d2e6, 0x000000);
+    setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
+    printf("Press enter to start!", 0x25d2e6, 0x000000);
+
+    char c;
+    while ((c = getChar()) != '\n')
+        if(c == '\t')
+            return 1;
+
+    clearScreen();
+
+    return 0;
+}
+
+static int initScreenInfo(){
+    screen_height = verticalPixelCount();
+    screen_width = horizontalPixelCount();
+
+    if(screen_height < MIN_SCREEN_HEIGHT || screen_width < MIN_SCREEN_WIDTH){
+        setCursorPos(0,0);
+        print("Screen is too small");
+        return 1;
+    }
+
+    if(screen_width > MAX_SCREEN_WIDTH)
+        screen_width = MAX_SCREEN_WIDTH;
+
+    bricks_per_row = screen_width / BRICKS_WIDTH;
+    initial_bar_x = screen_width / 2 - BAR_WIDTH / 2;
+
+    screen_width = bricks_per_row * BRICKS_WIDTH;
+
+    bar_y = screen_height - BRICKS_HEIGHT * 2;
+
+    return 0;
+}
+
+static void initGame(){
+    bricksLeft = 0;
+    for (int i = 0; i < BRICKS_PER_COLUMN; i++)
+        for (int j = 0; j < bricks_per_row; j++){
+            bricks[i][j] = BRICK_PRESENT;
+            bricksLeft++;
+        }
+
+    lives = INITIAL_LIVES;
+    bar_x = initial_bar_x;
+    startTime = getTicksElapsed();
+    initBall();
 }
 
 static void play(){
@@ -143,7 +198,7 @@ static void play(){
     return endGame();    
 }
 
-static int endGame(){
+static void endGame(){
     clearScreen();
     setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2);
     print("GAME OVER");
@@ -155,26 +210,21 @@ static int endGame(){
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
         print("Press escape to leave or enter to restart");
         char c;
-        while ((c = getChar()) != ESC){
+        while ((c = getChar()) != ESC && c != '\t'){
             if (c == '\n')
                 restart();
         }
-
-        return 1;
     }else{
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
         println("You won!");
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
         print("Press escape to leave or enter to restart");
         char c;
-        while ((c = getChar()) != ESC){
+        while ((c = getChar()) != ESC && c != '\t'){
             if (c == '\n')
                 restart();
         }
-        return 1;
-    }
-    
-    
+    }  
 }
 
 static int gameOver(){
@@ -182,50 +232,12 @@ static int gameOver(){
 }
 
 static void exitGame(){
-
-}
-
-static int initScreenInfo(){
-    screen_height = verticalPixelCount();
-    screen_width = horizontalPixelCount();
-
-    if(screen_height < MIN_SCREEN_HEIGHT || screen_width < MIN_SCREEN_WIDTH){
-        setCursorPos(0,0);
-        print("Screen is too small");
-        return 1;
-    }
-
-    if(screen_width > MAX_SCREEN_WIDTH)
-        screen_width = MAX_SCREEN_WIDTH;
-
-    bricks_per_row = screen_width / BRICKS_WIDTH;
-    initial_bar_x = screen_width / 2 - BAR_WIDTH / 2;
-
-    screen_width = bricks_per_row * BRICKS_WIDTH;
-
-    bar_y = screen_height - BRICKS_HEIGHT * 2;
-
-    return 0;
-}
-
-static void initGame(){
-    bricksLeft = 0;
-    for (int i = 0; i < BRICKS_PER_COLUMN; i++)
-        for (int j = 0; j < bricks_per_row; j++){
-            bricks[i][j] = BRICK_PRESENT;
-            bricksLeft++;
-        }
-
-    lives = INITIAL_LIVES;
-    bar_x = initial_bar_x;
-    startTime = getTicksElapsed();
-    initBall();
 }
 
 static void restart(){
-    clearScreen();
-    startArkanoid();
+    startArkanoid(NEW_GAME);
 }
+
 
 static void initBall(){
     ball.vx = INIT_SPEED;
