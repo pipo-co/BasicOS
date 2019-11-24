@@ -36,5 +36,8 @@ int main(){
 
     // while(1);
     startShell();
+    clearScreen();
+    setCursorPos(0, 0);
+    print("Sesion finalizada");
     return 0;
 }
