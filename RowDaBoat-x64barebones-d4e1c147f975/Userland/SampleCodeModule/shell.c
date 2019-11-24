@@ -8,6 +8,7 @@
 #define CURSOR_COLOR 0x00FF00
 
 enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
+enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, FS=740, G=784, GS=831 };
 
 //Vars
     typedef struct{
@@ -37,6 +38,7 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     static int triggerException0(int argcount, char * args[]);
     static int triggerException6(int argcount, char * args[]);
     static int playSound(int argcount, char * args[]);
+    static int playMusic(int argcount, char * args[]);
     static void turnOffCursor();
     static void tickCursor();
 //End
@@ -119,6 +121,7 @@ static void loadFunctions(){
     loadFunction("triggerException0",&triggerException0, "Triggers Exception number 0 \n");
     loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
     loadFunction("beep",&playSound, "Plays a beep \n");
+    loadFunction("Music",&playMusic, "Plays some music \n");
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -265,7 +268,80 @@ static int playSound(int argcount, char * args[]){
     sysBeep(1000,5);
     return 0;
 }
+static int playMusic(int argcount, char * args[]){
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
 
+    sysBeep(G,8);
+    sysBeep(E-30,8);
+    sysBeep(G,8);
+    sysBeep(E-30,8);
+
+    sysBeep(F,8);
+    sysBeep(D,8);
+    sysBeep(F,8);
+    sysBeep(D,8);
+
+    sysBeep(G,8);
+    sysBeep(F,8);
+    sysBeep(E,8);
+    sysBeep(B,8);
+    sysBeep(1140,8);
+    sysBeep(E,8);
+    sysBeep(C,8);
+    sysBeep(E,8);
+
+    sysBeep(G,8);
+    sysBeep(E-40,8);
+    sysBeep(G,8);
+    sysBeep(E-40,8);
+
+    sysBeep(F,8);
+    sysBeep(D,8);
+    sysBeep(F,8);
+    sysBeep(D,8);
+
+    sysBeep(B,8);
+    sysBeep(G,8);
+    sysBeep(F,8);
+    sysBeep(B,8);
+    sysBeep(1140,8);
+    sysBeep(E,8);
+    sysBeep(1140,8);
+    sysBeep(E,8);
+    
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    sysBeep(C,8);
+    sysBeep(G,8);
+    sysBeep(B-10,8);
+    sysBeep(F-7,8);
+    return 0;
+}
 static void tickCursor(){
     if(cursorTick)
         putchar('\b');
