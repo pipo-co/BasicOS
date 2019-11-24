@@ -207,7 +207,7 @@ static void play(){
         } 
 
         currentTick = getTicksElapsed();
-        if(currentTick != lastTick){
+        if(/*currentTick != lastTick*/1){
             ticksElapsedSinceStart++;
             if(movesPerTurn <= MAX_MOVES_PER_TURN && ticksElapsedSinceStart % (15*TICKS_PER_SEC) == 0){
                 sysBeep(880, 5);
@@ -232,17 +232,23 @@ static void endGame(){
     
     if( lives <= 0){
         removeBall();
-        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 , verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
+        setCursorPos(screen_width / CHAR_WIDTH / 2 , screen_height / CHAR_HEIGHT / 2 + 1);
         print("You lost");
-        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 3, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
+        setCursorPos(screen_width / CHAR_WIDTH / 2 - 3, screen_height / CHAR_HEIGHT / 2 + 2);
         print("Bricks left: ");
         printint(bricksLeft);
-        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 3);
+        setCursorPos(screen_width / CHAR_WIDTH / 2, screen_height / CHAR_HEIGHT / 2 + 3);
+        print("Time: ");
+        printint(ticksElapsedSinceStart);
+        setCursorPos(screen_width / CHAR_WIDTH / 2 - 15, screen_height / CHAR_HEIGHT / 2 + 4);
         Defeat();
     }else{
-        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
+        setCursorPos(screen_width / CHAR_WIDTH / 2, screen_height / CHAR_HEIGHT / 2 + 1);
         println("You won!");
-        setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
+        setCursorPos(screen_width / CHAR_WIDTH / 2, screen_height / CHAR_HEIGHT / 2 + 2);
+        print("Time: ");
+        printint(ticksElapsedSinceStart);
+        setCursorPos(screen_width / CHAR_WIDTH / 2 - 15, screen_height / CHAR_HEIGHT / 2 + 3);
         Victory();
     }
 
@@ -441,10 +447,11 @@ static void initBall(){
         removeBall();
         ball.xc += ball.vx;
         ball.yc += ball.vy;
-        if(ball.yc < screen_height){
+        if(ball.yc < bar_y){
             tryHorizontalBounce();
             tryVerticalBounce();
         }else{
+            sysBeep(1000,5);
             lives--;
             printGUI();
             initBall();
@@ -490,7 +497,7 @@ static void initBall(){
                 ball.yc = (((ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT) + 1 ) * BRICKS_HEIGHT + GUI_HEIGHT + RADIUS;
             }
         }//Choque barra
-        else if( (ball.yc + RADIUS >= bar_y ) && (ball.xc >= bar_x) && (ball.xc < bar_x + BAR_WIDTH)){
+        else if( (ball.yc + RADIUS >= bar_y ) /*&& (ball.xc >= bar_x) && (ball.xc < bar_x + BAR_WIDTH)*/){
             ball.vy *= INVERT;
             ball.yc = bar_y - RADIUS - 1;
         }
