@@ -40,7 +40,6 @@ enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, F
     static int playSound(int argcount, char * args[]);
     static int Lavander(int argcount, char * args[]);
     static int forElisa(int argcount, char * args[]);
-    static int Victory(int argcount, char * args[]);
     static int Evangelion(int argcount, char * args[]);
     static int Defeat(int argcount, char * args[]);
     static int Victory(int argcount, char * args[]);
@@ -332,6 +331,7 @@ static int Victory(int argcount, char * args[]){
     sysBeep(D/2,8);
     sysBeep(D/2,8);
     */
+   return 0;
 }
 static int Defeat(int argcount, char * args[]){
    
@@ -410,36 +410,6 @@ static int Defeat(int argcount, char * args[]){
     
 }
 
-static int Victory(int argcount, char * args[]){
-    sysBeep(B/2,4);
-    sysBeep(A/2,4);
-    sysBeep(E/4,16);
-    sysBeep(A/2,4);
-    sysBeep(C,4);
-    sysBeep(D,8);
-    sysBeep(A/2,24);
-    sysBeep(C,16);
-    sysBeep(B/2,4);
-    sysBeep(C,4);
-    sysBeep(D,4);
-    sysBeep(G/2,4);
-    sysBeep(E,16);
-    sysBeep(D,16);
-
-    sysBeep(B/2,4);
-    sysBeep(A/2,4);
-    sysBeep(E/4,16);
-    sysBeep(A/2,4);
-    sysBeep(C,4);
-    sysBeep(D,8);
-    sysBeep(A/2,24);
-    sysBeep(C,16);
-    sysBeep(B/2,4);
-    sysBeep(C,4);
-    sysBeep(D,4);
-    sysBeep(G/2,4);
-    sysBeep(A/2,32);
-}
 
 static int forElisa(int argcount, char * args[]){
     sysBeep(E,6);
