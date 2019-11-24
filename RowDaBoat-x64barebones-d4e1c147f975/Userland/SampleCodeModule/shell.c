@@ -117,6 +117,7 @@ static void processInstruction(char * userInput){
     for (int i = 0; i < functionsSize; i++){
         if(strcmp(arguments[0], functions[i].name)){
             functions[i].function(argCount - 1, arguments + 1);
+            return;
         }
     }
     if(*userInput != 0){
