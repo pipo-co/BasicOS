@@ -207,7 +207,7 @@ static void play(){
         } 
 
         currentTick = getTicksElapsed();
-        if(/*currentTick != lastTick*/1){
+        if(currentTick != lastTick){
             ticksElapsedSinceStart++;
             if(movesPerTurn <= MAX_MOVES_PER_TURN && ticksElapsedSinceStart % (15*TICKS_PER_SEC) == 0){
                 sysBeep(880, 5);
@@ -497,7 +497,7 @@ static void initBall(){
                 ball.yc = (((ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT) + 1 ) * BRICKS_HEIGHT + GUI_HEIGHT + RADIUS;
             }
         }//Choque barra
-        else if( (ball.yc + RADIUS >= bar_y ) /*&& (ball.xc >= bar_x) && (ball.xc < bar_x + BAR_WIDTH)*/){
+        else if( (ball.yc + RADIUS >= bar_y ) && (ball.xc >= bar_x) && (ball.xc < bar_x + BAR_WIDTH)){
             ball.vy *= INVERT;
             ball.yc = bar_y - RADIUS - 1;
         }
