@@ -39,11 +39,11 @@ enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, F
     static int triggerException0(int argcount, char * args[]);
     static int triggerException6(int argcount, char * args[]);
     static int playSound(int argcount, char * args[]);
-    static int playMusic(int argcount, char * args[]);
+    static int Lavander(int argcount, char * args[]);
     static int forElisa(int argcount, char * args[]);
-    static int Victory(int argcount, char * args[]);
     static int Evangelion(int argcount, char * args[]);
     static int Defeat(int argcount, char * args[]);
+    static int Victory(int argcount, char * args[]);
     static void turnOffCursor();
     static void tickCursor();
     static int arkanoid(int argcount, char * args[]);
@@ -136,12 +136,12 @@ static void loadFunctions(){
     loadFunction("triggerException0",&triggerException0, "Triggers Exception number 0 \n");
     loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
     loadFunction("beep",&playSound, "Plays a beep \n");
-    loadFunction("Lavander",&playMusic, "Plays an indie game's music\n");
+    loadFunction("Lavander",&Lavander, "Plays an indie game's music\n");
     loadFunction("Elisa", &forElisa, "Music for a student \n");
-    loadFunction("Music", &Victory, "Music for a student \n");
     loadFunction("arkanoid", &arkanoid, "Arkanoid Game! Args:\n No args for new game.\n -c to continue last game.\n");
     loadFunction("Evangelion", &Evangelion, "Evangelion theme \n"); 
     loadFunction("SadMusic", &Defeat, "Music to listen when you are sad \n");
+    loadFunction("HappyMusic", &Victory, "Music to listen when you are happy \n");
 }
 
 static void loadFunction(char * string, int (*fn)(), char * desc){
@@ -288,6 +288,63 @@ static int playSound(int argcount, char * args[]){
     sysBeep(1000,5);
     return 0;
 }
+static int Victory(int argcount, char * args[]){
+    /*
+    sysBeep(D/2,4);
+    sysBeep(S,4);
+    sysBeep(D/2,4);
+    sysBeep(S,4);
+    sysBeep(D/2,4);
+    sysBeep(S,4);*/
+
+    sysBeep(G/2,8);
+    sysBeep(D,8);
+
+    sysBeep(C,4);
+    sysBeep(B/2,4);
+    sysBeep(A/2,4);
+    sysBeep(G,8);
+    sysBeep(D,8);
+
+    sysBeep(C,4);
+    sysBeep(B/2,4);
+    sysBeep(A/2,4);
+    sysBeep(G,8);
+    sysBeep(D,8);
+
+    sysBeep(C,4);
+    sysBeep(B/2,4);
+    sysBeep(C,4);
+    sysBeep(A/2,8);
+    
+    /*sysBeep(D/2,4);
+    sysBeep(D/2,4);
+    
+
+    sysBeep(G/2,32);
+    sysBeep(D,32);
+
+    sysBeep(C,8);
+    sysBeep(B/2,8);
+    sysBeep(A/2,8);
+    sysBeep(G,32);
+    sysBeep(D,16);
+
+    sysBeep(C,8);
+    sysBeep(B/2,8);
+    sysBeep(A/2,8);
+    sysBeep(G,32);
+    sysBeep(D,16);
+
+    sysBeep(C,8);
+    sysBeep(B/2,8);
+    sysBeep(C,8);
+    sysBeep(A/2,32);
+    sysBeep(D/2,8);
+    sysBeep(D/2,8);
+    */
+   return 0;
+}
 static int Defeat(int argcount, char * args[]){
    
     sysBeep(B/2,8);
@@ -365,36 +422,6 @@ static int Defeat(int argcount, char * args[]){
     
 }
 
-static int Victory(int argcount, char * args[]){
-    sysBeep(B/2,4);
-    sysBeep(A/2,4);
-    sysBeep(E/4,16);
-    sysBeep(A/2,4);
-    sysBeep(C,4);
-    sysBeep(D,8);
-    sysBeep(A/2,24);
-    sysBeep(C,16);
-    sysBeep(B/2,4);
-    sysBeep(C,4);
-    sysBeep(D,4);
-    sysBeep(G/2,4);
-    sysBeep(E,16);
-    sysBeep(D,16);
-
-    sysBeep(B/2,4);
-    sysBeep(A/2,4);
-    sysBeep(E/4,16);
-    sysBeep(A/2,4);
-    sysBeep(C,4);
-    sysBeep(D,8);
-    sysBeep(A/2,24);
-    sysBeep(C,16);
-    sysBeep(B/2,4);
-    sysBeep(C,4);
-    sysBeep(D,4);
-    sysBeep(G/2,4);
-    sysBeep(A/2,32);
-}
 
 static int forElisa(int argcount, char * args[]){
     sysBeep(E,6);
@@ -471,7 +498,7 @@ static int Evangelion(int argcount, char * args[]){
     return 0;
 }
 
-static int playMusic(int argcount, char * args[]){
+static int Lavander(int argcount, char * args[]){
     sysBeep(C,8);
     sysBeep(G,8);
     sysBeep(B-10,8);
