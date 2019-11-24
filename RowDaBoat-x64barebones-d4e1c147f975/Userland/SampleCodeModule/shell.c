@@ -268,6 +268,7 @@ static int playSound(int argcount, char * args[]){
     sysBeep(1000,5);
     return 0;
 }
+
 static int playMusic(int argcount, char * args[]){
     sysBeep(C,8);
     sysBeep(G,8);
