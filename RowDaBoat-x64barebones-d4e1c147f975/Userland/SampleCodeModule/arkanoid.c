@@ -53,7 +53,7 @@ typedef struct{
 
 int bricks[BRICKS_PER_COLUMN][MAX_BRICKS_PER_ROW];
 ball_t ball;
-int bar_x, lives, bricksLeft, ticksElapsedSinceStart;
+int bar_x, lives, bricksLeft, ticksElapsedSinceStart, restartFlag;
 int gameStarted = 0;
 int movesPerTurn = INIT_MOVES_PER_TURN;
 
@@ -76,7 +76,6 @@ int movesPerTurn = INIT_MOVES_PER_TURN;
     static void moveBall();
     static void endGame();
     static void printGUI();
-    static void restart();
     static int initScreenInfo();
     static int welcomeScreen(enum gameMode mode);
 //Prototypes
@@ -91,24 +90,40 @@ void startArkanoid(enum gameMode mode){
 
     clearScreen();
 
-    if(welcomeScreen(mode)){
+    restartFlag = 1;
+
+    while(restartFlag){
+        restartFlag = 0;
+
+        if(welcomeScreen(mode)){
+            clearScreen();
+            return;
+        }
+
+        if(mode == NEW_GAME || (mode == CONTINUE && gameStarted == 0))
+            initGame();
+        else if(gameOver()){
+            endGame();
+            clearScreen();
+            if(restartFlag)
+                initGame();
+            else 
+                return;
+            
+        }
+
+        //por si se arrepiente de jugar
+        
+        
+        printBricks();
+        drawBall();
+        drawBar();
+        printGUI();
+        play();
+
+        mode = NEW_GAME;
         clearScreen();
-        return;
     }
-
-    if(mode == NEW_GAME || (mode == CONTINUE && gameStarted == 0))
-        initGame();
-    else if(gameOver())
-        endGame();
-
-    //por si se arrepiente de jugar
-    
-    
-    printBricks();
-    drawBall();
-    drawBar();
-    printGUI();
-    play();
 }
 
 static int welcomeScreen(enum gameMode mode){
@@ -116,7 +131,10 @@ static int welcomeScreen(enum gameMode mode){
     if(mode == NEW_GAME || gameStarted == 0 )
         printf("Move using A and D", 0x25d2e6, 0x000000);
     setCursorPos(((horizontalPixelCount() / CHAR_WIDTH / 2) - 10), verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
-    printf("Press enter to start!", 0x25d2e6, 0x000000);
+    if(mode == NEW_GAME || gameStarted == 0 )
+        printf("Press enter to start!", 0x25d2e6, 0x000000);
+    else
+        printf("Press enter to continue!", 0x25d2e6, 0x000000);
 
     char c;
     while ((c = getChar()) != '\n')
@@ -219,33 +237,28 @@ static void endGame(){
         print("Bricks left: ");
         printint(bricksLeft);
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 3);
-        print("Press escape to leave or enter to restart");
-        char c;
-        while ((c = getChar()) != ESC && c != '\t'){
-            if (c == '\n')
-                restart();
-        }
     }else{
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2, verticalPixelCount() / CHAR_HEIGHT / 2 + 1);
         println("You won!");
         setCursorPos(horizontalPixelCount() / CHAR_WIDTH / 2 - 15, verticalPixelCount() / CHAR_HEIGHT / 2 + 2);
         print("Press escape to leave or enter to restart");
-        char c;
-        while ((c = getChar()) != ESC && c != '\t'){
-            if (c == '\n')
-                restart();
-        }
-    }  
+    }
+
+    print("Press escape to leave or enter to restart");
+    char c;
+    while ((c = getChar()) != ESC && c != '\t'){
+            if (c == '\n'){
+                restartFlag = 1;
+                return;
+            }
+    }
+    if(c == ESC)
+        gameStarted = 0;
 }
 
 static int gameOver(){
     return lives <= 0 || bricksLeft <= 0;
 }
-
-static void restart(){
-    startArkanoid(NEW_GAME);
-}
-
 
 static void initBall(){
     ball.vx = INIT_SPEED;

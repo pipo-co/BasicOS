@@ -82,19 +82,18 @@ static int readUserInput(char * buffer, int maxSize){
             if(c == ESC)
                 return 0;
 
+            if(c == '\t'){ //Tecla para arrancar arkanoid si hay un juego empezado.
+                if(gameAlreadyStarted()){
+                    startArkanoid(CONTINUE);
+                    buffer[0] = 0;
+                    counter = 0;
+                    return 1;
+                }
+                c = ' ';
+            }
+
             if( c != '\b'){
                 putchar(c);
-
-                if(c == '\t'){ //Tecla para arrancar arkanoid si hay un juego empezado.
-                    if(gameAlreadyStarted()){
-                        startArkanoid(CONTINUE);
-                        buffer[0] = 0;
-                        counter = 0;
-                        return 1;
-                    }
-
-                    c = ' ';
-                }
 
                 buffer[counter++] = c;
 
@@ -118,8 +117,10 @@ static int processInstruction(char * userInput){
             return functions[i].function(argCount - 1, arguments + 1);
         }
     }
-    print(userInput);
-    println(" not found");
+    if(*userInput != 0){
+        print(userInput);
+        println(" not found");
+    }
     return 1;
 }
 
