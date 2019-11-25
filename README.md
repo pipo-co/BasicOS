@@ -1,4 +1,4 @@
-Manual de usuario:
+##Manual de usuario:
 
 Entrar a la carpeta Toolchain y ejecutar make all dentro de la misma.
 En la carpeta principal, ejecutar make all.
@@ -8,7 +8,7 @@ Se abrirá una ventana con el sistema operativo ejecutando el módulo de código
 
 Además, la shell cuenta con el comando ‘help’ que se puede utilizar sin argumentos, y de esta manera la función muestra todos los comandos disponibles con una breve descripción, y la manera en como usarlo. También se puede pedir ayuda sobre una función en particular, ejecutando ‘help <COMMAND>’.
 
-Kernel:
+##Kernel:
 	En primer instancia, se tuvieron que programar los drivers necesarios para poder trabajar durante el tp. Entre estos driver se encuentran el de video, pantalla, sonido y teclado. 
 	Dado que el trabajo debía realizarse en modo video, lo primero que se programó fue el driver de video, en el que se obtienen valores tales como la cantidad de pixeles horizontales y verticales, que se deben cargar llamando a la función init_VM_driver al iniciar el sistema operativo. A su vez, aquí se encuentran las funciones provistas por la cátedra para dibujar un pixel dándole la posición del mismo y su color, y la función para dibujar un  caracter, dependiendo de la función charBitmap del archivo font.c, también provisto por la cátedra, que se ocupa de devolver el mapa de pixeles que deberá seguir la funcion para dibujar el carácter deseado. Se agrego la funcion copiar pixel que permite dado una posición fuente y una posición destino dibujar sobre la segunda el pixel que se encontraba en la primera.
 	Una vez terminado el driver de video se procedió a programar el driver de pantalla. Este brinda la funcionalidad de poder considerar a la pantalla como una matriz de caracteres, similar al modo texto. Para que este funcione correctamente se deberá ejecutar la función init_screen, que se ocupa de delimitar los valores de la matriz en base a la altura y ancho de los caracteres usados y la cantidad de pixeles horizontales y verticales, provistos por el driver de video. Se proveen funciones tales como mover el “cursor”, osea, la posición actual en la matriz, escribir un carácter, ya sea con formato o con los valores default, o del mismo modo imprimir un string. Se tomaron las consideraciones necesarias para el caso de ciertos caracteres especiales tales como el enter o el backspace. A su vez se añade la función de limpiar la pantalla y de subir todos las posiciones una línea, borrando la primera y dejando vacía la última. Consideramos que esta última corresponde en kernel, ya que este modo está pensado para ser usado usualmente por texto y siempre será deseable bajar una línea cuando se alcanza el final de la pantalla.
@@ -29,7 +29,7 @@ getTime: Devuelve la hora, minutos o segundos actuales.
 sysBeep: Ejecuta un sonido por el PC Speaker en base a la frecuencia y tiempo provistos.
 	Por último, para las excepciones se siguió el mismo procedimiento. Se tomaron en cuenta la excepción de división por cero y la excepción código de operación inválido. Las mismas se cargaron en la posición 0 y 6 de la idt respectivamente. Al ocurrir una interrupción, se procederá a imprimir en pantalla un mensaje que indique la excepción ocurrida e imprimiendo el estado actual de todos los registros. Se deja un tiempo para que el usuario pueda consultar la información dada y posteriormente se procede a volver al estado inicial del programa principal. Para poder lograr esto, antes de inicializar SampleCodeModule, se guardan las direcciones del IP y del stack, justo antes de ejecutar el programa principal, y antes de realizar el iretq de excepción se modifican los valores del stack y del instruction pointer del stackframe recibido, por dichos valores de back up, asegurando que el programa volverá a comenzar correctamente y no se sobrecarga el stack con las nuevas ejecuciones del programa.
 
-Userland:
+##Userland:
 	En esta zona del código se cuenta con una librería de usuario donde se brindan funcionalidades de uso general. Se brinda funcionalidad para strings cómo imprimir (con o sin formato), comparar strings, obtener el largo, poder parsear strings y poder convertir un string correspondiente a un número hexadecimal a su valor entero. A su vez se cuenta con funciones tales como la potencia, obtener los valores de alto y ancho de la “matriz” de caracteres considerada en el driver de pantalla y borrar la pantalla, entre otras. Algunas de estas funciones poseen toda su lógica en C y otras utilizan funciones de assembler para poder ejecutar las llamadas a sistema que necesiten.
 	El trabajo se modelo teniendo como programa central una shell, desde la cual se podrán ejecutar las distintas funcionalidades realizadas llamandolas por línea de comando. En todo momento se puede presionar la tecla ESC para salir de la terminal.
 Para poder ejecutar las funciones por comando se decidió realizar un arreglo de “Paquetes de funciones”, que cuentan con el nombre, la descripción de la función y el puntero a la misma. Se utiliza loadFunctions como método para cargar los valores de este array, en donde se hace un loadFunction por cada una de las funciones cargando los valores a la estructura de la posición correspondiente. 
@@ -51,7 +51,8 @@ El juego permite volver a la shell en cualquier momento utilizando la tecla de T
  Una vez concluida la partida, ya sea que el jugador perdió o que gano, se le da la opción de volver a la consola o de volver a jugar. Para salir del juego hay dos opciones, utilizando la tecla Escape para terminar la partida y Tabulación para dejar la partida en pausa, la cual podrá ser continuada.
 Por último, las variables que llevan registro de los bloques presentes, la posición de la pelota, la barra y las vidas, es decir, las variables involucradas con el estado de la partida, son globales. El objetivo de esto fue poder implementar un guardado facil de partida en donde no hay que manejar variables externas al juego, de forma que, él mismo se encarga de tener toda la información necesaria para reanudar la partida. Esto tiene un aspecto negativo, el espacio requerido por este estado interno (el cual no es muy grande) siempre estará reservado, se quiera jugar a Arkanoid o no.
 	
-Recursos Externos
+##Recursos Externos
+
 Driver sonido:	https://wiki.osdev.org/PC_Speaker
 Keyboard scan codes: http://www.cs.umd.edu/~hollings/cs412/s98/project/proj1/scancode
 Dibujado de una esfera (arkanoid - drawBall): https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
