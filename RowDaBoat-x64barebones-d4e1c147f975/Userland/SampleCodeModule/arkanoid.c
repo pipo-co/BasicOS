@@ -540,7 +540,7 @@ static void initBall(){
                 ball.yc = (((ball.yc - GUI_HEIGHT - RADIUS - 1) / BRICKS_HEIGHT) + 1 ) * BRICKS_HEIGHT + GUI_HEIGHT + RADIUS;
             }
         }//Choque barra
-        else if( (ball.yc + RADIUS >= bar_y ) /*&& (ball.xc >= bar_x) && (ball.xc < bar_x + BAR_WIDTH)*/){
+        else if( (ball.yc + RADIUS >= bar_y ) && (ball.xc >= bar_x) && (ball.xc < bar_x + BAR_WIDTH)){
             ball.vy *= INVERT;
             ball.yc = bar_y - RADIUS - 1;
         }
