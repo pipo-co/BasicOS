@@ -1,5 +1,5 @@
+//videoDriver.c
 #include <videoDriver.h>
-
 
 unsigned int horizontalPixelCount = 1024;
 unsigned int verticalPixelCount = 768;
@@ -52,7 +52,7 @@ void init_VM_Driver() {
 }
 
 void drawPixel(unsigned int x, unsigned int y, int color){
-
+	
     char* screen = (char *) ( (uint64_t) screenData->framebuffer); 
     unsigned where = (x + y*horizontalPixelCount) * numberOfColorBytes;
     screen[where] = color & 255;              // BLUE
@@ -61,7 +61,7 @@ void drawPixel(unsigned int x, unsigned int y, int color){
 }
 
 void copyPixel(unsigned int xFrom, unsigned int yFrom, unsigned int xTo, unsigned int yTo){
-
+	//Agregado de los casteos
 	char* screen = (char *) ( (uint64_t) screenData->framebuffer);
 	
 	unsigned from = (xFrom + yFrom*horizontalPixelCount) * numberOfColorBytes;
@@ -87,7 +87,7 @@ void drawChar(int x, int y, char character, int fontColor, int backgroundColor){
 
 	for (int i = 0; i < CHAR_HEIGHT; i++){
 		for (int j = 0; j < CHAR_WIDTH; j++){
-			bitIsPresent = (1 << (CHAR_WIDTH - 1 - j)) & toDraw[i]; //JUGADISIMO pero se le puede restar 1 a j. Confio
+			bitIsPresent = (1 << (CHAR_WIDTH - 1 - j)) & toDraw[i]; //Ver pie de la funcion
 
 			if(bitIsPresent)
 				drawPixel(aux_x, aux_y, fontColor);
@@ -100,6 +100,9 @@ void drawChar(int x, int y, char character, int fontColor, int backgroundColor){
 		aux_y++;
 	}
 }
+//En la implementacion provista no se le restaba 1 en "CHAR_WIDTH - 1 - j", observamos que esto 
+// hacia que no se imprima de manera completa el caracter, ya que no imprimia una de las filas 
+// correspondientes.
 
 int horPixelCount(){
 	return horizontalPixelCount;

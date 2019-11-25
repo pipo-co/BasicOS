@@ -8,15 +8,19 @@
     #define MIN_SCREEN_HEIGHT GUI_HEIGHT + 3*BRICKS_HEIGHT + 2*BRICKS_HEIGHT + 8*RADIUS
     
     #define MIN_BRICKS_PER_ROW 2
-    
     #define MAX_BRICKS_PER_ROW 64
+
     #define BRICKS_PER_COLUMN 3
 
+    #define BRICKS_HEIGHT 32
+    #define BRICKS_WIDTH 64
+
+    #define BRICK_PRESENT 1
+    #define BRICK_BROKEN 0
+    
     #define BACKGROUND_COLOR 0x000000
 
     #define GUI_HEIGHT 16
-    #define BRICKS_HEIGHT 32
-    #define BRICKS_WIDTH 64
 
     #define BAR_WIDTH 128
     #define BAR_HEIGHT 32
@@ -31,9 +35,6 @@
 
     #define INIT_SPEED 5
 
-    #define BRICK_PRESENT 1
-    #define BRICK_BROKEN 0
-
     #define INITIAL_LIVES 3
 
     #define ESC 27
@@ -44,7 +45,7 @@
     #define MAX_MOVES_PER_TURN 4
 //End Defines
 
-int screen_height, screen_width, bricks_per_row, initial_bar_x, bar_y;
+//Estructura para el modelado de la pelota.
 typedef struct{
     int xc;
     int yc;
@@ -52,33 +53,66 @@ typedef struct{
     char vy;
 } ball_t;
 
+//Matriz para llevar el control de que bloque esta y que bloque no
 int bricks[BRICKS_PER_COLUMN][MAX_BRICKS_PER_ROW];
 ball_t ball;
+
+//Variables dependientes del tamaño de la pantalla.
+int screen_height, screen_width, bricks_per_row, initial_bar_x, bar_y;
+
+//Variables del juego en si
 int bar_x, lives, bricksLeft, ticksElapsedSinceStart, restartFlag;
 int gameStarted = 0;
 int movesPerTurn = INIT_MOVES_PER_TURN;
 
 //Prototypes
-    static void drawBrick(int x, int y);
-    static void tryVerticalBounce();
-    static void drawBall();
+    //Funcion encargada de inicializar las variables vinculadas al manejo de pantalla.
+    static int initScreenInfo();
+    
+    //Si es una partida nueva, inicializa las variables vinculadas a la partida.
+    static void initVariables();
+
+    //Funcion encargada de inicializar y reinciar la posicion de la pelota, 
+    // al principio del juego y cada vez que se pierde
     static void initBall();
-    static void drawBar();
+
+    //Funcion principal.
     static void play();
-    static void removeBall();
+
+    //Funcion que imprime el mensaje de bienvenida y espera hasta que el usuario interactue-
+    static int welcomeScreen(enum gameMode mode);
+
+    //Funciones para el dibujo y borrado de los ladrillos.
     static void printBricks();
-    static void initGame();
+    static void drawBrick(int x, int y);
+    static void removeBrick(int row, int col);
+
+    //Funciones para el dibujo y borrado de la pelota.
+    static void drawBall();
+    static void removeBall();
+    static void midPointCircleDraw(int x_centre, int y_centre, int r, int color);
+
+    //Funciones para el dibujo y borrado de la barra.
+    static void drawBar();
     static void removeBar();
+
+    //Funcion para imprimir la interfaz con la informacion de la partida actual.
+    static void printGUI();
+    
+    //Funciones encargadas del movimiento de la pelota y la barra
     static void moveBarLeft();
     static void moveBarRight();
-    static void midPointCircleDraw(int x_centre, int y_centre, int r, int color);
-    static int gameOver();
-    static void tryHorizontalBounce();
     static void moveBall();
+    
+    //Funciones encargadas del procesado de los rebotes
+    static void tryVerticalBounce();
+    static void tryHorizontalBounce();
+    
+    //Funcion que valida las condiciones de finializacion del juego
+    static int gameOver();
+
+    //Funcion que imprime el mensaje de salida y el puntaje de la partida terminada
     static void endGame();
-    static void printGUI();
-    static int initScreenInfo();
-    static int welcomeScreen(enum gameMode mode);
 //Prototypes
 
 int gameAlreadyStarted(){
@@ -86,6 +120,7 @@ int gameAlreadyStarted(){
 }
 
 void startArkanoid(enum gameMode mode){
+    
     if(initScreenInfo())
         return;
 
@@ -93,6 +128,7 @@ void startArkanoid(enum gameMode mode){
 
     restartFlag = 1;
 
+    //Loop para poder jugar multiples partidas sin salir del juego
     while(restartFlag){
         restartFlag = 0;
 
@@ -102,20 +138,16 @@ void startArkanoid(enum gameMode mode){
         }
 
         if(mode == NEW_GAME || (mode == CONTINUE && gameStarted == 0))
-            initGame();
+            initVariables();
         else if(gameOver()){
             endGame();
             clearScreen();
             if(restartFlag)
-                initGame();
+                initVariables();
             else 
-                return;
-            
+                return;    
         }
 
-        //por si se arrepiente de jugar
-        
-        
         printBricks();
         drawBall();
         drawBar();
@@ -170,13 +202,15 @@ static int initScreenInfo(){
     return 0;
 }
 
-static void initGame(){
+static void initVariables(){
+    
     bricksLeft = 0;
     for (int i = 0; i < BRICKS_PER_COLUMN; i++)
         for (int j = 0; j < bricks_per_row; j++){
             bricks[i][j] = BRICK_PRESENT;
             bricksLeft++;
         }
+    
     gameStarted = 1;
     lives = INITIAL_LIVES;
     bar_x = initial_bar_x;
@@ -191,6 +225,7 @@ static void play(){
 
     while (! gameOver()){
 
+        //En base a la tecla presionada se mueve la barra o se sale del juego.
         c = getChar();
         switch(c){
             case 'a':
@@ -205,19 +240,23 @@ static void play(){
                 clearScreen();
                 return;
         } 
-
+        //Se realiza una accion por cada tick distinto
         currentTick = getTicksElapsed();
-        if(/*currentTick != lastTick*/1){
+        if(currentTick != lastTick){
+            
             ticksElapsedSinceStart++;
+            
+            //Cada 15 segundos se aumenta la velocidad del movimiento de pelota
             if(movesPerTurn <= MAX_MOVES_PER_TURN && ticksElapsedSinceStart % (15*TICKS_PER_SEC) == 0){
-                sysBeep(880, 5);
+                sysBeep(A, 5);
                 movesPerTurn++;
             }
+            //La cantidad de llamado a moveBall es directamente proporcional a la velocidad del juego
             for (int i = 0; i < movesPerTurn; i++)
                 moveBall();
 
+            //Actualizado de la informacion para el usuario.
             printGUI();
-            //while (getChar() != '\n');
             
             lastTick = currentTick;
         }
@@ -241,7 +280,7 @@ static void endGame(){
         print("Time: ");
         printint(ticksElapsedSinceStart);
         setCursorPos(screen_width / CHAR_WIDTH / 2 - 15, screen_height / CHAR_HEIGHT / 2 + 4);
-        Defeat();
+        Defeat(); //Reproduce la cancion de derrota
     }else{
         setCursorPos(screen_width / CHAR_WIDTH / 2, screen_height / CHAR_HEIGHT / 2 + 1);
         println("You won!");
@@ -249,9 +288,10 @@ static void endGame(){
         print("Time: ");
         printint(ticksElapsedSinceStart);
         setCursorPos(screen_width / CHAR_WIDTH / 2 - 15, screen_height / CHAR_HEIGHT / 2 + 3);
-        Victory();
+        Victory(); //Reproduce la cancion de victoria
     }
 
+    //Se le da al usuario la opcion de salor o de seguir juando
     print("Press escape to leave or enter to restart");
     char c;
     while ((c = getChar()) != ESC && c != '\t'){
@@ -276,6 +316,7 @@ static void initBall(){
     movesPerTurn = INIT_MOVES_PER_TURN;
 }
 //Print and Remove
+    //Imprime todos los ladrillos que esten presentes
     static void printBricks(){
         for (int i = 0; i < BRICKS_PER_COLUMN; i++){
             for (int j = 0; j < bricks_per_row; j++){
@@ -316,6 +357,7 @@ static void initBall(){
         }
     }
 
+    //Dibuja la pelota en su posicion actual.
     static void drawBall(){
         int r = RADIUS;
         while(r > 0){
@@ -324,6 +366,7 @@ static void initBall(){
         }
     }
 
+    //Borra la pelota.
     static void removeBall(){
         int r = RADIUS;
         while(r > 0){
@@ -332,6 +375,7 @@ static void initBall(){
         }
     }
 
+    //Dibuja la barra donde este
     static void drawBar(){
         int x = bar_x;
         int y = bar_y;
@@ -347,6 +391,7 @@ static void initBall(){
         }
     }
 
+    //Borra la barra
     static void removeBar(){
         int x = bar_x;
         int y = bar_y;
@@ -367,7 +412,7 @@ static void initBall(){
         printint(ticksElapsedSinceStart);
     }
 
-    //https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
+    //Source: https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
     static void midPointCircleDraw(int x_centre, int y_centre, int r, int color){ 
         int x = r, y = 0; 
         
@@ -377,8 +422,7 @@ static void initBall(){
         
         // When radius is zero only a single 
         // point will be printed 
-        if (r > 0) 
-        { 
+        if (r > 0) { 
             drawPixel(x + x_centre, -y + y_centre,color); 
             drawPixel(-x + x_centre, y + y_centre,color); 
             drawPixel(y + x_centre, x + y_centre,color); 
@@ -387,8 +431,7 @@ static void initBall(){
         
         // Initialising the value of P 
         int P = 1 - r; 
-        while (x > y) 
-        {  
+        while (x > y) {  
             y++; 
             
             // Mid-point is inside or on the perimeter 
@@ -396,8 +439,7 @@ static void initBall(){
                 P = P + 2*y + 1; 
                 
             // Mid-point is outside the perimeter 
-            else
-            { 
+            else{ 
                 x--; 
                 P = P + 2*y - 2*x + 1; 
             } 
@@ -415,8 +457,7 @@ static void initBall(){
             
             // If the generated point is on the line x = y then  
             // the perimeter points have already been printed 
-            if (x != y) 
-            { 
+            if (x != y) { 
                 drawPixel(y + x_centre, x + y_centre,color); 
                 drawPixel(-y + x_centre, x + y_centre,color); 
                 drawPixel(y + x_centre, -x + y_centre,color); 
@@ -442,7 +483,8 @@ static void initBall(){
             drawBar();
         }
     }
-
+    //Mueve la pelota en la direccion que traia y revisa si hubo una colision o si esta fuera 
+    // de limites y se debe perder una vida y reiniciar la posicion de la pelota
     static void moveBall(){
         removeBall();
         ball.xc += ball.vx;
@@ -459,6 +501,7 @@ static void initBall(){
         drawBall();
     }
 
+    //Funcion encargada de las colisiones horizontales.
     static void tryHorizontalBounce(){
         if (ball.xc + RADIUS >= screen_width ){
             ball.vx *= INVERT;
@@ -479,7 +522,7 @@ static void initBall(){
             }
         }
     }
-
+    //Funcion encargda de las colisiones verticales. 
     static void tryVerticalBounce(){
         //CHOQUE CON TECHO
         if(ball.yc - RADIUS < GUI_HEIGHT){

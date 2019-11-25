@@ -1,3 +1,5 @@
+//idtLoader.c
+//Archivo provisto por la catedra
 #include <stdint.h>
 #include <idtLoader.h>
 #include <defs.h>
@@ -23,7 +25,8 @@ DESCR_INT * idt = (DESCR_INT *) 0;	// IDT de 255 entradas
 static void setup_IDT_entry (int index, uint64_t offset);
 
 void load_idt() {
-
+  //Cargado de los descriptores de interrupcion (puntero a la rutina 
+  // de atencion e indice) en la IDT
   setup_IDT_entry (0x00, (uint64_t)&_exception0Handler);
   setup_IDT_entry (0x06, (uint64_t)&_exception6Handler);
 
@@ -34,7 +37,7 @@ void load_idt() {
  
 
 
-	//Solo interrupcion timer tick habilitadas
+	//Se desenmascara el IRQ0 y 1 (timerTick y teclado).
 	picMasterMask(0xFC); 
 	picSlaveMask(0xFF);
         

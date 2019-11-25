@@ -1,9 +1,5 @@
- /*
- *   interrupts.h
- *
- *  Created on: Apr 18, 2010
- *      Author: anizzomc
- */
+//interrupts.h
+//Archivo provisto por la catedra
 
 #ifndef __INTERRUPS_H__
 #define __INTERRUPS_H__

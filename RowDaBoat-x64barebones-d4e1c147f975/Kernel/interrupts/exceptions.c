@@ -1,3 +1,5 @@
+//exceptions.h
+
 #include <screenDriver.h>
 #include <lib.h>
 #include <interrupts.h>
@@ -12,6 +14,7 @@ static void invalid_opcode(uint64_t * exceptionStackframe);
 static void restartSampleCodeModule(uint64_t * exceptionStackframe);
 static void printRegs(uint64_t * address);
 
+//valores utilizados a la hora de continuar la ejecucion luego de una excepcion
 static uint64_t continueExecutionIP, continueExecutionSP;
 
 static char * regs[] = {
@@ -20,6 +23,7 @@ static char * regs[] = {
 	"RAX: ", "IP: ", "RSP: "
 };
 
+//Imprime el valor de los registros en el momento que se produjo la excepcion
 static void printRegs(uint64_t * address){
 	char buffer[50];
 	for (int i = 0; i < 16; i++){
@@ -28,7 +32,7 @@ static void printRegs(uint64_t * address){
 		println(buffer);
 	}
 	printString(regs[16]);
-	uintToBase((uint64_t)(address + 15 + 3), buffer, 16); //RSP
+	uintToBase((uint64_t)(address + 15 + 3), buffer, 16); //RSP, caso especial
 	println(buffer);
 }
 

@@ -1,3 +1,6 @@
+//font.c
+//Archivo provisto por la catedra
+
 // Created from bdf2c Version 3, (c) 2009, 2010 by Lutz Sammer
 //	License AGPLv3: GNU Affero General Public License version 3
 
@@ -1719,3 +1722,4 @@ static unsigned char __font_bitmap__[] = {
 unsigned char * charBitmap(int c) {
 	return (__font_bitmap__+(c-' ')*CHAR_HEIGHT);
 }
+

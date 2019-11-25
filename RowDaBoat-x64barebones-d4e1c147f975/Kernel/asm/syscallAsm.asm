@@ -1,3 +1,6 @@
+;syscallAsm.asm 
+;funcion asignada como rutina de atencion de la int 80h, se encarga de llamar a
+; syscallDispatcher, el cual llama a la sysCall pertinente.
 SECTION .text
 
 EXTERN syscallDispatcher

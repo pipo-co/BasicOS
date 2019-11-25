@@ -1,17 +1,21 @@
+//shell.c
 #include <shell.h>
 #include <usrlib.h>
 #include <arkanoid.h>
 #include <music.h>
 
+//constantes para la definicion de arrays
 #define USER_INPUT_SIZE 50
 #define MAX_FUNCTIONS 20
 #define MAX_ARGUMENTS_SIZE 5
-#define ESC 27
+
+#define END_OF_EXECUTION_KEY 27
+#define GAME_RETURNING_KEY '\t'
 #define CURSOR_COLOR 0x00FF00
 
-enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
-
 //Vars
+    //Estructura para el guardado de los modulos. Puntero a la funcion pertinente,
+    // nombre con el cual se la llama y una breve descripcion de su funcionamiento. 
     typedef struct{
         void (*function)(int argcount, char * args[]);
         char * name;
@@ -19,31 +23,63 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
     }functionPackage;
     
     functionPackage functions[MAX_FUNCTIONS];
+    //Cantidad de funciones disponibles
     int functionsSize = 0;
 
     int cursorTick = 0;
 
 //End
 //Protoripos
-    extern void getRegs(int argcount, char * args[]);
-
-    static int readUserInput(char * buffer, int maxSize);
-    static void loadFunction(char * string, void (*fn)(), char * desc);
-    static void processInstruction(char * userInput);
+    //Funciones para el cargado del fuctionArray. Carga todos los modulos disponibles.
     static void loadFunctions();
-    static void ticksElpased(int argcount, char * args[]);
-    static void printArgs(int argcount, char * args[]);
-    static void help(int argcount, char * args[]);
-    void printRegs(uint64_t * regs);
+    static void loadFunction(char * string, void (*fn)(), char * desc);
+
+    //Funciones utilizadas para la operacion de la shell.
+    static int readUserInput(char * buffer, int maxSize);
+    static void processInstruction(char * userInput);
+
+    //Funciones auxiliares para tener un cursor parpadeante. 
+    static void tickCursor();
+    static void turnOffCursor();
+    
+    //Modulos - Funciones ejecutables desde la shell
+    //inforeg: imprimir el valor de todos los registros
+    extern void getRegs(int argcount, char * args[]);
+    void printRegs(uint64_t * regs); //Llamada por getRegs en assembler.
+    
+    //printmem: imprime en pantalla el valor hexadecimal de los primeros 32 bytes 
+    // a partir de la direccion recibida como argumento
+    static void printmem(int argcount, char * args[]);
+
+    //clock: imprime la hora actual en horario GMT-3
     static void printCurrentTime(int argcount, char * args[]);
     static void printTime(enum time id);
-    static void printmem(int argcount, char * args[]);
+
+    //help: funcion que imprime las funciones disponibles y su respectiva descripcion
+    static void help(int argcount, char * args[]);
+
+    //triggerException: funciones demostrativas de las rutinas de atencion de las excepciones 
+    // 0 y 6 (division por cero y opcode invalido, respectivamente).
     static void triggerException0(int argcount, char * args[]);
     static void triggerException6(int argcount, char * args[]);
-    static void playSound(int argcount, char * args[]);
-    static void turnOffCursor();
-    static void tickCursor();
+
+    //arkanoid: juego arkanoid. Partida nueva o continuada.
     static void arkanoid(int argcount, char * args[]);
+
+    //Modulos adicionales
+    
+    //ticksElpased: funcion demostrativa de la syscall 0.
+    //Imprime los ticks actuales.
+    static void ticksElpased(int argcount, char * args[]);
+
+    //printArgs: funcion demostrativa del parseado de argumentos. 
+    // Imprime todos los argumentos que recibe.
+    static void printArgs(int argcount, char * args[]);
+
+    //beep: emite un sonido breve.
+    static void playSound(int argcount, char * args[]);
+
+    //canciones disponibles.
     static void playLavander(int argcount, char * args[]);
     static void playForElisa(int argcount, char * args[]);
     static void playDefeat(int argcount, char * args[]);
@@ -53,12 +89,15 @@ enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
 //End
 
 void startShell(){
+    //Se cargan los modulos
     loadFunctions();
     clearScreen();
     setCursorPos(0,getScreenHeight() - 1);
     char userInput[USER_INPUT_SIZE];
     printf("Fleshy: $>", 0x5CFEE4, 0);
 
+    //Se espera hasta que se reciba un enter y luego, se procesa el texto ingresado.
+    //Si coincide con el nombre de una funcion se la ejecuta, sino se vuelve a modo lectura.
     while(readUserInput(userInput,USER_INPUT_SIZE)){
         processInstruction(userInput);
         setCursorPos(0,getScreenHeight() - 1);
@@ -66,6 +105,9 @@ void startShell(){
     }
 }
 
+//Funcion encargada de la lectura del texto ingresado por el usuario.
+//Se encarga de guardarlo en un buffer para luego ser procesado. Maneja borrado, 
+// tecla especial para volver al juego y tecla especial para el corte de ejecucion.
 static int readUserInput(char * buffer, int maxSize){
     
     int counter = 0;
@@ -75,27 +117,30 @@ static int readUserInput(char * buffer, int maxSize){
     
     while((counter < maxSize - 1) && (c = getChar()) != '\n' ){
 
+        //Parpadeo del cursor.
         currentTimerTick = getTicksElapsed();
         if(currentTimerTick != lastTimerTick && currentTimerTick % 10 == 0){
             tickCursor();
             lastTimerTick = currentTimerTick;
         }
-
+        //Procesado de la tecla presionada
         if(c){
             turnOffCursor();
 
-            if(c == ESC)
+            if(c == END_OF_EXECUTION_KEY)
                 return 0;
 
-            if(c == '\t'){ //Tecla para arrancar arkanoid si hay un juego empezado.
+            if(c == GAME_RETURNING_KEY){ //Tecla para arrancar arkanoid si hay un juego empezado.
                 if(gameAlreadyStarted()){
                     startArkanoid(CONTINUE);
                     buffer[0] = 0;
                     counter = 0;
                     return 1;
                 }
-                c = ' ';
             }
+
+            if( c == '\t')
+                c = ' ';
 
             if( c != '\b'){
                 putchar(c);
@@ -114,6 +159,8 @@ static int readUserInput(char * buffer, int maxSize){
     return 1;
 }
 
+//Funcion encargada de procesar el texto recibido. Se guardan los argumentos en un array 
+// y se verifica si el texto ingresado valida con el nombre de una funcion para asi llamarla.
 static void processInstruction(char * userInput){
     char * arguments[MAX_ARGUMENTS_SIZE];
     int argCount = strtok(userInput,' ', arguments, MAX_ARGUMENTS_SIZE);
@@ -129,6 +176,7 @@ static void processInstruction(char * userInput){
     }
 }
 
+//Cargado de los modulos
 static void loadFunctions(){
     loadFunction("inforeg",&getRegs, "Prints all the registers \n");
     loadFunction("ticks",&ticksElpased, "Prints ticks elapsed from start.\nArg: -s for seconds elapsed \n");
@@ -145,7 +193,7 @@ static void loadFunctions(){
     loadFunction("Evangelion", &playEvangelion, "Evangelion theme \n"); 
     loadFunction("SadMusic", &playSadness, "Music to listen when you are sad \n");
     loadFunction("Victory", &playVictory, "Music to listen when you win \n");
-    loadFunction("Defeat", &playDefeat, "Music to listen when you are happy \n");
+    loadFunction("Defeat", &playDefeat, "Music to listen when you are happyn't \n");
 }
 
 static void loadFunction(char * string, void (*fn)(), char * desc){
@@ -155,7 +203,22 @@ static void loadFunction(char * string, void (*fn)(), char * desc){
     functionsSize++;
 }
 
+static void tickCursor(){
+    if(cursorTick)
+        putchar('\b');
+    else
+        putcharf(' ', 0, CURSOR_COLOR);
+    
+    cursorTick = !cursorTick;
+}
 
+static void turnOffCursor(){
+    if(cursorTick)
+        putchar('\b');
+    cursorTick = 0;
+}
+
+//Modulos
 static void ticksElpased(int argcount, char * args[]){
     if(strcmp(args[0],"-s"))
         printint(getTicksElapsed() / 18);
@@ -281,22 +344,7 @@ static void triggerException6(int argcount, char * args[]){
 }
 
 static void playSound(int argcount, char * args[]){
-    sysBeep(1000,5);
-}
-
-static void tickCursor(){
-    if(cursorTick)
-        putchar('\b');
-    else
-        putcharf(' ', 0, CURSOR_COLOR);
-    
-    cursorTick = !cursorTick;
-}
-
-static void turnOffCursor(){
-    if(cursorTick)
-        putchar('\b');
-    cursorTick = 0;
+    sysBeep(A,5);
 }
 
 static void arkanoid(int argcount, char * args[]){

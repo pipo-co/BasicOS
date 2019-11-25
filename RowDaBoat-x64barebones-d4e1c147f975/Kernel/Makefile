@@ -1,4 +1,6 @@
 include Makefile.inc
+#Se modifico el archivo para que pueda compilar archivos en otras 
+# carpetas que no eran la original.
 
 KERNEL=kernel.bin
 SOURCES=$(wildcard *.c)

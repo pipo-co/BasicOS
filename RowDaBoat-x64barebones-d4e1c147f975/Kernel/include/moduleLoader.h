@@ -1,3 +1,5 @@
+//moduleLoader.h
+//funciones orginales del kernel.
 #ifndef MODULELOADER_H
 #define MODULELOADER_H
 

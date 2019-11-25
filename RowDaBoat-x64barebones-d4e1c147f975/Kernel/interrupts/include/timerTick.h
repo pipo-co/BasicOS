@@ -1,3 +1,6 @@
+//timerTick.h
+//Archivo provisto por la catedra
+
 #ifndef __TIMER_TICK_H__
 #define __TIMER_TICK_H__
 

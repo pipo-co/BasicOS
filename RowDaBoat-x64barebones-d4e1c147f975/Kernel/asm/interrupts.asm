@@ -1,4 +1,5 @@
 ;interrupts.asm
+;Archivo provisto por la catedra con un unico cambio en linea 79
 GLOBAL _cli
 GLOBAL _sti
 GLOBAL picMasterMask
@@ -75,7 +76,7 @@ SECTION .text
 	pushState
 
 	mov rdi, %1 ; pasaje de parametro
-	mov rsi, rsp
+	mov rsi, rsp ; pasaje del exception stackframe para acceder a los valores de los registros
 	call exceptionDispatcher
 
 	popState
@@ -149,13 +150,12 @@ _exception0Handler:
 ;Invalid Opcode Exception
 _exception6Handler:
 	exceptionHandler 6
-
+;
 haltcpu:
 	cli
 	hlt
 	ret
 ;
-
 
 SECTION .bss
 	aux resq 1

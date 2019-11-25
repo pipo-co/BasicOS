@@ -1,10 +1,10 @@
+//music.c
 #include <music.h>
 #include <usrlib.h>
 
-enum chords{A=880, AS= 932, B=988, C=523, CS=554, D=587, DS=622, E=659, F=698, FS=740, G=784, GS=831, S=250000 };
-
 void Victory(){
-    /*
+    /* 
+    Director's cut :D aKa marito
     sysBeep(D/2,4);
     sysBeep(S,4);
     sysBeep(D/2,4);

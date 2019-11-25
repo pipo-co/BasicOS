@@ -1,3 +1,6 @@
+//timerTick.c
+//Archivo provisto por la catedra
+
 #include <timerTick.h>
 
 static unsigned long ticks = 0;

@@ -1,3 +1,6 @@
+//keyboardDriver.capsLock
+// Driver del teclado, obtencion de los scancodes y devolucion de los caracteres correspondientes
+
 #include <keyboardDriver.h>
 
 #define BUFFER_SIZE 15
@@ -7,6 +10,9 @@
 //Source: http://www.cs.umd.edu/~hollings/cs412/s98/project/proj1/scancode
 //Full scancode table: https://www.shsu.edu/~csc_tjm/fall2005/cs272/scan_codes.html
 
+// Matriz con los codigos ascii asociados a los scancodes de las teclas. La primer entrada 
+// es el valor comun, y el segundo es el valor cuando esta el shift activado.
+// Si devuelve 0 es una tecla sin ascii asociado.
 static char asccode[MAX_SC_TO_ASCII][2] ={
 	{   0,0   }, {ESC , ESC}, { '1','!' }, { '2','@' },
     { '3','#' }, { '4','$' }, { '5','%' }, { '6','^' },
@@ -25,6 +31,7 @@ static char asccode[MAX_SC_TO_ASCII][2] ={
     {   0,0   }, { ' ',' ' }
 };
 
+//Obtencion del scancode del registro del teclado
 extern unsigned char getKeyboardScancode();
 
 //Static Prototypes
@@ -40,34 +47,27 @@ extern unsigned char getKeyboardScancode();
     static int shiftActivated = 0;
     static int capsLock = 0;
 
+    //Buffer con los codigos ascii de las teclas precionadas, forma de cola (FIFO)
     char keyBuffer[BUFFER_SIZE];
     unsigned int bufferCount = 0;
 //End Variables
+
 
 int storeKey(){
     int scancode;
 	while(keyboardActivated()){
         scancode = getKeyboardScancode();
 
+        //Se analiza si es una tecla especial (Shift, Ctrl, etc).
         processScancode(scancode);
 
+        //Para las teclas que tienen ascii se lo almacena en el buffer
         if(scancodeHasAscii(scancode)){
             storeInBuffer(scancodeToAscii(scancode));
             return 1;
         }
     }
     return 0; //No habia nada
-}
-
-int getScancode(){
-    if(!keyboardActivated())
-        return -1; //No hay nada
-
-    int scancode = getKeyboardScancode();
-
-    processScancode(scancode);
-
-    return scancode;
 }
 
 int isShiftActivated(){
@@ -99,6 +99,7 @@ static void storeInBuffer(char c){
         keyBuffer[bufferCount++] = c;
 }
 
+//Funcion auxiliar para el manejo de la cola
 static char getKeyFromBuffer(){
     //saco la primer letra del Buffer y lo muevo todo
     char aux = keyBuffer[0];

@@ -1,3 +1,7 @@
+;keyboard.asm
+;Funciones auxiliares de interaccion con el mapa entrada/salida 
+; utilizadas por el keyboard driver
+
 GLOBAL keyboardActivated
 GLOBAL getKeyboardScancode
 

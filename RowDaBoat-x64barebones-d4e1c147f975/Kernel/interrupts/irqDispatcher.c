@@ -1,3 +1,5 @@
+//irqDispatcher.c
+//Archivo provisto por la catedra
 #include <timerTick.h>
 #include <stdint.h>
 #include <keyboardDriver.h>
@@ -17,10 +19,12 @@ void irqDispatcher(uint64_t irq) {
 	return;
 }
 
+//Llamado a la rutina de atencion asocida
 void int_20() {
 	timer_handler();
 }
 
+//Llamado a la rutina de atencion asocida
 void int_21() {
 	storeKey();
 }

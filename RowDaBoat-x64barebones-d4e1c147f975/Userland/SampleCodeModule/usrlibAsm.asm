@@ -1,3 +1,4 @@
+;usrlibAsm.asm
 GLOBAL getRegs
 EXTERN printRegs
 
@@ -37,6 +38,7 @@ SECTION .text
 	pop rbx
 %endmacro
 
+;funcion para obtener los valores de todos los registros y asi poder imprimirlos (inforeg)
 getRegs:
     mov [regsSpace], rax
     mov [regsSpace + 1*8], rbx

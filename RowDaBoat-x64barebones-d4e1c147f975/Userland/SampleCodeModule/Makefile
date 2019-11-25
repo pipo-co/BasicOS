@@ -1,4 +1,5 @@
 include ../Makefile.inc
+# Archivo modificado para la compilacion de archivos assembler e inclusion de archivos .h
 
 MODULE=0000-sampleCodeModule.bin
 SOURCES=$(wildcard [^_]*.c)

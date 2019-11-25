@@ -1,8 +1,12 @@
+;libasm.asm
+;libreria general de kernel, permite hacer movimientos de datos con el mapa de entrada/salida
+; desde C, implementa el acceso al reloj (RTC) y funcion auxiliar para el manejo de excepciones
+
 GLOBAL cpuVendor
 GLOBAL getRtc
 GLOBAL inb
 GLOBAL outb
-GLOBAL getSampleCodeStackAdress
+GLOBAL getSP
 
 section .text
 	
@@ -43,13 +47,15 @@ inb:
 	in al,dx	;value
 	ret
 ;
+
 outb:
 	mov rax, rsi ;value
 	mov rdx, rdi ;port
 	out dx, al
 	ret
 ;
-getSampleCodeStackAdress:
+
+getSP:
 	mov rax, rsp
 	ret
 ;

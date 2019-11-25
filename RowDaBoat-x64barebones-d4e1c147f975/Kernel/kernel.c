@@ -1,3 +1,7 @@
+//kernel.c
+//Archivo original, el amyor cambio fue sacar todos los print que 
+// realizaba al inicializar el kernel.
+
 #include <stdint.h>
 #include <string.h>
 #include <lib.h>
@@ -21,13 +25,11 @@ static void * const sampleDataModuleAddress = (void*)0x500000;
 typedef int (*EntryPoint)();
 
 
-void clearBSS(void * bssAddress, uint64_t bssSize)
-{
+void clearBSS(void * bssAddress, uint64_t bssSize){
 	memset(bssAddress, 0, bssSize);
 }
 
-void * getStackBase()
-{
+void * getStackBase(){
 	return (void*)(
 		(uint64_t)&endOfKernel
 		+ PageSize * 8				//The size of the stack itself, 32KiB
@@ -35,8 +37,7 @@ void * getStackBase()
 	);
 }
 
-void * initializeKernelBinary()
-{
+void * initializeKernelBinary(){
 	void * moduleAddresses[] = {
 		sampleCodeModuleAddress,
 		sampleDataModuleAddress
@@ -48,11 +49,10 @@ void * initializeKernelBinary()
 	return getStackBase();
 }
 
-int main()
-{	
+int main(){
+	//Funciones de inicializacion de video, de la IDT y del controlador de excepciones.
 	init_screen();
 	load_idt();
-	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSampleCodeStackAdress()); 
+	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
 	return ((EntryPoint)sampleCodeModuleAddress)();
-
 }

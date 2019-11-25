@@ -1,3 +1,5 @@
+;sysCaller.asm
+;funciones auxiliares de asm para realizar la int 80 y pasar los argumentos correctamente
 SECTION .text
 
 GLOBAL getTicksElapsed

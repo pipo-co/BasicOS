@@ -1,7 +1,10 @@
+//soundDriver.c
 #include <stdint.h>
 #include <lib.h>
 #include <interrupts.h>
+
 //source: https://wiki.osdev.org/PC_Speaker
+
 static void play_sound(uint32_t nFrequence) {
  	uint32_t Div;
  	uint8_t tmp;
@@ -17,24 +20,23 @@ static void play_sound(uint32_t nFrequence) {
   	if (tmp != (tmp | 3)) {
  		outb(0x61, tmp | 3);
  	}
- }
+}
  
  //make it shutup
- static void nosound() {
+static void nosound() {
  	uint8_t tmp = inb(0x61) & 0xFC;
  
  	outb(0x61, tmp);
- }
+}
  
  //Make a beep
- void beep(uint32_t nFrequence, uint16_t time) {
+void beep(uint32_t nFrequence, uint16_t time) {
  	 play_sound(nFrequence);
  	 for (int i = 0; i < time; i++){
 		_hlt();
 	  }
  	 nosound();
-          //set_PIT_2(old_frequency);
- }
+}
 
 
 

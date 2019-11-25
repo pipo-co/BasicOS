@@ -1,3 +1,6 @@
+//font.h
+// Archivo provisto por la catedra
+
 #ifndef __FONT_H__
 #define __FONT_H__
 

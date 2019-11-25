@@ -47,6 +47,8 @@ void putcharf(char c, unsigned int font, unsigned int background ){
     }
 }
 
+//Se encarga de interpretar caractere de movimiento de cursor. Realizar un salto de 
+// linea, borrar y realizar una tabulacion.
 static int parseSpecialCharacter(char c, unsigned int background){
     switch(c){
         case '\n':
@@ -85,6 +87,10 @@ void printStringf( char * string, unsigned int font, unsigned int background){
         string++;
     }
 }
+
+//Cuando se esta escribiendo en la ultima linea de la pantalla y se quiere pasar a la proxima 
+// (fuera de la pantalla) sube todo lo impreso en pantalla y genera una nueva linea 
+// para continuar escribiendo.
 
 static void scrollDownOnce(unsigned int background){
     for(int j = 0; j < verPixelCount() - CHAR_HEIGHT; j++){
