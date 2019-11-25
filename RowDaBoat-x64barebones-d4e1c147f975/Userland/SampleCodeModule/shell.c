@@ -94,6 +94,8 @@ void startShell(){
     clearScreen();
     setCursorPos(0,getScreenHeight() - 1);
     char userInput[USER_INPUT_SIZE];
+    printf("Bienvenido a shell, estas son las funciones disponibles: \n", 0x5CFEE4, 0);
+    help(0,0);
     printf("Fleshy: $>", 0x5CFEE4, 0);
 
     //Se espera hasta que se reciba un enter y luego, se procesa el texto ingresado.
@@ -179,21 +181,21 @@ static void processInstruction(char * userInput){
 //Cargado de los modulos
 static void loadFunctions(){
     loadFunction("inforeg",&getRegs, "Prints all the registers \n");
-    loadFunction("ticks",&ticksElpased, "Prints ticks elapsed from start.\nArg: -s for seconds elapsed \n");
+    loadFunction("ticks",&ticksElpased, "Prints ticks elapsed from start. Arg: -s for seconds elapsed \n");
     loadFunction("printArgs",&printArgs, "Prints all its arguments\n ");
     loadFunction("help",&help, "Prints the description of all functions \n");
-    loadFunction("clock",&printCurrentTime, "Prints the current time. Args:\n -h prints current hours. \n -m prints current minutes. \n -s prints current seconds.\n");
+    loadFunction("clock",&printCurrentTime, "Prints the current time. Args: -h prints current hours.  -m prints current minutes.  -s prints current seconds.\n");
     loadFunction("printmem",&printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
     loadFunction("triggerException0",&triggerException0, "Triggers Exception number 0 \n");
     loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
-    loadFunction("arkanoid", &arkanoid, "Arkanoid Game! Args:\n No args for new game.\n -c to continue last game.\n");
+    loadFunction("arkanoid", &arkanoid, "Arkanoid Game! Args: No args for new game. -c to continue last game.\n");
     loadFunction("beep",&playSound, "Plays a beep \n");
-    loadFunction("Lavander",&playLavander, "Plays an indie game's music\n");
-    loadFunction("Elisa", &playForElisa, "Music for a student \n");
-    loadFunction("Evangelion", &playEvangelion, "Evangelion theme \n"); 
-    loadFunction("SadMusic", &playSadness, "Music to listen when you are sad \n");
-    loadFunction("Victory", &playVictory, "Music to listen when you win \n");
-    loadFunction("Defeat", &playDefeat, "Music to listen when you are happyn't \n");
+    loadFunction("Lavander",&playLavander, "Plays an indie game's music");
+    loadFunction("Elisa", &playForElisa, "Music for a student\n");
+    loadFunction("Evangelion", &playEvangelion, "Evangelion theme\n"); 
+    loadFunction("SadMusic", &playSadness, "Music to listen when you are sad");
+    loadFunction("Victory", &playVictory, "Music to listen when you win");
+    loadFunction("Defeat", &playDefeat, "Music to listen when you are happyn't");
 }
 
 static void loadFunction(char * string, void (*fn)(), char * desc){

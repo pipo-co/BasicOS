@@ -59,6 +59,7 @@ void Victory(){
     sysBeep(D/2,8);
     */
 }
+
 void Defeat(){
     sysBeep(B/4,4);
     sysBeep(A/4,4);

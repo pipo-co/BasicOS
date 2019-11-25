@@ -53,6 +53,7 @@ void init_VM_Driver() {
 
 void drawPixel(unsigned int x, unsigned int y, int color){
 	
+	//Agregado de los casteos
     char* screen = (char *) ( (uint64_t) screenData->framebuffer); 
     unsigned where = (x + y*horizontalPixelCount) * numberOfColorBytes;
     screen[where] = color & 255;              // BLUE
@@ -61,7 +62,7 @@ void drawPixel(unsigned int x, unsigned int y, int color){
 }
 
 void copyPixel(unsigned int xFrom, unsigned int yFrom, unsigned int xTo, unsigned int yTo){
-	//Agregado de los casteos
+	
 	char* screen = (char *) ( (uint64_t) screenData->framebuffer);
 	
 	unsigned from = (xFrom + yFrom*horizontalPixelCount) * numberOfColorBytes;
