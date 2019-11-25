@@ -1,3 +1,6 @@
+## Autores
+Brandy Tobias, Pannunzio Faustino, Sagues Ignacio, Vazquez Ignacio
+
 # Manual de usuario:
 
 Entrar a la carpeta Toolchain y ejecutar make all dentro de la misma.
