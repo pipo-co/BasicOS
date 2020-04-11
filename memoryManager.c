@@ -76,33 +76,13 @@ void free2(void * ap){
         return;
     }
     
-    for(p = first; p->s.ptr != NULL && bp < p; p = p->s.ptr) //Unico a p antes de donde iria bp
+    for(p = first; p->s.ptr != NULL && bp < p; p = p->s.ptr); //Unico a p antes de donde iria bp
          
     //Right Join
     joinMem(bp, p->s.ptr);
-    printf("%u\n", bp->s.size);
-    /* if(bp == NULL || p->s.ptr == NULL || bp >= p->s.ptr)
-        return;
-
-    if(bp + bp->s.size == p->s.ptr){
-        bp->s.size += p->s.ptr->s.size;
-        bp->s.ptr = p->s.ptr->s.ptr;
-    }else
-        bp->s.ptr = p->s.ptr;
-*/
 
     //Left Join
     joinMem(p, bp);
-    /*
-    if(p == NULL || bp == NULL || p >= bp)
-        return;
-
-    if(p + p->s.size == bp){
-        p->s.size += bp->s.size;
-        p->s.ptr = bp->s.ptr;
-    }else
-        p->s.ptr = bp;
-        */
 
 }
 
@@ -170,23 +150,41 @@ int main(int argc, char const *argv[]){
 
     printList();
     
-    // int * arr6 = malloc2(131055);
-    // if(arr6 != NULL){
-    //     void * arrBackUp6 = (void *) arr6;
-    //     for (int j = 0; j < 3; arr6++, j++){
-    //         *arr6=j;
-    //     // printf("%d\n", *arr2);
-    //     }
-    //     printf("Holaaa\n");
-    //     printList();
+    int * arr6 = malloc2(131055);
+    if(arr6 != NULL){
+        void * arrBackUp6 = (void *) arr6;
+        for (int j = 0; j < 3; arr6++, j++){
+            *arr6=j;
+        // printf("%d\n", *arr2);
+        }
+        printf("Holaaa\n");
+        printList();
 
-    //     free2(arrBackUp6);
+        free2(arrBackUp6);
 
-    //     printList();
-    // }
+        printList();
+    }
 
-    // testNacho1();
-    // testNacho2();
+    testNacho1();
+    testNacho2();
+
+    int* var1 = malloc2(50);
+    int* var2 = malloc2(1005);
+    int* var3 = malloc2(129952);
+    int* var4 = malloc2(1);
+    if(first == NULL)
+        printf("yes\n");
+    printList();
+
+    free2(var1);
+    printList();
+
+    free2(var2);
+    printList();
+
+    free2(var3);
+    printList();
+
 
 }
 
