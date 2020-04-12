@@ -13,6 +13,8 @@ GLOBAL getTime
 GLOBAL sysBeep
 GLOBAL malloc2
 GLOBAL free2
+GLOBAL getDynamicMemLeft
+GLOBAL printList
 
 %macro pushState 0
 	push rbx
@@ -94,3 +96,9 @@ malloc2:
 
 free2:
 	sysCaller 10
+
+getDynamicMemLeft:
+	sysCaller 11
+
+printList:
+	sysCaller 12

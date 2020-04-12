@@ -83,4 +83,10 @@ extern void * malloc2(uint32_t bytes);
 //syscall 10:
 extern int free2(void * ap);
 
+//syscall 11:
+extern uint32_t getDynamicMemLeft();
+
+//syscall 12:
+extern void printList();
+
 #endif

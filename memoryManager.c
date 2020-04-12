@@ -1,5 +1,7 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+#ifdef FREELIST
+
 #include "memoryManager.h"
 #include <stdint.h>
 #include <stddef.h>
@@ -299,3 +301,18 @@ size_t getAvailableMemory(){
     
     return freeBlocks * BLOCK_SIZE;
 }
+
+#endif
+#ifdef BUDDY
+
+void initMM(void* init, unsigned blockCount){
+    
+}
+
+void * malloc2(unsigned bytes);
+
+int free2(void * ap);
+
+size_t getAvailableMemory();
+
+#endif

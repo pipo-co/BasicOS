@@ -8,6 +8,5 @@ int main(){
     clearScreen();
     setCursorPos(0, 0);
     print("Sesion finalizada");
-
     return 0;
 }
