@@ -11,4 +11,6 @@ void * malloc2(unsigned bytes);
 
 void free2(void * ap);
 
+size_t getAvailableMemory();
+
 #endif
