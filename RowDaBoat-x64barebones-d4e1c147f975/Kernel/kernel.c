@@ -1,5 +1,5 @@
 //kernel.c
-//Archivo original, el amyor cambio fue sacar todos los print que 
+//Archivo original, el mayor cambio fue sacar todos los print que 
 // realizaba al inicializar el kernel.
 
 #include <stdint.h>
@@ -9,6 +9,7 @@
 #include <idtLoader.h>
 #include <exceptions.h>
 #include <screenDriver.h>
+#include <memoryManager.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -50,9 +51,63 @@ void * initializeKernelBinary(){
 }
 
 int main(){
-	//Funciones de inicializacion de video, de la IDT y del controlador de excepciones.
+	//Funciones de inicializacion de video, de la IDT, del Memory Manager y del controlador de excepciones.
 	init_screen();
 	load_idt();
-	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
-	return ((EntryPoint)sampleCodeModuleAddress)();
+	initMM();
+	
+
+	//Prebas Malloc
+	printList();
+    int* var1 = malloc2(1000);
+    int* var2 = malloc2(1000);
+    int* var3 = malloc2(1000);
+    int* var4 = malloc2(1000);
+    int* var5 = malloc2(1000);
+    int* var6 = malloc2(1000);
+    int* var7 = malloc2(1000);
+    int* var8 = malloc2(1000);
+    int* var9 = malloc2(1000);
+    int* var10 = malloc2(1000);
+	int* var11 = malloc2(8387967 * 16);
+	if(var11 == NULL)
+		println("Dio NULL");
+
+	printList();
+
+
+    free2(var9);
+    
+    printList();
+    free2(var7);
+
+	printList();
+	free2(var9);
+
+    printList();
+    free2(var5);
+    printList();
+
+    
+    //free2((node*)var9 + 1);
+
+    free2(var3);
+	printList();
+    free2(var6);
+    free2(var10);
+    printList();
+    free2(var1);
+
+    free2(var4);
+
+    free2(var2);
+	printList();
+
+    free2(var8);
+	printList();
+
+    //free2(heapBase + (first->s.size - 4) * BLOCK_SIZE + 16);
+	
+	//initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
+	return 0;//((EntryPoint)sampleCodeModuleAddress)();
 }

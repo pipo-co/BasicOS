@@ -86,6 +86,9 @@
     static void playSadness(int argcount, char * args[]);
     static void playVictory(int argcount, char * args[]);
     static void playEvangelion(int argcount, char * args[]);
+
+    //Memory Manager Tests
+    static void TestMallocFree(int argcount, char *args[]);
 //End
 
 void startShell(){
@@ -196,6 +199,7 @@ static void loadFunctions(){
     loadFunction("SadMusic", &playSadness, "Music to listen when you are sad");
     loadFunction("Victory", &playVictory, "Music to listen when you win");
     loadFunction("Defeat", &playDefeat, "Music to listen when you are happyn't");
+    loadFunction("TestMalloc", &TestMallocFree,"Test malloc free");
 }
 
 static void loadFunction(char * string, void (*fn)(), char * desc){
@@ -380,4 +384,43 @@ static void playSadness(int argcount, char * args[]){
 
 static void playDefeat(int argcount, char * args[]){
     Defeat();
+}
+
+static void TestMallocFree(int argcount, char *args[]){
+    int* var1 = malloc2(1000);
+    int* var2 = malloc2(1000);
+    int* var3 = malloc2(1000);
+    int* var4 = malloc2(1000);
+    int* var5 = malloc2(1000);
+    int* var6 = malloc2(1000);
+    int* var7 = malloc2(1000);
+    int* var8 = malloc2(1000);
+    int* var9 = malloc2(1000);
+    int* var10 = malloc2(1000);
+
+ 
+    free2(var9);
+
+    free2(var7);
+
+    free2(var5);
+ 
+    free2(var3);
+  
+    free2(var6);
+   
+    free2(var10);
+  
+    free2(var1);
+   
+    free2(var4);
+
+    free2(var2);
+   
+    free2(var8);
+  
+
+    //free2(heapBase + (first->s.size - 4) * BLOCK_SIZE + 16);
+    println("hola");
+
 }

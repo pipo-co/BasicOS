@@ -77,4 +77,10 @@ extern uint8_t getTime(uint64_t timeDescriptor);
 //syscall 8:
 extern void sysBeep(uint32_t nFrequence, uint16_t time);
 
+//syscall 9:
+extern void * malloc2(uint32_t bytes);
+
+//syscall 10:
+extern int free2(void * ap);
+
 #endif

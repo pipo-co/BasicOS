@@ -19,7 +19,6 @@ union node{
     }s;
     Align x;
 };
-
 typedef union node node;
 
 static void joinMem(node *left, node *right);
@@ -40,6 +39,8 @@ void initMM(void* init){
 
 //Heavily inspired in C malloc
 void * malloc2(unsigned bytes){
+    if(bytes == 0)
+        return NULL;
 
     node* p;
     node* prevp = first; 
@@ -103,17 +104,13 @@ int free2(void * ap){
     
     for(p = first; p->s.ptr != NULL && p != bp && !(p < bp && bp < p->s.ptr); p = p->s.ptr); //Ubico a p antes de donde iria bp
 
-    //A la segunda condicion le saque el igual. La tercera no la entiedno, no deberia ser menor?
-    if( p == bp || bp < p + p->s.size/* || bp + bp->s.size >= p->s.ptr*/){
+    //A la segunda condicion le saque el igual. La tercera no la entiendo, no deberia ser menor?
+    if(p == bp || bp < p + p->s.size){
         printf("Free: Pointer Already Freed\n");
         if(bp < p + p->s.size)
         printf("toldya\n");
         return 3;
     }
-    
-    //Para mi esta esta demas
-    // if(p->s.ptr == NULL && bp + bp->s.size > HEAP_SIZE + HEAP_BASE)
-    //     return;
 
     //Right Join
     joinMem(bp, p->s.ptr);
@@ -146,7 +143,7 @@ int main(int argc, char const *argv[]){
     // testNacho1();
     // testNacho2();
     // testFaus();
-
+    
     printList();
 }
 

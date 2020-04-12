@@ -1,6 +1,7 @@
 //lib.c
 //Archivo original con el agregado de uintToBase y strilen.
 #include <stdint.h>
+#include <screenDriver.h>
 
 void * memset(void * destination, int32_t c, uint64_t length){
 	uint8_t chr = (uint8_t)c;
@@ -88,4 +89,10 @@ int strilen(char * s){
 		rta++;
 
 	return rta;
+}
+
+void printint(uint64_t value){
+	char buffer[40];
+	uintToBase(value,buffer,10);
+	printString(buffer);
 }

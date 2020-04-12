@@ -11,6 +11,8 @@ GLOBAL verticalPixelCount
 GLOBAL horizontalPixelCount
 GLOBAL getTime
 GLOBAL sysBeep
+GLOBAL malloc2
+GLOBAL free2
 
 %macro pushState 0
 	push rbx
@@ -86,3 +88,9 @@ getTime:
 
 sysBeep:
 	sysCaller 8
+
+malloc2:
+	sysCaller 9
+
+free2:
+	sysCaller 10

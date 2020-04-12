@@ -25,4 +25,6 @@ extern uint64_t getSP();
 
 int strilen(char * s);
 
+void printint(uint64_t value);
+
 #endif

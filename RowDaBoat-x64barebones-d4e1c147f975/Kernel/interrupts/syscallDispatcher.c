@@ -7,6 +7,7 @@
 #include <keyboardDriver.h>
 #include <rtcDriver.h>
 #include <soundDriver.h>
+#include <memoryManager.h>
 
 //Funcion encargada de llamar a la funcion asociada a la systemCall llamada y pasarle 
 // los parametros correctos.
@@ -43,6 +44,12 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			//void beep(uint32_t nFrequence, uint16_t time);
 			beep(rsi,rdx);
 			break;
+		case 9:
+			//void * malloc2(uint32_t bytes);
+			return (uint64_t)malloc2(rsi);
+		case 10:
+			//int free2(void * ap);
+			return free2((void*)rsi);
 	}
 	return 0;
 }
