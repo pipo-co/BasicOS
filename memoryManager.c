@@ -9,7 +9,7 @@
 #define HEAP_SIZE (1024 * 128) //128 MB 
 #define BLOCK_SIZE sizeof(node)
 #define HEAP_TOTAL_BLOCKS (HEAP_SIZE / BLOCK_SIZE)
-#define HEAP_BASE 0x600000
+#define HEAP_BASE (heapBase)  //0x600000
 
 typedef uint16_t Align;
 union node{
@@ -30,6 +30,7 @@ static void testFaus();
 static void testTobi();
 
 static node* first;
+char heapBase[HEAP_SIZE];
 
 void initMM(void* init){
     first = init; //Deberia ser HEAP_BASE
@@ -63,37 +64,56 @@ void * malloc2(unsigned bytes){
     return NULL;
 } 
 
-void free2(void * ap){
-    // if(ap < HEAP_BASE || ap > HEAP_BASE + HEAP_SIZE || ((unsigned)((node*)ap - 1) - HEAP_BASE) % BLOCK_SIZE != 0) //Invalid pointer
-    //     return;
+int free2(void * ap){
+
+    if(ap == NULL){
+        printf("Free: Pointer is NULL\n");
+        return 1;
+    }
 
     node* bp = (node*)ap - 1;
+
+    //Creo que estas validaciones ya estan bien
+    if(bp < (node*)HEAP_BASE || bp >= (node*)(HEAP_BASE + HEAP_SIZE)){
+        printf("Free: Pointer Out of Bounds\n");
+        return 1;
+    }
+
+    if(((uintptr_t)bp - (uintptr_t)HEAP_BASE) % BLOCK_SIZE != 0){
+        printf("Free: Pointer is not a multiple of node\n");
+        return 2;
+    }
+    
     node* p;
-    bp->s.ptr = NULL;
+
+    //Lo saque para que si hacen free de la misma cosa no se rompa.
+    //bp->s.ptr = NULL;
 
     if(first == NULL){
         first = bp;
-        return;
+        first->s.ptr = NULL;
+        return 0;
     }
 
     if(bp < first){   
         joinMem(bp, first);
         first = bp;
-        return;
+        return 0;
     }
     
-    for(p = first; p->s.ptr != NULL && !(p < bp && bp < p->s.ptr); p = p->s.ptr); //Ubico a p antes de donde iria bp
+    for(p = first; p->s.ptr != NULL && p != bp && !(p < bp && bp < p->s.ptr); p = p->s.ptr); //Ubico a p antes de donde iria bp
 
-    if( p == bp || bp <= p + p->s.size || bp + bp->s.size >= p->s.ptr)
-        return;
+    //A la segunda condicion le saque el igual. La tercera no la entiedno, no deberia ser menor?
+    if( p == bp || bp < p + p->s.size/* || bp + bp->s.size >= p->s.ptr*/){
+        printf("Free: Pointer Already Freed\n");
+        if(bp < p + p->s.size)
+        printf("toldya\n");
+        return 3;
+    }
     
+    //Para mi esta esta demas
     // if(p->s.ptr == NULL && bp + bp->s.size > HEAP_SIZE + HEAP_BASE)
     //     return;
-
-    if(p == bp){
-        printf("Corta");
-        return;
-    }
 
     //Right Join
     joinMem(bp, p->s.ptr);
@@ -101,12 +121,15 @@ void free2(void * ap){
     //Left Join
     joinMem(p, bp);
 
+    return 0;
 }
 
 static void joinMem(node *left, node *right){
     
-    if(left == NULL || right == NULL || left >= right)
+    if(left == NULL || (right != NULL && left >= right)){
+        printf("joinMem: Invalid Join\n");
         return;
+    }
 
     if(left + left->s.size == right){
         left->s.size += right->s.size;
@@ -116,13 +139,15 @@ static void joinMem(node *left, node *right){
 }
 
 int main(int argc, char const *argv[]){
-    char heapBase[HEAP_SIZE];
+    
     initMM(heapBase);
 
     testTobi();
     // testNacho1();
     // testNacho2();
     // testFaus();
+
+    printList();
 }
 
 static void printList(){
@@ -233,12 +258,20 @@ static void testTobi(){
 
     printList();
     free2(var9);
+    
+    
     printList();
     free2(var7);
+
+    
     printList();
     free2(var5);
-    free2(var9);
     printList();
+
+    
+    free2((node*)var9 + 1);
+    printList();
+
     free2(var3);
     printList();
     free2(var6);
@@ -254,6 +287,9 @@ static void testTobi(){
     free2(var8);
     printList();
 
+    //free2(heapBase + (first->s.size - 4) * BLOCK_SIZE + 16);
+    printf("hola\n");
+    printList();
     assert(getAvailableMemory() == HEAP_SIZE);
 }
 
@@ -261,7 +297,8 @@ size_t getAvailableMemory(){
     
     size_t freeBlocks = 0;
 
-    for(node *ptr = first; ptr != NULL; ptr = ptr->s.ptr, freeBlocks += ptr->s.size);
+    //Primero guarda el size y despues itera. Hacia segmentation fault.
+    for(node *ptr = first; ptr != NULL; freeBlocks += ptr->s.size, ptr = ptr->s.ptr);
     
     return freeBlocks * BLOCK_SIZE;
 }

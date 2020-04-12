@@ -9,7 +9,7 @@
 //Heavily inspired in C malloc
 void * malloc2(unsigned bytes);
 
-void free2(void * ap);
+int free2(void * ap);
 
 size_t getAvailableMemory();
 
