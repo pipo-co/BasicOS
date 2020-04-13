@@ -310,6 +310,7 @@ size_t getAvailableMemory(){
 #include <stddef.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
 
 #define HEAP_SIZE (1024 * 1024 * 128) //128 MB 
 #define HEAP_BASE (heapBase)  //0x600000
@@ -341,13 +342,16 @@ list_t * getBuddyAddress(list_t *node, uint8_t level);
 list_t * getPrincipalAdress(list_t *node, uint8_t level);
 list_t *tryJoin(list_t *node);
 
+void printList();
+
 char heapBase[HEAP_SIZE];
 static list_t listArray[BUCKET_COUNT];
 
 
 int main(){
-    /* code */
-    return 0;
+    initMM();
+
+    printList();
 }
 
 void initMM(){
@@ -472,5 +476,28 @@ int getFirstAvBucket(uint8_t minBucket){
 
     return (minBucket < BUCKET_COUNT)? minBucket : -1;
 }
+
+void printList(){
+    list_t *dummy, *iter;
+    uint32_t nodeCount = 0;
+    uint32_t totalFreeSpace = 0;
+
+    for(int i = BUCKET_COUNT - 1; i >= 0; i--){
+        dummy = &listArray[i];
+
+        if(!isListEmpty(dummy)){
+            printf("Level: %d\n", i + MIN_POWER);
+
+            for(iter = dummy->next, nodeCount = 0; iter != dummy; nodeCount++, iter = iter->next)
+                printf("Node Number: %d Pointer: %p Next: %p Prev: %p Level %d Free: %d\n", nodeCount, (void*)iter, (void*)iter->next, (void*)iter->prev, iter->level, iter->isFree);
+            printf("\n");
+
+            totalFreeSpace += nodeCount * pow(2, i + MIN_POWER);
+        }
+    }
+    printf("Total Free Space: %d\n", totalFreeSpace);
+}
+
+
 
 #endif
