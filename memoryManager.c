@@ -351,6 +351,8 @@ static list_t listArray[BUCKET_COUNT];
 int main(){
     initMM();
 
+    //printList();
+    malloc2(50000);
     printList();
 }
 
@@ -364,20 +366,36 @@ void initMM(){
 }
 
 void * malloc2(unsigned bytes){
+    printf("hola\n");
     bytes += sizeof(list_t);
+    printf("Bytes: %u\n", bytes);
 
     if(bytes > HEAP_SIZE)
         return NULL;
 
     uint8_t bucket = getBucket(bytes);
+    printf("Bucket: %u\n", bucket);
 
     int parentBucket = getFirstAvBucket(bucket);
     if(parentBucket == -1)
         return NULL;
 
+    printf("Parent Bucket: %d\n", parentBucket);
+
     list_t *ptr;
-    for(ptr = list_pop(&listArray[parentBucket]); parentBucket > bucket; parentBucket--)
+    printf("vamos a ver pop\n");
+    ptr = list_pop(&listArray[parentBucket]);
+    printf("ptr %p ptrLevel: %d\n", (void*)ptr, ptr->level);
+
+    for(; parentBucket > bucket; parentBucket--){
+        printf("BuddyAddress %p\n", (void*)getBuddyAddress(ptr, parentBucket - 1));
         createAndPushNode(&listArray[parentBucket - 1], getBuddyAddress(ptr, parentBucket - 1), parentBucket - 1);
+    }
+
+    printf("ptr %p", (void*)ptr);
+
+    ptr->isFree = 0;
+    ptr->level = bucket;
 
     return (void *)(ptr + 1);
 }
@@ -472,7 +490,7 @@ static uint8_t getBucket(uint32_t request){
 }
 
 int getFirstAvBucket(uint8_t minBucket){
-    for(; minBucket < BUCKET_COUNT && !isListEmpty(&listArray[minBucket]); minBucket++);
+    for(; minBucket < BUCKET_COUNT && isListEmpty(&listArray[minBucket]); minBucket++);
 
     return (minBucket < BUCKET_COUNT)? minBucket : -1;
 }
