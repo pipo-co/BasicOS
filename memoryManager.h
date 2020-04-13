@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-void initMM(void* init, unsigned blockCount);
+void initMM();
 
 //Heavily inspired in C malloc
 void * malloc2(unsigned bytes);

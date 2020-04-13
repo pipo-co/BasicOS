@@ -1,7 +1,8 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-#ifdef FREELIST
+#define BUDDY
 
+#ifndef BUDDY
 #include "memoryManager.h"
 #include <stdint.h>
 #include <stddef.h>
@@ -33,8 +34,8 @@ static void testTobi();
 static node* first;
 char heapBase[HEAP_SIZE];
 
-void initMM(void* init){
-    first = init; //Deberia ser HEAP_BASE
+void initMM(){
+    first = HEAP_BASE; //Deberia ser HEAP_BASE
     first->s.ptr = NULL;
     first->s.size = HEAP_TOTAL_BLOCKS;
 }
@@ -139,7 +140,7 @@ static void joinMem(node *left, node *right){
 
 int main(int argc, char const *argv[]){
     
-    initMM(heapBase);
+    initMM();
 
     testTobi();
     // testNacho1();
@@ -301,18 +302,175 @@ size_t getAvailableMemory(){
     
     return freeBlocks * BLOCK_SIZE;
 }
-
 #endif
 #ifdef BUDDY
 
-void initMM(void* init, unsigned blockCount){
-    
+#include "memoryManager.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <assert.h>
+
+#define HEAP_SIZE (1024 * 1024 * 128) //128 MB 
+#define HEAP_BASE (heapBase)  //0x600000
+#define MIN_POWER 6 //Min size 64 bytes
+#define MIN_ALLOC 64 //2^MIN_POWER
+#define MAX_POWER 27 //log2(HEAP_SIZE)
+#define BUCKET_COUNT (MAX_POWER - MIN_POWER + 1)
+
+typedef struct list_t {
+    uint8_t isFree;
+    uint8_t level;
+    struct list_t *prev, *next;
+}list_t;
+
+// Lista circular doblemente encadenada:
+// https://github.com/evanw/buddy-malloc/blob/master/buddy-malloc.c
+// list_t, list_init, list_push, list_remove, list_pop
+static void list_init(list_t *list);
+static void list_push(list_t *list, list_t *entry);
+static void list_remove(list_t *entry);
+static list_t *list_pop(list_t *list);
+
+static int isListEmpty(list_t *list);
+void createAndPushNode(list_t* list, list_t* node , uint8_t level);
+
+static uint8_t getBucket(uint32_t request);
+int getFirstAvBucket(uint8_t minBucket);
+list_t * getBuddyAddress(list_t *node, uint8_t level);
+list_t * getPrincipalAdress(list_t *node, uint8_t level);
+list_t *tryJoin(list_t *node);
+
+char heapBase[HEAP_SIZE];
+static list_t listArray[BUCKET_COUNT];
+
+
+int main(){
+    /* code */
+    return 0;
 }
 
-void * malloc2(unsigned bytes);
+void initMM(){
+    for(size_t i = 0; i < BUCKET_COUNT; i++){
+        list_init(&listArray[i]);
+        listArray[i].isFree = 0;
+        listArray[i].level = i;
+    }
+    createAndPushNode(&listArray[BUCKET_COUNT - 1], (list_t*)HEAP_BASE, BUCKET_COUNT - 1);
+}
 
-int free2(void * ap);
+void * malloc2(unsigned bytes){
+    bytes += sizeof(list_t);
 
-size_t getAvailableMemory();
+    if(bytes > HEAP_SIZE)
+        return NULL;
+
+    uint8_t bucket = getBucket(bytes);
+
+    int parentBucket = getFirstAvBucket(bucket);
+    if(parentBucket == -1)
+        return NULL;
+
+    list_t *ptr;
+    for(ptr = list_pop(&listArray[parentBucket]); parentBucket > bucket; parentBucket--)
+        createAndPushNode(&listArray[parentBucket - 1], getBuddyAddress(ptr, parentBucket - 1), parentBucket - 1);
+
+    return (void *)(ptr + 1);
+}
+
+int free2(void * ap){
+    list_t* bp = (list_t*)ap - 1;
+
+    if(bp == NULL)
+        return 0;
+    
+    while((bp = tryJoin(bp)) != NULL);
+
+    return 0;
+}
+
+list_t *tryJoin(list_t *node){
+    list_t *buddy = getBuddyAddress(node, node->level);
+    list_t *principal = getPrincipalAdress(node, node->level);
+   
+    if(node->level == BUCKET_COUNT - 1 || !buddy->isFree)
+        return NULL;
+
+    list_remove(buddy);
+    node->level++;    
+    list_push(&listArray[node->level], principal);
+    
+    return  principal;
+}
+
+size_t getAvailableMemory(){
+    return 0;
+}
+
+static void list_init(list_t *list){
+    list->prev = list;
+    list->next = list;
+}
+
+static void list_push(list_t *list, list_t *entry){
+    list_t *prev = list->prev;
+    entry->prev = prev;
+    entry->next = list;
+    prev->next = entry;
+    list->prev = entry;
+}
+
+static void list_remove(list_t *entry){
+    list_t *prev = entry->prev;
+    list_t *next = entry->next;
+    prev->next = next;
+    next->prev = prev;
+}
+
+static list_t *list_pop(list_t *list){
+    list_t *back = list->prev;
+    if (back == list) return NULL;
+    list_remove(back);
+    return back;
+}
+
+static int isListEmpty(list_t *list){
+    return list->prev == list;
+}
+
+void createAndPushNode(list_t* list, list_t* node , uint8_t level){
+    node->isFree = 1;
+    node->level = BUCKET_COUNT - 1;
+    list_push(list, node);
+}
+
+list_t * getBuddyAddress(list_t *node, uint8_t level){
+    return (list_t*)((uintptr_t)node ^ (1 << (MIN_POWER + level)));
+}
+
+list_t * getPrincipalAdress(list_t *node, uint8_t level){
+    uintptr_t mask = (1 << (MIN_POWER + level));
+    mask = ~mask;    
+    return (list_t*)((uintptr_t)node & mask);
+}
+
+static uint8_t getBucket(uint32_t request){
+  uint8_t bucket = 0;
+  request--;
+  request >>= MIN_POWER;
+
+  while (request){
+    bucket++;
+    request >>= 1;
+  }
+
+  return bucket;
+}
+
+int getFirstAvBucket(uint8_t minBucket){
+    for(; minBucket < BUCKET_COUNT && !isListEmpty(&listArray[minBucket]); minBucket++);
+
+    return (minBucket < BUCKET_COUNT)? minBucket : -1;
+}
 
 #endif
