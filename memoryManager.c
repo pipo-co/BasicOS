@@ -338,9 +338,11 @@ void createAndPushNode(list_t* list, list_t* node , uint8_t level);
 
 static uint8_t getBucket(uint32_t request);
 int getFirstAvBucket(uint8_t minBucket);
-list_t * getBuddyAddress(list_t *node, uint8_t level);
-list_t * getPrincipalAdress(list_t *node, uint8_t level);
-list_t *tryJoin(list_t *node);
+list_t * getBuddyAddress(list_t *node);
+list_t * getPrincipalAdress(list_t *node);
+void insertNodeAndJoinSpace(list_t* node);
+//list_t *tryJoin(list_t *node);
+
 
 void printList();
 
@@ -351,8 +353,54 @@ static list_t listArray[BUCKET_COUNT];
 int main(){
     initMM();
 
-    //printList();
-    malloc2(50000);
+    int * v1 = malloc2(50000);
+    printList();
+    int * v2 = malloc2(50000);
+    printList();
+    int * v3 = malloc2(50000);
+    printList();
+    int * v4 = malloc2(50000);
+    printList();
+    int * v5 = malloc2(50000);
+    printList();
+    int * v6 = malloc2(50000);
+    printList();
+    int * v7 = malloc2(33554000);
+    printList();
+    int * v8 = malloc2(33554000);
+    printList();
+    int * v9 = malloc2(33554000);
+    printList();
+    if(malloc2(33554000) == NULL)
+        printf("YASS\n");
+    if(malloc2(1000000000) == NULL)
+        printf("YASS\n");
+    int * v10 = malloc2(16777000);
+    printList();
+    if(malloc2(16777000) == NULL)
+        printf("YASS\n");
+
+    free2(v1);
+    printList();
+    free2(v3);
+    printList();
+    free2(v5);
+    printList();
+    free2(v2);
+    printList();
+    free2(v4);
+    printList();
+    free2(v7);
+    printList();
+    free2(v9);
+    printList();
+    free2(v10);
+    printList();
+    free2(v8);
+    printList();
+    v5 = malloc2(500000);
+    printList();
+    free2(v6);
     printList();
 }
 
@@ -366,6 +414,9 @@ void initMM(){
 }
 
 void * malloc2(unsigned bytes){
+    if(bytes == 0)
+        return NULL;
+
     printf("hola\n");
     bytes += sizeof(list_t);
     printf("Bytes: %u\n", bytes);
@@ -388,41 +439,69 @@ void * malloc2(unsigned bytes){
     printf("ptr %p ptrLevel: %d\n", (void*)ptr, ptr->level);
 
     for(; parentBucket > bucket; parentBucket--){
-        printf("BuddyAddress %p\n", (void*)getBuddyAddress(ptr, parentBucket - 1));
-        createAndPushNode(&listArray[parentBucket - 1], getBuddyAddress(ptr, parentBucket - 1), parentBucket - 1);
+        printf("BuddyAddress %p\n", (void*)getBuddyAddress(ptr));
+        ptr->level--;
+        createAndPushNode(&listArray[parentBucket - 1], getBuddyAddress(ptr), parentBucket - 1);
     }
 
-    printf("ptr %p", (void*)ptr);
+    printf("ptr %p\n", (void*)ptr);
 
     ptr->isFree = 0;
-    ptr->level = bucket;
+    //ptr->level = bucket;
 
     return (void *)(ptr + 1);
 }
 
 int free2(void * ap){
-    list_t* bp = (list_t*)ap - 1;
-
-    if(bp == NULL)
+    if(ap == NULL)
         return 0;
+
+    list_t* bp = (list_t*)ap - 1;
+    printf("Pointer: %p\n", (void*)bp);
+
+    bp->isFree = 1;
     
-    while((bp = tryJoin(bp)) != NULL);
+    //while((bp = tryJoin(bp)) != NULL);
+    insertNodeAndJoinSpace(bp);
 
     return 0;
 }
 
-list_t *tryJoin(list_t *node){
-    list_t *buddy = getBuddyAddress(node, node->level);
-    list_t *principal = getPrincipalAdress(node, node->level);
-   
-    if(node->level == BUCKET_COUNT - 1 || !buddy->isFree)
-        return NULL;
+// list_t *tryJoin(list_t *node){
+//     list_t *buddy = getBuddyAddress(node);
+//     list_t *principal = getPrincipalAdress(node);
 
-    list_remove(buddy);
-    node->level++;    
-    list_push(&listArray[node->level], principal);
+//     printf("Node: %p Level: %d Buddy: %p Level: %d isFree: %d Principal: %p Level: %d isFree: %d\n", (void*)node, node->level, (void*)buddy, buddy->level, buddy->isFree, (void*)principal, principal->level, buddy->isFree);
+   
+//     if(node->level == BUCKET_COUNT - 1 || buddy->level != node->level || !buddy->isFree){
+//         list_push(&listArray[node->level], node);
+//         return NULL;
+//     }
+
+//     list_remove(buddy);
+//     principal->level++;   
+//     list_push(&listArray[principal->level], principal);
     
-    return  principal;
+//     return principal;
+// }
+
+void insertNodeAndJoinSpace(list_t* node){ //Prueba
+    list_t *buddy = getBuddyAddress(node);
+
+    while(node->level != BUCKET_COUNT - 1 && buddy->level == node->level && buddy->isFree){
+
+        printf("Node: %p Level: %d Buddy: %p Level: %d isFree: %d \n", (void*)node, node->level, (void*)buddy, buddy->level, buddy->isFree);
+
+        list_remove(buddy);
+
+        node = getPrincipalAdress(node);
+        node->level++;
+
+        buddy = getBuddyAddress(node);
+    }
+    printf("Node: %p Level: %d Buddy: %p Level: %d isFree: %d \n", (void*)node, node->level, (void*)buddy, buddy->level, buddy->isFree);
+
+    list_push(&listArray[node->level], node);
 }
 
 size_t getAvailableMemory(){
@@ -462,18 +541,27 @@ static int isListEmpty(list_t *list){
 
 void createAndPushNode(list_t* list, list_t* node , uint8_t level){
     node->isFree = 1;
-    node->level = BUCKET_COUNT - 1;
+    node->level = level;
     list_push(list, node);
 }
 
-list_t * getBuddyAddress(list_t *node, uint8_t level){
-    return (list_t*)((uintptr_t)node ^ (1 << (MIN_POWER + level)));
+list_t * getBuddyAddress(list_t *node){ //Luego sacar los casteos a HEAP_BASE
+    uint8_t level = node->level;
+    uintptr_t currentOffset = (uintptr_t)node - (uintptr_t)HEAP_BASE;
+    uintptr_t newOffset = currentOffset ^ (1 << (MIN_POWER + level));
+
+    return (list_t*)(newOffset + (uintptr_t)HEAP_BASE);
 }
 
-list_t * getPrincipalAdress(list_t *node, uint8_t level){
+list_t * getPrincipalAdress(list_t *node){ //Luego sacar los casteos a HEAP_BASE
+    uint8_t level = node->level;
     uintptr_t mask = (1 << (MIN_POWER + level));
-    mask = ~mask;    
-    return (list_t*)((uintptr_t)node & mask);
+    mask = ~mask; 
+
+    uintptr_t currentOffset = (uintptr_t)node - (uintptr_t)HEAP_BASE;
+    uintptr_t newOffset = currentOffset & mask;  
+
+    return (list_t*)(newOffset + (uintptr_t)HEAP_BASE);
 }
 
 static uint8_t getBucket(uint32_t request){
