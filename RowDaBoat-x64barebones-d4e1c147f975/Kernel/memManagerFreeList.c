@@ -1,6 +1,5 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-
 #ifndef BUDDY
 #include <memoryManager.h>
 #include <lib.h>
@@ -131,15 +130,8 @@ static void joinMem(node *left, node *right){
         left->s.ptr = right;
 }
 
-uint32_t getAvailableMemory(){
-    
+uint32_t getAvailableMemory(){  
     return availableBlocks * BLOCK_SIZE;
-
-    /* uint32_t freeBlocks = 0;
-
-    for(node *ptr = first; ptr != NULL; freeBlocks += ptr->s.size, ptr = ptr->s.ptr);
-    
-    return freeBlocks * BLOCK_SIZE; */
 }
 
 void dumpMM(){
@@ -152,12 +144,12 @@ void dumpMM(){
     while(iter != NULL){
         printString("Node number: ");
         printint(count++);
-        printString(". Start adress: "); 
-        printint((uint64_t)iter);
-        printString(". Available blocks: "); 
+        printString(". Start adress: 0x"); 
+        printhex((uint64_t)iter);
+        printString(". Available blocks: 0x"); 
         printint((uint64_t)iter->s.size);
-        printString(". Next free adress: "); 
-        printint((uint64_t)iter->s.ptr);
+        printString(". Next free adress: 0x"); 
+        printhex((uint64_t)iter->s.ptr);
         println(".");
         iter = iter->s.ptr;
     }

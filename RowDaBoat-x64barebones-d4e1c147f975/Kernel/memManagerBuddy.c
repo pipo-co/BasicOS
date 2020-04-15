@@ -16,9 +16,8 @@ typedef struct list_t {
     struct list_t *prev, *next;
 }list_t;
 
-// Lista circular doblemente encadenada:
+// Doubly linked circuar list:
 // https://github.com/evanw/buddy-malloc/blob/master/buddy-malloc.c
-// list_t, list_init, list_push, list_remove, list_pop
 static void list_init(list_t *list);
 static void list_push(list_t *list, list_t *entry);
 static void list_remove(list_t *entry);
@@ -34,12 +33,12 @@ static list_t * getPrincipalAdress(list_t *node);
 static void insertNodeAndJoinSpace(list_t* node);
 static void printBlockSize(uint8_t exp);
 
+//Global variables
 static list_t *heap_base;
 static uint32_t heap_size;
 static list_t listArray[MAX_BUCKET_COUNT];
 static uint32_t availableMemory;
 static uint8_t bucketCount;
-
 
 void initMM(void * heap_baseInit, uint32_t heap_sizeInit){
     heap_base = heap_baseInit;
@@ -105,6 +104,8 @@ int free2(void * ap){
 }
 
 uint32_t getAvailableMemory(){
+    //El espacio libre no es el espacio que puede pdir el usuario. Habria que desconatr el tamaño que ocupan los headers nenecsarios para aprovecharlo
+    //Se podria restar sizeof(list_t) cada vez que se agrega una entrada a listArray y sumar la misma cantidad cuando se junta con su buddy
     return availableMemory;
 }
 
@@ -123,13 +124,18 @@ void dumpMM(){
             for(iter = dummy->next, nodeCount = 0; iter != dummy; nodeCount++, iter = iter->next){
                 printString("Node number: ");
                 printint(nodeCount);
-                printString(". Pointer: ");
-                printint((uintptr_t) iter);
-                printString(". Next: ");
-                printint((uintptr_t) iter->next);
-                printString(". Prev: ");
-                printint((uintptr_t) iter->prev);
-                println(".");
+                printString(". Pointer: 0x");
+                printhex((uintptr_t) iter);
+                printString(". Next: 0x");
+                printhex((uintptr_t) iter->next);
+                printString(". Prev: 0x");
+                printhex((uintptr_t) iter->prev);
+                printString(". Level: ");
+                printint((uintptr_t) iter->level);
+                if(iter->isFree)
+                    println(" Block is free.");
+                else
+                    println(" Block is't free.");
             }
             putchar('\n');
 
@@ -138,11 +144,10 @@ void dumpMM(){
     }
     printString("Total Free Space: ");
     printint(totalFreeSpace);
-    println(".");
+    println(" B.");
 }
 
 static void printBlockSize(uint8_t exp){
-    
     char * unidad;
     if(exp < KILO){
         unidad = " B.";
@@ -235,18 +240,11 @@ static list_t * getPrincipalAdress(list_t *node){
 
 static uint8_t getBucket(uint32_t request){
 
-  return intLog2(request) - MIN_POWER;
-  /* uint8_t bucket = 0;
-  request--;
-  
-  request >>= min_power;
+    uint8_t aux = intLog2(request);
+    if(aux < MIN_POWER)
+        return 0;
 
-  while (request){
-    bucket++;
-    request >>= 1;
-  }
-
-  return bucket; */
+    return intLog2(request) - MIN_POWER;
 }
 
 static int getFirstAvBucket(uint8_t minBucket){

@@ -97,6 +97,12 @@ void printint(uint64_t value){
 	printString(buffer);
 }
 
+void printhex(uint64_t value){
+	char buffer[40];
+	uintToBase(value,buffer,16);
+	printString(buffer);
+}
+
 uint8_t intLog2(uint64_t n){
     uint8_t rta = 0;
 
