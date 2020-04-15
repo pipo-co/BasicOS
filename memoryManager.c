@@ -343,11 +343,11 @@ list_t * getPrincipalAdress(list_t *node);
 void insertNodeAndJoinSpace(list_t* node);
 //list_t *tryJoin(list_t *node);
 
-
 void printList();
 
 char heapBase[HEAP_SIZE];
 static list_t listArray[BUCKET_COUNT];
+uint32_t availableMemory = HEAP_SIZE;
 
 
 int main(){
@@ -449,6 +449,8 @@ void * malloc2(unsigned bytes){
     ptr->isFree = 0;
     //ptr->level = bucket;
 
+    availableMemory -= pow(2, bucket + MIN_POWER);
+
     return (void *)(ptr + 1);
 }
 
@@ -460,6 +462,8 @@ int free2(void * ap){
     printf("Pointer: %p\n", (void*)bp);
 
     bp->isFree = 1;
+
+    availableMemory += pow(2, bp->level + MIN_POWER);
     
     //while((bp = tryJoin(bp)) != NULL);
     insertNodeAndJoinSpace(bp);
@@ -504,8 +508,8 @@ void insertNodeAndJoinSpace(list_t* node){ //Prueba
     list_push(&listArray[node->level], node);
 }
 
-size_t getAvailableMemory(){
-    return 0;
+uint32_t getAvailableMemory(){
+    return availableMemory;
 }
 
 static void list_init(list_t *list){
@@ -601,7 +605,7 @@ void printList(){
             totalFreeSpace += nodeCount * pow(2, i + MIN_POWER);
         }
     }
-    printf("Total Free Space: %d\n", totalFreeSpace);
+    printf("Total Free Space: %d Available Memory Test: %d\n", totalFreeSpace, getAvailableMemory());
 }
 
 
