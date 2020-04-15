@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -pedantic -Wall -std=c99 -pthread -lrt -g -DBUDDY -lm
+CFLAGS = -pedantic -Wall -std=c99 -pthread -lrt -g -DBUDDY
 RM = rm -f
 
 SOURCES = $(wildcard *.c)

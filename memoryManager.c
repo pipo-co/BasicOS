@@ -310,7 +310,6 @@ size_t getAvailableMemory(){
 #include <stddef.h>
 #include <stdio.h>
 #include <assert.h>
-#include <math.h>
 
 #define HEAP_SIZE (1024 * 1024 * 128) //128 MB 
 #define HEAP_BASE (heapBase)  //0x600000
@@ -318,6 +317,7 @@ size_t getAvailableMemory(){
 #define MIN_ALLOC 64 //2^MIN_POWER
 #define MAX_POWER 27 //log2(HEAP_SIZE)
 #define BUCKET_COUNT (MAX_POWER - MIN_POWER + 1)
+#define BINARY_POWER(x) (1 << (x))
 
 typedef struct list_t {
     uint8_t isFree;
@@ -353,6 +353,7 @@ uint32_t availableMemory = HEAP_SIZE;
 int main(){
     initMM();
 
+    printList();
     int * v1 = malloc2(50000);
     printList();
     int * v2 = malloc2(50000);
@@ -398,8 +399,8 @@ int main(){
     printList();
     free2(v8);
     printList();
-    v5 = malloc2(500000);
-    printList();
+    //v5 = malloc2(500000);
+    //printList();
     free2(v6);
     printList();
 }
@@ -449,7 +450,7 @@ void * malloc2(unsigned bytes){
     ptr->isFree = 0;
     //ptr->level = bucket;
 
-    availableMemory -= pow(2, bucket + MIN_POWER);
+    availableMemory -= BINARY_POWER(bucket + MIN_POWER);
 
     return (void *)(ptr + 1);
 }
@@ -463,31 +464,12 @@ int free2(void * ap){
 
     bp->isFree = 1;
 
-    availableMemory += pow(2, bp->level + MIN_POWER);
+    availableMemory += BINARY_POWER(bp->level + MIN_POWER);
     
-    //while((bp = tryJoin(bp)) != NULL);
     insertNodeAndJoinSpace(bp);
 
     return 0;
 }
-
-// list_t *tryJoin(list_t *node){
-//     list_t *buddy = getBuddyAddress(node);
-//     list_t *principal = getPrincipalAdress(node);
-
-//     printf("Node: %p Level: %d Buddy: %p Level: %d isFree: %d Principal: %p Level: %d isFree: %d\n", (void*)node, node->level, (void*)buddy, buddy->level, buddy->isFree, (void*)principal, principal->level, buddy->isFree);
-   
-//     if(node->level == BUCKET_COUNT - 1 || buddy->level != node->level || !buddy->isFree){
-//         list_push(&listArray[node->level], node);
-//         return NULL;
-//     }
-
-//     list_remove(buddy);
-//     principal->level++;   
-//     list_push(&listArray[principal->level], principal);
-    
-//     return principal;
-// }
 
 void insertNodeAndJoinSpace(list_t* node){ //Prueba
     list_t *buddy = getBuddyAddress(node);
@@ -552,14 +534,14 @@ void createAndPushNode(list_t* list, list_t* node , uint8_t level){
 list_t * getBuddyAddress(list_t *node){ //Luego sacar los casteos a HEAP_BASE
     uint8_t level = node->level;
     uintptr_t currentOffset = (uintptr_t)node - (uintptr_t)HEAP_BASE;
-    uintptr_t newOffset = currentOffset ^ (1 << (MIN_POWER + level));
+    uintptr_t newOffset = currentOffset ^ BINARY_POWER(MIN_POWER + level);
 
     return (list_t*)(newOffset + (uintptr_t)HEAP_BASE);
 }
 
 list_t * getPrincipalAdress(list_t *node){ //Luego sacar los casteos a HEAP_BASE
     uint8_t level = node->level;
-    uintptr_t mask = (1 << (MIN_POWER + level));
+    uintptr_t mask = BINARY_POWER(MIN_POWER + level);
     mask = ~mask; 
 
     uintptr_t currentOffset = (uintptr_t)node - (uintptr_t)HEAP_BASE;
@@ -602,12 +584,9 @@ void printList(){
                 printf("Node Number: %d Pointer: %p Next: %p Prev: %p Level %d Free: %d\n", nodeCount, (void*)iter, (void*)iter->next, (void*)iter->prev, iter->level, iter->isFree);
             printf("\n");
 
-            totalFreeSpace += nodeCount * pow(2, i + MIN_POWER);
+            totalFreeSpace += nodeCount * BINARY_POWER(i + MIN_POWER);  
         }
     }
     printf("Total Free Space: %d Available Memory Test: %d\n", totalFreeSpace, getAvailableMemory());
 }
-
-
-
 #endif
