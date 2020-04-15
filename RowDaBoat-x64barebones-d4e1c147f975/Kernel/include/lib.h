@@ -27,4 +27,7 @@ int strilen(char * s);
 
 void printint(uint64_t value);
 
+//Calcular el logaritmo en base 2 truncado a entero.
+uint8_t intLog2(uint64_t n);
+
 #endif

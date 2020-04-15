@@ -6,10 +6,8 @@
 #include <lib.h>
 #include <screenDriver.h>
 
-#define HEAP_SIZE (128 * 1024 * 1024) //128 MiB 
 #define BLOCK_SIZE sizeof(node)
-#define HEAP_TOTAL_BLOCKS (HEAP_SIZE / BLOCK_SIZE)
-#define HEAP_BASE (0x600000)  //Posicion de memoria 6MiB, 1 MiB despues despues del comienzo de la seccion de datos de Userland.
+#define HEAP_TOTAL_BLOCKS (heap_size / BLOCK_SIZE)
 
 typedef uint64_t Align;
 union node{
@@ -21,12 +19,20 @@ union node{
 };
 typedef union node node;
 
+static node *heap_base; //Asumimos 6 MiB
+static uint32_t heap_size; //Asumimos 128 MiB
+static uint32_t availableBlocks;
+
 static void joinMem(node *left, node *right);
 
 static node* first;
 
-void initMM(){
-    first = (node*)HEAP_BASE;
+void initMM(void * heap_baseInit, uint32_t heap_sizeInit){
+    heap_base = (node*)heap_baseInit;
+    heap_size = heap_sizeInit;
+    availableBlocks = HEAP_TOTAL_BLOCKS;
+
+    first = heap_base;
     first->s.ptr = NULL;
     first->s.size = HEAP_TOTAL_BLOCKS;
 }
@@ -53,6 +59,7 @@ void * malloc2(uint32_t bytes){
                 p += p->s.size;
                 p->s.size = blocks;
             }
+            availableBlocks -= p->s.size;
             return (void*)(p + 1);
         }
     }
@@ -68,12 +75,12 @@ int free2(void * ap){
 
     node* bp = (node*)ap - 1;
 
-    if(bp < (node*)HEAP_BASE || bp >= (node*)(HEAP_BASE + HEAP_SIZE)){
+    if(bp < heap_base || bp >= heap_base + heap_size){
         println("Free: Pointer Out of Bounds");
         return 1;
     }
 
-    if(((uintptr_t)bp - (uintptr_t)HEAP_BASE) % BLOCK_SIZE != 0){
+    if(((uintptr_t)bp - (uintptr_t)heap_base) % BLOCK_SIZE != 0){
         println("Free: Pointer is not a multiple of node");
         return 2;
     }
@@ -100,6 +107,7 @@ int free2(void * ap){
         return 3;
     }
 
+    availableBlocks += bp->s.size; 
     //Right Join
     joinMem(bp, p->s.ptr);
 
@@ -125,14 +133,16 @@ static void joinMem(node *left, node *right){
 
 uint32_t getAvailableMemory(){
     
-    uint32_t freeBlocks = 0;
+    return availableBlocks * BLOCK_SIZE;
+
+    /* uint32_t freeBlocks = 0;
 
     for(node *ptr = first; ptr != NULL; freeBlocks += ptr->s.size, ptr = ptr->s.ptr);
     
-    return freeBlocks * BLOCK_SIZE;
+    return freeBlocks * BLOCK_SIZE; */
 }
 
-void printList(){
+void dumpMM(){
     uint64_t count = 0;
     node* iter = first;
     println("Free memory blocks list");

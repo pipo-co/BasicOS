@@ -1,7 +1,5 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-#define BUDDY
-
 #ifndef BUDDY
 #include "memoryManager.h"
 #include <stdint.h>
@@ -293,9 +291,9 @@ static void testTobi(){
     assert(getAvailableMemory() == HEAP_SIZE);
 }
 
-size_t getAvailableMemory(){
+uint32_t getAvailableMemory(){
     
-    size_t freeBlocks = 0;
+    uint32_t freeBlocks = 0;
 
     //Primero guarda el size y despues itera. Hacia segmentation fault.
     for(node *ptr = first; ptr != NULL; freeBlocks += ptr->s.size, ptr = ptr->s.ptr);

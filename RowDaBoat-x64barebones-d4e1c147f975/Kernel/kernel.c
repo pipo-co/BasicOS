@@ -22,6 +22,8 @@ static const uint64_t PageSize = 0x1000;
 
 static void * const sampleCodeModuleAddress = (void*)0x400000;
 static void * const sampleDataModuleAddress = (void*)0x500000;
+static void * const heapBaseAddress = (void*)0x600000;	//Posicion de memoria 6MiB, 1 MiB despues despues del comienzo de la seccion de datos de Userland.
+#define HEAP_SIZE (128 * 1024 * 1024) //128 MiB 
 
 typedef int (*EntryPoint)();
 
@@ -54,7 +56,7 @@ int main(){
 	//Funciones de inicializacion de video, de la IDT, del Memory Manager y del controlador de excepciones.
 	init_screen();
 	load_idt();
-	initMM();	
+	initMM(heapBaseAddress, HEAP_SIZE);	
 	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
 	return ((EntryPoint)sampleCodeModuleAddress)();
 }

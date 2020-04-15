@@ -96,3 +96,13 @@ void printint(uint64_t value){
 	uintToBase(value,buffer,10);
 	printString(buffer);
 }
+
+uint8_t intLog2(uint64_t n){
+    uint8_t rta = 0;
+
+    while(n > 0){
+        rta++;
+        n >>= 1;
+    }
+    return rta - 1;
+}

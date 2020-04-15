@@ -87,6 +87,6 @@ extern int free2(void * ap);
 extern uint32_t getDynamicMemLeft();
 
 //syscall 12:
-extern void printList();
+extern void dumpMM();
 
 #endif

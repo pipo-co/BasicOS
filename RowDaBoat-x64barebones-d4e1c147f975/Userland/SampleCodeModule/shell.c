@@ -88,7 +88,7 @@
     static void playEvangelion(int argcount, char * args[]);
 
     //Memory Manager List Dump
-    static void commandPrintList(int argcount, char * args[]);
+    static void commandDumpMM(int argcount, char * args[]);
 //End
 
 void startShell(){
@@ -97,8 +97,9 @@ void startShell(){
     clearScreen();
     setCursorPos(0,getScreenHeight() - 1);
     char userInput[USER_INPUT_SIZE];
-    printf("Bienvenido a shell, estas son las funciones disponibles: \n", 0x5CFEE4, 0);
-    help(0,0);
+    //comentado help
+    //printf("Bienvenido a shell, estas son las funciones disponibles: \n", 0x5CFEE4, 0);
+    //help(0,0);
     printf("Fleshy: $>", 0x5CFEE4, 0);
 
     //Se espera hasta que se reciba un enter y luego, se procesa el texto ingresado.
@@ -199,7 +200,7 @@ static void loadFunctions(){
     loadFunction("SadMusic", &playSadness, "Music to listen when you are sad");
     loadFunction("Victory", &playVictory, "Music to listen when you win");
     loadFunction("Defeat", &playDefeat, "Music to listen when you are happyn't");
-    loadFunction("printList", &commandPrintList,"Memory Manager List Dump");
+    loadFunction("dumpMM", &commandDumpMM,"Memory Manager Dump");
 }
 
 static void loadFunction(char * string, void (*fn)(), char * desc){
@@ -386,6 +387,6 @@ static void playDefeat(int argcount, char * args[]){
     Defeat();
 }
 
-static void commandPrintList(int argcount, char * args[]){
-    printList();
+static void commandDumpMM(int argcount, char * args[]){
+    dumpMM();
 }

@@ -54,8 +54,8 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			//uint32_t getAvailableMemory();
 			return getAvailableMemory();
 		case 12:
-			//void printList();
-			printList();
+			//void dumpMM();
+			dumpMM();
 			break;
 	}
 	return 0;
