@@ -97,9 +97,9 @@ void startShell(){
     clearScreen();
     setCursorPos(0,getScreenHeight() - 1);
     char userInput[USER_INPUT_SIZE];
-    //comentado help
-    //printf("Bienvenido a shell, estas son las funciones disponibles: \n", 0x5CFEE4, 0);
-    //help(0,0);
+    /*  comentado help
+    printf("Bienvenido a shell, estas son las funciones disponibles: \n", 0x5CFEE4, 0);
+    help(0,0); */
     printf("Fleshy: $>", 0x5CFEE4, 0);
 
     //Se espera hasta que se reciba un enter y luego, se procesa el texto ingresado.

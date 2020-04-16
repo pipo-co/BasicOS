@@ -8,6 +8,7 @@
 #include <rtcDriver.h>
 #include <soundDriver.h>
 #include <memoryManager.h>
+#include <scheduler.h>
 
 //Funcion encargada de llamar a la funcion asociada a la systemCall llamada y pasarle 
 // los parametros correctos.
@@ -56,6 +57,10 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 		case 12:
 			//void dumpMM();
 			dumpMM();
+			break;
+		case 13:
+			//void exit(uint8_t pid);
+			kill(rdi);
 			break;
 	}
 	return 0;

@@ -102,3 +102,6 @@ getDynamicMemLeft:
 
 dumpMM:
 	sysCaller 12
+
+kill:
+	sysCaller 13

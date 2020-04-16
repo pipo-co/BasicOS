@@ -89,4 +89,7 @@ extern uint32_t getDynamicMemLeft();
 //syscall 12:
 extern void dumpMM();
 
+//syscall 13:
+extern void kill(uint8_t pid);
+
 #endif

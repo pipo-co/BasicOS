@@ -12,11 +12,11 @@
 #define HEAP_TOTAL_BLOCKS (HEAP_SIZE / BLOCK_SIZE)
 #define HEAP_BASE (heapBase)  //0x600000
 
-typedef uint16_t Align;
+typedef uint64_t Align;
 union node{
     struct{
         union node *ptr;
-        unsigned size; 
+        uint32_t size; 
     }s;
     Align x;
 };
@@ -33,7 +33,7 @@ static node* first;
 char heapBase[HEAP_SIZE];
 
 void initMM(){
-    first = HEAP_BASE; //Deberia ser HEAP_BASE
+    first = (node*)HEAP_BASE; //Deberia ser HEAP_BASE
     first->s.ptr = NULL;
     first->s.size = HEAP_TOTAL_BLOCKS;
 }
@@ -140,12 +140,14 @@ int main(int argc, char const *argv[]){
     
     initMM();
 
-    testTobi();
-    // testNacho1();
-    // testNacho2();
-    // testFaus();
+    printf("sizeof %lu", sizeof(node));
+
+    // testTobi();
+    // // testNacho1();
+    // // testNacho2();
+    // // testFaus();
     
-    printList();
+    // printList();
 }
 
 static void printList(){
@@ -323,6 +325,8 @@ typedef struct list_t {
     struct list_t *prev, *next;
 }list_t;
 
+
+
 // Lista circular doblemente encadenada:
 // https://github.com/evanw/buddy-malloc/blob/master/buddy-malloc.c
 // list_t, list_init, list_push, list_remove, list_pop
@@ -350,57 +354,58 @@ uint32_t availableMemory = HEAP_SIZE;
 
 int main(){
     initMM();
+    printf("sizeof %lu", sizeof(list_t));
 
-    printList();
-    int * v1 = malloc2(50000);
-    printList();
-    int * v2 = malloc2(50000);
-    printList();
-    int * v3 = malloc2(50000);
-    printList();
-    int * v4 = malloc2(50000);
-    printList();
-    int * v5 = malloc2(50000);
-    printList();
-    int * v6 = malloc2(50000);
-    printList();
-    int * v7 = malloc2(33554000);
-    printList();
-    int * v8 = malloc2(33554000);
-    printList();
-    int * v9 = malloc2(33554000);
-    printList();
-    if(malloc2(33554000) == NULL)
-        printf("YASS\n");
-    if(malloc2(1000000000) == NULL)
-        printf("YASS\n");
-    int * v10 = malloc2(16777000);
-    printList();
-    if(malloc2(16777000) == NULL)
-        printf("YASS\n");
+    // printList();
+    // int * v1 = malloc2(50000);
+    // printList();
+    // int * v2 = malloc2(50000);
+    // printList();
+    // int * v3 = malloc2(50000);
+    // printList();
+    // int * v4 = malloc2(50000);
+    // printList();
+    // int * v5 = malloc2(50000);
+    // printList();
+    // int * v6 = malloc2(50000);
+    // printList();
+    // int * v7 = malloc2(33554000);
+    // printList();
+    // int * v8 = malloc2(33554000);
+    // printList();
+    // int * v9 = malloc2(33554000);
+    // printList();
+    // if(malloc2(33554000) == NULL)
+    //     printf("YASS\n");
+    // if(malloc2(1000000000) == NULL)
+    //     printf("YASS\n");
+    // int * v10 = malloc2(16777000);
+    // printList();
+    // if(malloc2(16777000) == NULL)
+    //     printf("YASS\n");
 
-    free2(v1);
-    printList();
-    free2(v3);
-    printList();
-    free2(v5);
-    printList();
-    free2(v2);
-    printList();
-    free2(v4);
-    printList();
-    free2(v7);
-    printList();
-    free2(v9);
-    printList();
-    free2(v10);
-    printList();
-    free2(v8);
-    printList();
-    //v5 = malloc2(500000);
-    //printList();
-    free2(v6);
-    printList();
+    // free2(v1);
+    // printList();
+    // free2(v3);
+    // printList();
+    // free2(v5);
+    // printList();
+    // free2(v2);
+    // printList();
+    // free2(v4);
+    // printList();
+    // free2(v7);
+    // printList();
+    // free2(v9);
+    // printList();
+    // free2(v10);
+    // printList();
+    // free2(v8);
+    // printList();
+    // //v5 = malloc2(500000);
+    // //printList();
+    // free2(v6);
+    // printList();
 }
 
 void initMM(){
