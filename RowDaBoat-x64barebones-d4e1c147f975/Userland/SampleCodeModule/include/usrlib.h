@@ -90,6 +90,18 @@ extern uint32_t getDynamicMemLeft();
 extern void dumpMM();
 
 //syscall 13:
-extern void kill(uint8_t pid);
+extern void exit();
+
+//syscall 14:
+extern void kill(uint16_t pid);
+
+//syscall 15:
+extern uint16_t getPID();
+
+//syscall 16:
+extern uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv);
+
+//syscall 17:
+extern void dumpScheduler();
 
 #endif

@@ -12,7 +12,7 @@
 
 //Funcion encargada de llamar a la funcion asociada a la systemCall llamada y pasarle 
 // los parametros correctos.
-uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx){
+uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9){
 	switch(rdi){
         case 0:
 			//int ticks_elapsed();
@@ -59,9 +59,25 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			dumpMM();
 			break;
 		case 13:
-			//void exit(uint8_t pid);
-			kill(rdi);
+			//void exit();
+			exit();
 			break;
+		case 14:
+			//void kill(uint16_t pid);
+			kill(rsi);
+			break;
+		case 15:
+			//uint16_t getPID();
+			return getPID();
+			break;
+		case 16:
+			//uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv);
+			return initializeProccess((int (*)(int, char**))rsi, (char*)rdx, rcx, r8, (char**)r9);
+			break;
+		case 17:
+			//void dumpScheduler();
+			dumpScheduler();
+			break;		
 	}
 	return 0;
 }

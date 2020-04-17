@@ -52,11 +52,13 @@ GLOBAL dumpMM
 
 %macro sysCaller 1
     pushState
+	mov r9, r8
+	mov r8, rcx
 	mov rcx, rdx
 	mov rdx, rsi
 	mov rsi, rdi
 	mov rdi, %1
-    ;rdi, rsi, rdx, rcx
+    ;rdi, rsi, rdx, rcx, r8, r9
 
     int 80h
     popState
@@ -103,5 +105,17 @@ getDynamicMemLeft:
 dumpMM:
 	sysCaller 12
 
-kill:
+exit:
 	sysCaller 13
+
+kill:
+	sysCaller 14
+
+getPID:
+	sysCaller 15
+
+initializeProccess:
+	sysCaller 16
+
+dumpScheduler:
+	sysCaller 17

@@ -1,10 +1,13 @@
 #include <stdint.h>
+#include <scheduler.h>
 #include <memoryManager.h>
 #include <lib.h>
+#include <screenDriver.h>
 
 #define PRIORITY_COUNT 5
 #define TIME_MULT 2
-#define PROCCESS_STACK_SIZE (8 * 1024) 
+#define PROCCESS_STACK_SIZE (8 * 1024) //8 KiB
+#define DEFAULT_PRIORITY (PRIORITY_COUNT/2)
 
 enum states{READY, BLOCKED, KILLED};
 typedef struct proccess_t{
@@ -34,23 +37,23 @@ static queueHeader * expiredProccesses = expiredProccessesInitializer;
 
 static proccessNode * runningProccessNode;
 static uint64_t runetimeLeft;
-static uint16_t pidCounter = 0;
+static uint16_t pidCounter = 1;
 
 static void removeProccess(proccessNode * node);
 static int isEmpty(queueHeader * q);
 static void push(queueHeader * q, proccessNode * node);
 static proccessNode* pop(queueHeader * q);
-static proccessNode * getProccessNodeFromPID(uint8_t pid);
-static uint64_t * swapProccess(uint64_t * rsp);
-static void changeProccessPriority(uint8_t pid, uint8_t prority);
-static void changeProccessState(uint8_t pid, enum states state);
-uint64_t * scheduler(uint64_t * rsp);
-int initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, uint8_t priority, int argc, char ** argv);
-static proccessNode * getAndRemoveProccessNodeFromPID(uint8_t pid);
-void kill(uint8_t pid);
+static proccessNode * getProccessNodeFromPID(uint16_t pid);
+static uint64_t swapProccess(uint64_t rsp);
+static void changeProccessPriority(uint16_t pid, uint8_t prority);
+static void changeProccessState(uint16_t pid, enum states state);
+static proccessNode * getAndRemoveProccessNodeFromPID(uint16_t pid);
+static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority);
+static uint16_t getNewPID();
 
-void loader(int argc, char const *argv[], int (*function)(int , char **), int pid);
-extern _hlt();
+static void dumpProccess(proccess_t p);
+
+extern void _hlt();
 
 typedef struct stackFrame{ 
     uint64_t r15;
@@ -75,7 +78,7 @@ typedef struct stackFrame{
     uint64_t ss;    //0
 } stackFrame;
 
-uint64_t * scheduler(uint64_t * rsp){
+uint64_t scheduler(uint64_t rsp){
     if(runetimeLeft > 0){
         runetimeLeft--;
         return rsp;
@@ -83,7 +86,7 @@ uint64_t * scheduler(uint64_t * rsp){
     return swapProccess(rsp);
 }
 
-static uint64_t * swapProccess(uint64_t * rsp){
+static uint64_t swapProccess(uint64_t rsp){
     runningProccessNode->proccess.rsp = rsp;
 
     uint8_t currentPriority = runningProccessNode->proccess.priority;
@@ -110,15 +113,13 @@ static uint64_t * swapProccess(uint64_t * rsp){
     return runningProccessNode->proccess.rsp;
 }
 
-int initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, uint8_t priority, int argc, char ** argv){
-    if(priority >= PRIORITY_COUNT)
-        priority = PRIORITY_COUNT - 1;
+uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv){
 
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
     if(node == NULL)
-        return -1;
+        return 0;
 
-    createProccess(node, name, fg, priority);
+    createProccess(node, name, fg, DEFAULT_PRIORITY);
     push(&expiredProccesses[node->proccess.priority], node);
 
     stackFrame newSF;
@@ -126,15 +127,15 @@ int initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, u
     newSF.rsp = node->proccess.rbp;
     newSF.rflags = 0x202;
     newSF.cs = 0x8;
-    newSF.rip = (uint64_t) loader;
+    newSF.rip = (uint64_t) loader2;
     newSF.rdi = argc;
     newSF.rsi = (uint64_t) argv;
-    newSF.rdx = function;
+    newSF.rdx = (uint64_t) function;
     newSF.rcx = node->proccess.pid;
 
     memcpy((void *)(node->proccess.rbp - sizeof(stackFrame)), &newSF, sizeof(stackFrame));
 
-    return 0;
+    return node->proccess.pid;
 }
 
 static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority){
@@ -154,7 +155,7 @@ static uint16_t getNewPID(){
     return pidCounter - 1;
 }
 
-static void removeProccess(proccessNode * node){ //Faltan cosas
+static void removeProccess(proccessNode * node){ //Faltan cosas capaz
     free2(node);
 }
 
@@ -191,7 +192,7 @@ static int isEmpty(queueHeader * q){
     return q->first == NULL;
 }
 
-static proccessNode * getProccessNodeFromPID(uint8_t pid){
+static proccessNode * getProccessNodeFromPID(uint16_t pid){
     for(uint8_t i = 0; i < PRIORITY_COUNT; i++){
         for(proccessNode* iter = activeProccesses[i].first; iter != NULL; iter = iter->next){
             if(iter->proccess.pid == pid)
@@ -202,35 +203,40 @@ static proccessNode * getProccessNodeFromPID(uint8_t pid){
                 return iter;
         }
     }
+    return NULL;
 }
 
-void loader(int argc, char const *argv[], int (*function)(int , char **), int pid){
+void loader2(int argc, char *argv[], int (*function)(int , char **)){
     function(argc, argv);
-    exit(pid);
+    exit();
 }
 
-static void changeProccessState(uint8_t pid, enum states state){
+static void changeProccessState(uint16_t pid, enum states state){
     if(runningProccessNode->proccess.pid == pid){
         runningProccessNode->proccess.state = state;
         return;
     }
 
     proccessNode * node = getProccessNodeFromPID(pid);
-    node->proccess.state = state;
+    if(node != NULL)
+        node->proccess.state = state;
 }
 
-static void changeProccessPriority(uint8_t pid, uint8_t priority){
+static void changeProccessPriority(uint16_t pid, uint8_t priority){
     proccessNode* node;
     if(runningProccessNode->proccess.pid == pid)
         node = runningProccessNode;
     else 
         node = getAndRemoveProccessNodeFromPID(pid);
 
+    if(node == NULL)
+        return;
+
     node->proccess.priority = priority;
     push(&expiredProccesses[priority], node);  
 }
 
-static proccessNode * getAndRemoveProccessNodeFromPID(uint8_t pid){
+static proccessNode * getAndRemoveProccessNodeFromPID(uint16_t pid){ //Muy feo
     for(uint8_t i = 0; i < PRIORITY_COUNT; i++){
         for(proccessNode* iter = activeProccesses[i].first, *prev = iter; iter != NULL; prev = iter, iter = iter->next){
             if(iter->proccess.pid == pid){
@@ -261,10 +267,77 @@ static proccessNode * getAndRemoveProccessNodeFromPID(uint8_t pid){
             }
         }
     }
+    return NULL;
 }
 
-void kill(uint8_t pid){ //Para mi en kill no va el hlt.
-    changeProccessState(pid, KILLED);
+void exit(){
+    kill(runningProccessNode->proccess.pid);
     _hlt();
+}
+
+void kill(uint16_t pid){ 
+    changeProccessState(pid, KILLED);
+}
+
+uint16_t getPID(){
+    return runningProccessNode->proccess.pid;
+}
+
+void dumpScheduler(){
+    uint16_t totalP = 1; //El running proccess
+
+    println("Current Running Proccess:");
+    dumpProccess(runningProccessNode->proccess);
+    printString("Runetime Left (in Ticks): ");
+    printint(runetimeLeft);
+    putchar('\n');
+
+    println("Active Proccesses:");
+    for(uint8_t i = 0; i < PRIORITY_COUNT; i++){
+        for(proccessNode* iter = activeProccesses[i].first; iter != NULL; iter = iter->next){
+            dumpProccess(iter->proccess);
+            totalP++;
+        }
+    }
+
+    println("Expired Proccesses:");
+    for(uint8_t i = 0; i < PRIORITY_COUNT; i++){
+        for(proccessNode* iter = expiredProccesses[i].first; iter != NULL; iter = iter->next){
+            dumpProccess(iter->proccess);
+            totalP++;
+        }
+    }
+
+    printString("Total Proccesses in System: ");
+    printint(totalP);
+    putchar('\n');
+
+    printString("Total Proccesses Created: ");
+    printint(pidCounter - 1);
+    putchar('\n');
+}
+
+static void dumpProccess(proccess_t p){
+    printString("Name: ");
+    printString(p.name);
+    printString(" PID: ");
+    printint(p.pid);
+    printString(" RSP: 0x");
+    printhex(p.rsp);
+    printString(" RBP: 0x");
+    printhex(p.rbp);
+    (p.fg)? printString(" Foreground ") : printString(" Background ");
+    printString("Priority: ");
+    printint(p.priority);
+    printString(" State: ");
+    switch(p.state){
+        case READY:
+            printString("READY"); break;
+        case KILLED:
+            printString("KILLED"); break;
+        case BLOCKED:
+            printString("BLOCKED"); break;
+    }
+    putchar('\n');
 }
 
