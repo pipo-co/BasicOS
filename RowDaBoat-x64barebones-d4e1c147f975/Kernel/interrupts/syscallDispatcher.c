@@ -77,7 +77,11 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 		case 17:
 			//void dumpScheduler();
 			dumpScheduler();
-			break;		
+			break;
+		case 18:
+			//void changeProccessPriority(uint16_t pid, uint8_t prority);
+			changeProccessPriority(rsi, rdx);
+			break;
 	}
 	return 0;
 }

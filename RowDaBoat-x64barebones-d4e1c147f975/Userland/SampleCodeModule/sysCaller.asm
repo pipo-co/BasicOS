@@ -20,6 +20,7 @@ GLOBAL kill
 GLOBAL getPID
 GLOBAL initializeProccess
 GLOBAL dumpScheduler
+GLOBAL changeProccessPriority
 
 %macro pushState 0
 	push rbx
@@ -124,3 +125,6 @@ initializeProccess:
 
 dumpScheduler:
 	sysCaller 17
+
+changeProccessPriority:
+	sysCaller 18

@@ -110,4 +110,7 @@ extern uint16_t initializeProccess(int (*function)(int , char **), char* name, u
 //syscall 17:
 extern void dumpScheduler();
 
+//syscall 18
+extern void changeProccessPriority(uint16_t pid, uint8_t prority);
+
 #endif
