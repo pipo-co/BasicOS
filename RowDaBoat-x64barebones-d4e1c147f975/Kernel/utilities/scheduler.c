@@ -33,7 +33,7 @@ typedef struct{
 static proccessNodeQueue activeProccesses;
 
 static proccessNode * runningProccessNode;
-static uint64_t runetimeLeft;
+static uint64_t runtimeLeft;
 static uint16_t pidCounter = 1;
 
 static proccessNode * dummyProcessNode;
@@ -81,18 +81,17 @@ void initScheduler(){
     //Initialize Dummy Process
     initializeProccess(dummyFunction, "Dummy Process", 0, 0, NULL); //Mete al dummy process en la cola
     dummyProcessNode = pop(&activeProccesses); //Lo saco de la cola (es el unico Pc en ella)
-    dummyProcessNode->proccess.priority = PRIORITY_COUNT; //Para que su runetime sea 0
+    dummyProcessNode->proccess.priority = PRIORITY_COUNT; //Para que su runtime sea 0
     println("Dummy Creado");
-    runningProccessNode = dummyProcessNode; //Por ahora no hay nadie corriendo
     dumpScheduler();
     println("init Ended");
 }
 
 uint64_t scheduler(uint64_t rsp){
     println("scheduler");
-    printint(runetimeLeft);
-    if(runetimeLeft > 0){
-        runetimeLeft--;
+    printint(runtimeLeft);
+    if(runningProccessNode->proccess.state != KILLED && runtimeLeft > 0){
+        runtimeLeft--;
         return rsp;
     }
     return swapProccess(rsp);
@@ -101,14 +100,16 @@ uint64_t scheduler(uint64_t rsp){
 static uint64_t swapProccess(uint64_t rsp){
     println("hey");
 
-    if(runningProccessNode->proccess.pid != dummyProcessNode->proccess.pid){
-        runningProccessNode->proccess.rsp = rsp;
-        
-        //BLOCKED CASE MISSING ?
-        if(runningProccessNode->proccess.state == KILLED)
-            removeProccess(runningProccessNode);
-        else
-            push(&activeProccesses, runningProccessNode);
+    if(runningProccessNode != NULL){ //La primera vez ignoramos el update del stack
+            runningProccessNode->proccess.rsp = rsp;
+            
+        if(runningProccessNode->proccess.pid != dummyProcessNode->proccess.pid){ //Si estaba corriendo dummy, no hay que pushear
+            //BLOCKED CASE MISSING ?
+            if(runningProccessNode->proccess.state == KILLED)
+                removeProccess(runningProccessNode);
+            else
+                push(&activeProccesses, runningProccessNode);
+        }
     }
 
     if(!isEmpty(&activeProccesses))
@@ -118,7 +119,7 @@ static uint64_t swapProccess(uint64_t rsp){
 
     dumpProccess(runningProccessNode->proccess);
 
-    runetimeLeft = (PRIORITY_COUNT - runningProccessNode->proccess.priority) * TIME_MULT; //Heuristica
+    runtimeLeft = (PRIORITY_COUNT - runningProccessNode->proccess.priority) * TIME_MULT; //Heuristica
 
     return runningProccessNode->proccess.rsp;
 }
@@ -263,11 +264,13 @@ uint16_t getPID(){
 void dumpScheduler(){
     uint16_t totalP = 1; //El running proccess
 
-    println("Current Running Proccess:");
-    dumpProccess(runningProccessNode->proccess);
-    printString("Runetime Left (in Ticks): ");
-    printint(runetimeLeft);
-    putchar('\n');
+    if(runningProccessNode != NULL){
+        println("Current Running Proccess:");
+        dumpProccess(runningProccessNode->proccess);
+        printString("Runetime Left (in Ticks): ");
+        printint(runtimeLeft);
+        putchar('\n');
+    }
 
     println("Active Processes:");
     for(proccessNode* iter = activeProccesses.first; iter != NULL; iter = iter->next){
