@@ -1,6 +1,6 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//#ifndef BUDDY
+#ifndef BUDDY
 
 #include <memoryManager.h>
 #include <lib.h>
@@ -147,7 +147,7 @@ void dumpMM(){
         printint(count++);
         printString(". Start adress: 0x"); 
         printhex((uint64_t)iter);
-        printString(". Available blocks: 0x"); 
+        printString(". Available blocks: "); 
         printint((uint64_t)iter->s.size);
         printString(". Next free adress: 0x"); 
         printhex((uint64_t)iter->s.ptr);
@@ -157,4 +157,4 @@ void dumpMM(){
     putchar('\n');
 }
 
-//#endif
+#endif

@@ -18,6 +18,7 @@ OBJECTS_INTERRUPTS=$(SOURCES_INTERRUPTS:.c=.o)
 LOADERSRC=loader.asm
 
 LOADEROBJECT=$(LOADERSRC:.asm=.o)
+
 STATICLIBS=
 
 ALL_OBJECTS= $(LOADEROBJECT) $(OBJECTS) $(OBJECTS_ASM) $(OBJECTS_INTERRUPTS) $(OBJECTS_DRIVERS) $(OBJECTS_UTILITIES)
@@ -28,15 +29,12 @@ $(KERNEL): $(STATICLIBS) $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) -T kernel.ld -o $(KERNEL) $(ALL_OBJECTS) $(STATICLIBS)
 
 %.o: %.c
-	$(GCC) $(GCCFLAGS) -I./include -I ./drivers/include -I./interrupts/include -I ./utilities/include -DBUDDY=15 -c $< -o $@
+	$(GCC) $(GCCFLAGS) -I./include -I ./drivers/include -I./interrupts/include -I ./utilities/include -UBUDDY -c $< -o $@
 
 %.o : %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(LOADEROBJECT):
-	$(ASM) $(ASMFLAGS) $(LOADERSRC) -o $(LOADEROBJECT)
-
 clean:
-	rm -rf asm/*.o *.o *.bin interrupts/*.o drivers/*.o
+	rm -rf  $(ALL_OBJECTS) $(KERNEL)
 
 .PHONY: all clean
