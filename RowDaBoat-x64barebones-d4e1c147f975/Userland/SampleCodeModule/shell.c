@@ -87,8 +87,9 @@
     static void playVictory(int argcount, char * args[]);
     static void playEvangelion(int argcount, char * args[]);
 
-    //Memory Manager List Dump
+    //Kernel Dumps
     static void commandDumpMM(int argcount, char * args[]);
+    static void commandDumpScheduler(int argcount, char * args[]);
 //End
 
 void startShell(){
@@ -201,6 +202,7 @@ static void loadFunctions(){
     loadFunction("Victory", &playVictory, "Music to listen when you win");
     loadFunction("Defeat", &playDefeat, "Music to listen when you are happyn't");
     loadFunction("dumpMM", &commandDumpMM,"Memory Manager Dump");
+    loadFunction("dumpScheduler", &commandDumpScheduler,"Scheduler Dump");
 }
 
 static void loadFunction(char * string, void (*fn)(), char * desc){
@@ -389,4 +391,8 @@ static void playDefeat(int argcount, char * args[]){
 
 static void commandDumpMM(int argcount, char * args[]){
     dumpMM();
+}
+
+static void commandDumpScheduler(int argcount, char * args[]){
+    dumpScheduler();
 }

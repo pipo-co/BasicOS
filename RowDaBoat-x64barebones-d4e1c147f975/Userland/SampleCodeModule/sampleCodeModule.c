@@ -2,10 +2,18 @@
 #include <usrlib.h>
 #include <shell.h>
 
-extern void _cli();
+extern void _hlt();
 
 int main(){
-    println("Bienvenido a Sample Code Module");
+
+    initializeProccess((int (*)(int, char**))startShell, "Shell", 1, 0, 0);
+
+
+    while(1){
+        println("Estamos en sample");
+        _hlt();
+    }
+
     // startShell();
 
 
@@ -13,5 +21,4 @@ int main(){
     // setCursorPos(0, 0);
     // print("Sesion finalizada");
     // return 0;
-    return 0;
 }

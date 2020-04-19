@@ -55,17 +55,21 @@ void * initializeKernelBinary(){
 }
 
 int main(){
-	//Funciones de inicializacion de video, de la IDT, del Memory Manager y del controlador de excepciones.
+	//Funciones de inicializacion de video, de la IDT, del Memory Manager, del scheduler y del controlador de excepciones.
 	init_screen();
+
 	load_idt();
+
 	initMM(heapBaseAddress, HEAP_SIZE);	
+
 	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
-	//return ((EntryPoint)sampleCodeModuleAddress)();
-	println("hola");
+
 	initScheduler();
-	int pid = initializeProccess(sampleCodeModuleAddress, "Sample Code Module", 1, 0, NULL);
-	changeProccessPriority(pid, 4);
+
+	initializeProccess(sampleCodeModuleAddress, "Sample Code Module", 1, 0, NULL);
+
 	_hlt(); //Hace el sti y hlt
+
 	println("No deberiamos llegar aca");
 	return 0;
 }

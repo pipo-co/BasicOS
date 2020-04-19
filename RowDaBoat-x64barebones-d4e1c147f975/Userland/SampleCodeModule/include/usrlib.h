@@ -49,6 +49,12 @@ int pow(int base, unsigned int exp);
 // al numero que representa en decimal
 uint64_t hexstringToInt(char * s);
 
+extern void _hlt();
+
+extern void _cli();
+
+extern void _sti();
+
 //SysCall callers
 //syscall 0:
 extern int getTicksElapsed();

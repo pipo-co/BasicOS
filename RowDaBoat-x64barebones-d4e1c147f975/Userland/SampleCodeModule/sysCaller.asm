@@ -15,6 +15,11 @@ GLOBAL malloc2
 GLOBAL free2
 GLOBAL getDynamicMemLeft
 GLOBAL dumpMM
+GLOBAL exit
+GLOBAL kill
+GLOBAL getPID
+GLOBAL initializeProccess
+GLOBAL dumpScheduler
 
 %macro pushState 0
 	push rbx

@@ -77,19 +77,13 @@ typedef struct stackFrame{
 } stackFrame;
 
 void initScheduler(){
-    println("entramos a init");
     //Initialize Dummy Process
     initializeProccess(dummyFunction, "Dummy Process", 0, 0, NULL); //Mete al dummy process en la cola
     dummyProcessNode = pop(&activeProccesses); //Lo saco de la cola (es el unico Pc en ella)
     dummyProcessNode->proccess.priority = PRIORITY_COUNT; //Para que su runtime sea 0
-    println("Dummy Creado");
-    dumpScheduler();
-    println("init Ended");
 }
 
 uint64_t scheduler(uint64_t rsp){
-    println("scheduler");
-    printint(runtimeLeft);
     if(runningProccessNode->proccess.state != KILLED && runtimeLeft > 0){
         runtimeLeft--;
         return rsp;
@@ -98,7 +92,6 @@ uint64_t scheduler(uint64_t rsp){
 }
 
 static uint64_t swapProccess(uint64_t rsp){
-    println("hey");
 
     if(runningProccessNode != NULL){ //La primera vez ignoramos el update del stack
             runningProccessNode->proccess.rsp = rsp;
@@ -117,21 +110,16 @@ static uint64_t swapProccess(uint64_t rsp){
     else
         runningProccessNode = dummyProcessNode;
 
-    dumpProccess(runningProccessNode->proccess);
-
     runtimeLeft = (PRIORITY_COUNT - runningProccessNode->proccess.priority) * TIME_MULT; //Heuristica
 
     return runningProccessNode->proccess.rsp;
 }
 
 uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv){
-    println("Initialize Process:");
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
     dumpMM();
     if(node == NULL)
         return 0;
-
-    println("MM success");
 
     createProccess(node, name, fg, DEFAULT_PRIORITY);
     push(&activeProccesses, node);
