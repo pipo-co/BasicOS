@@ -54,11 +54,6 @@ void * initializeKernelBinary(){
 	return getStackBase();
 }
 
-int prueba(int a, char ** b){
-	println("Llegamos!!!");
-	while(1);
-}
-
 int main(){
 	//Funciones de inicializacion de video, de la IDT, del Memory Manager y del controlador de excepciones.
 	init_screen();
@@ -68,7 +63,8 @@ int main(){
 	//return ((EntryPoint)sampleCodeModuleAddress)();
 	println("hola");
 	initScheduler();
-	initializeProccess(prueba, "Prueba", 1, 0, NULL);
+	int pid = initializeProccess(sampleCodeModuleAddress, "Sample Code Module", 1, 0, NULL);
+	changeProccessPriority(pid, 4);
 	_hlt(); //Hace el sti y hlt
 	println("No deberiamos llegar aca");
 	return 0;

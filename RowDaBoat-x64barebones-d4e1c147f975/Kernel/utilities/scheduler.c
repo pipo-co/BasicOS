@@ -6,7 +6,7 @@
 
 #define PRIORITY_COUNT 5
 #define TIME_MULT 2
-#define PROCCESS_STACK_SIZE (8 * 1024) //8 KiB
+#define PROCCESS_STACK_SIZE (8 * 1024 - sizeof(proccessNode)) //8 KiB
 #define DEFAULT_PRIORITY (PRIORITY_COUNT/2)
 
 enum states{READY, BLOCKED, KILLED};
@@ -44,7 +44,6 @@ static void push(proccessNodeQueue * q, proccessNode * node);
 static proccessNode* pop(proccessNodeQueue * q);
 static proccessNode * getProccessNodeFromPID(uint16_t pid);
 static uint64_t swapProccess(uint64_t rsp);
-static void changeProccessPriority(uint16_t pid, uint8_t prority);
 static void changeProccessState(uint16_t pid, enum states state);
 static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority);
 static uint16_t getNewPID();
@@ -91,6 +90,7 @@ void initScheduler(){
 
 uint64_t scheduler(uint64_t rsp){
     println("scheduler");
+    printint(runetimeLeft);
     if(runetimeLeft > 0){
         runetimeLeft--;
         return rsp;
@@ -99,15 +99,17 @@ uint64_t scheduler(uint64_t rsp){
 }
 
 static uint64_t swapProccess(uint64_t rsp){
-    runningProccessNode->proccess.rsp = rsp;
+    println("hey");
 
-    uint8_t currentPriority = runningProccessNode->proccess.priority;
-    
-    //BLOCKED CASE MISSING ?
-    if(runningProccessNode->proccess.state == KILLED)
-        removeProccess(runningProccessNode);
-    else
-        push(&activeProccesses, runningProccessNode);
+    if(runningProccessNode->proccess.pid != dummyProcessNode->proccess.pid){
+        runningProccessNode->proccess.rsp = rsp;
+        
+        //BLOCKED CASE MISSING ?
+        if(runningProccessNode->proccess.state == KILLED)
+            removeProccess(runningProccessNode);
+        else
+            push(&activeProccesses, runningProccessNode);
+    }
 
     if(!isEmpty(&activeProccesses))
         runningProccessNode = pop(&activeProccesses);
@@ -116,7 +118,7 @@ static uint64_t swapProccess(uint64_t rsp){
 
     dumpProccess(runningProccessNode->proccess);
 
-    runetimeLeft = (PRIORITY_COUNT - currentPriority) * TIME_MULT; //Heuristica
+    runetimeLeft = (PRIORITY_COUNT - runningProccessNode->proccess.priority) * TIME_MULT; //Heuristica
 
     return runningProccessNode->proccess.rsp;
 }
@@ -146,8 +148,8 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
     newSF.rdx = (uint64_t) function;
     newSF.rcx = node->proccess.pid;
 
-    memcpy((void *)(node->proccess.rbp - sizeof(stackFrame)), &newSF, sizeof(stackFrame));
-    printhex((uint64_t)(node->proccess.rbp - sizeof(stackFrame)));
+    memcpy((void *)(node->proccess.rsp), &newSF, sizeof(stackFrame));
+    printhex(node->proccess.rsp);
 
     return node->proccess.pid;
 }
@@ -155,8 +157,8 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
 static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority){
     proccess_t * p = &node->proccess;
 
-    p->rbp = (uint64_t)node + PROCCESS_STACK_SIZE + sizeof(proccessNode) - 1;
-    p->rsp = p->rbp; //Not necessary
+    p->rbp = (uint64_t)node + PROCCESS_STACK_SIZE + sizeof(proccessNode) - sizeof(uint64_t);
+    p->rsp = (uint64_t)(node->proccess.rbp - sizeof(stackFrame));
     p->name = name;
     p->pid = getNewPID();
     p->fg = fg;
@@ -214,6 +216,7 @@ static proccessNode * getProccessNodeFromPID(uint16_t pid){
 
 void loader2(int argc, char *argv[], int (*function)(int , char **)){
     function(argc, argv);
+    println(runningProccessNode->proccess.name);
     exit();
 }
 
@@ -228,7 +231,7 @@ static void changeProccessState(uint16_t pid, enum states state){
         node->proccess.state = state;
 }
 
-static void changeProccessPriority(uint16_t pid, uint8_t priority){
+void changeProccessPriority(uint16_t pid, uint8_t priority){
     if(priority >= PRIORITY_COUNT)
         priority = PRIORITY_COUNT - 1;
 

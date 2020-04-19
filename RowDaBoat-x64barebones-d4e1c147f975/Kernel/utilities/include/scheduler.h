@@ -18,4 +18,6 @@ void dumpScheduler();
 
 void initScheduler();
 
+void changeProccessPriority(uint16_t pid, uint8_t prority);
+
 #endif
