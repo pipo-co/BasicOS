@@ -16,4 +16,6 @@ uint16_t getPID();
 
 void dumpScheduler();
 
+void initScheduler();
+
 #endif

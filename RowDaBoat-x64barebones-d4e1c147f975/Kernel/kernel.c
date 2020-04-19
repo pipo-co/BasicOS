@@ -10,6 +10,7 @@
 #include <exceptions.h>
 #include <screenDriver.h>
 #include <memoryManager.h>
+#include <scheduler.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -17,6 +18,7 @@ extern uint8_t data;
 extern uint8_t bss;
 extern uint8_t endOfKernelBinary;
 extern uint8_t endOfKernel;
+extern void _hlt();
 
 static const uint64_t PageSize = 0x1000;
 
@@ -52,11 +54,22 @@ void * initializeKernelBinary(){
 	return getStackBase();
 }
 
+int prueba(int a, char ** b){
+	println("Llegamos!!!");
+	while(1);
+}
+
 int main(){
 	//Funciones de inicializacion de video, de la IDT, del Memory Manager y del controlador de excepciones.
 	init_screen();
 	load_idt();
 	initMM(heapBaseAddress, HEAP_SIZE);	
 	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
-	return ((EntryPoint)sampleCodeModuleAddress)();
+	//return ((EntryPoint)sampleCodeModuleAddress)();
+	println("hola");
+	initScheduler();
+	initializeProccess(prueba, "Prueba", 1, 0, NULL);
+	_hlt(); //Hace el sti y hlt
+	println("No deberiamos llegar aca");
+	return 0;
 }

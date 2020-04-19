@@ -28,28 +28,27 @@ typedef struct proccessNode{
 typedef struct{
     proccessNode * first;
     proccessNode * last;
-}queueHeader;
+}proccessNodeQueue;
 
-static queueHeader activeProccessesInitializer[PRIORITY_COUNT];
-static queueHeader expiredProccessesInitializer[PRIORITY_COUNT];
-static queueHeader * activeProccesses = activeProccessesInitializer;
-static queueHeader * expiredProccesses = expiredProccessesInitializer;
+static proccessNodeQueue activeProccesses;
 
 static proccessNode * runningProccessNode;
 static uint64_t runetimeLeft;
 static uint16_t pidCounter = 1;
 
+static proccessNode * dummyProcessNode;
+
 static void removeProccess(proccessNode * node);
-static int isEmpty(queueHeader * q);
-static void push(queueHeader * q, proccessNode * node);
-static proccessNode* pop(queueHeader * q);
+static int isEmpty(proccessNodeQueue * q);
+static void push(proccessNodeQueue * q, proccessNode * node);
+static proccessNode* pop(proccessNodeQueue * q);
 static proccessNode * getProccessNodeFromPID(uint16_t pid);
 static uint64_t swapProccess(uint64_t rsp);
 static void changeProccessPriority(uint16_t pid, uint8_t prority);
 static void changeProccessState(uint16_t pid, enum states state);
-static proccessNode * getAndRemoveProccessNodeFromPID(uint16_t pid);
 static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority);
 static uint16_t getNewPID();
+static int dummyFunction(int argc, char ** argv);
 
 static void dumpProccess(proccess_t p);
 
@@ -78,7 +77,20 @@ typedef struct stackFrame{
     uint64_t ss;    //0
 } stackFrame;
 
+void initScheduler(){
+    println("entramos a init");
+    //Initialize Dummy Process
+    initializeProccess(dummyFunction, "Dummy Process", 0, 0, NULL); //Mete al dummy process en la cola
+    dummyProcessNode = pop(&activeProccesses); //Lo saco de la cola (es el unico Pc en ella)
+    dummyProcessNode->proccess.priority = PRIORITY_COUNT; //Para que su runetime sea 0
+    println("Dummy Creado");
+    runningProccessNode = dummyProcessNode; //Por ahora no hay nadie corriendo
+    dumpScheduler();
+    println("init Ended");
+}
+
 uint64_t scheduler(uint64_t rsp){
+    println("scheduler");
     if(runetimeLeft > 0){
         runetimeLeft--;
         return rsp;
@@ -91,36 +103,37 @@ static uint64_t swapProccess(uint64_t rsp){
 
     uint8_t currentPriority = runningProccessNode->proccess.priority;
     
+    //BLOCKED CASE MISSING ?
     if(runningProccessNode->proccess.state == KILLED)
         removeProccess(runningProccessNode);
     else
-        push(&expiredProccesses[currentPriority], runningProccessNode);
+        push(&activeProccesses, runningProccessNode);
 
-    while(currentPriority < PRIORITY_COUNT && isEmpty(&activeProccesses[currentPriority]))
-        currentPriority++;
+    if(!isEmpty(&activeProccesses))
+        runningProccessNode = pop(&activeProccesses);
+    else
+        runningProccessNode = dummyProcessNode;
 
-    if(currentPriority == PRIORITY_COUNT){
-        queueHeader * aux = activeProccesses;
-        activeProccesses = expiredProccesses;
-        expiredProccesses = aux;
-        currentPriority = 0;
-    }
+    dumpProccess(runningProccessNode->proccess);
 
-    runningProccessNode = pop(&activeProccesses[currentPriority]);
-
-    runetimeLeft = (PRIORITY_COUNT - currentPriority) * TIME_MULT;
+    runetimeLeft = (PRIORITY_COUNT - currentPriority) * TIME_MULT; //Heuristica
 
     return runningProccessNode->proccess.rsp;
 }
 
 uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv){
-
+    println("Initialize Process:");
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
+    dumpMM();
     if(node == NULL)
         return 0;
 
+    println("MM success");
+
     createProccess(node, name, fg, DEFAULT_PRIORITY);
-    push(&expiredProccesses[node->proccess.priority], node);
+    push(&activeProccesses, node);
+    if(node->proccess.pid != 1)
+        dumpScheduler();
 
     stackFrame newSF;
     newSF.ss = 0;
@@ -134,20 +147,21 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
     newSF.rcx = node->proccess.pid;
 
     memcpy((void *)(node->proccess.rbp - sizeof(stackFrame)), &newSF, sizeof(stackFrame));
+    printhex((uint64_t)(node->proccess.rbp - sizeof(stackFrame)));
 
     return node->proccess.pid;
 }
 
 static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority){
-    proccess_t p = node->proccess;
+    proccess_t * p = &node->proccess;
 
-    p.rbp = (uint64_t)node + PROCCESS_STACK_SIZE + sizeof(proccessNode) - 1;
-    p.rsp = p.rbp; //Not neccesary
-    p.name = name;
-    p.pid = getNewPID();
-    p.fg = fg;
-    p.priority = prority;
-    p.state = READY;
+    p->rbp = (uint64_t)node + PROCCESS_STACK_SIZE + sizeof(proccessNode) - 1;
+    p->rsp = p->rbp; //Not necessary
+    p->name = name;
+    p->pid = getNewPID();
+    p->fg = fg;
+    p->priority = prority;
+    p->state = READY;
 }
 
 static uint16_t getNewPID(){
@@ -159,7 +173,7 @@ static void removeProccess(proccessNode * node){ //Faltan cosas capaz
     free2(node);
 }
 
-static void push(queueHeader * q, proccessNode * node){
+static void push(proccessNodeQueue * q, proccessNode * node){
     if(q == NULL || node == NULL)
         return;
 
@@ -172,7 +186,7 @@ static void push(queueHeader * q, proccessNode * node){
     node->next = NULL;
 }
 
-static proccessNode* pop(queueHeader * q){
+static proccessNode* pop(proccessNodeQueue * q){
     if(q == NULL || isEmpty(q))
         return NULL;
 
@@ -186,23 +200,15 @@ static proccessNode* pop(queueHeader * q){
     return ans;
 }
 
-static int isEmpty(queueHeader * q){
-    if(q == NULL)
-        return 1;
-    return q->first == NULL;
+static int isEmpty(proccessNodeQueue * q){
+    return q == NULL || q->first == NULL;
 }
 
 static proccessNode * getProccessNodeFromPID(uint16_t pid){
-    for(uint8_t i = 0; i < PRIORITY_COUNT; i++){
-        for(proccessNode* iter = activeProccesses[i].first; iter != NULL; iter = iter->next){
+        for(proccessNode* iter = activeProccesses.first; iter != NULL; iter = iter->next){
             if(iter->proccess.pid == pid)
                 return iter;
         }
-        for(proccessNode* iter = expiredProccesses[i].first; iter != NULL; iter = iter->next){
-            if(iter->proccess.pid == pid)
-                return iter;
-        }
-    }
     return NULL;
 }
 
@@ -223,51 +229,19 @@ static void changeProccessState(uint16_t pid, enum states state){
 }
 
 static void changeProccessPriority(uint16_t pid, uint8_t priority){
+    if(priority >= PRIORITY_COUNT)
+        priority = PRIORITY_COUNT - 1;
+
     proccessNode* node;
     if(runningProccessNode->proccess.pid == pid)
         node = runningProccessNode;
     else 
-        node = getAndRemoveProccessNodeFromPID(pid);
+        node = getProccessNodeFromPID(pid);
 
     if(node == NULL)
         return;
 
     node->proccess.priority = priority;
-    push(&expiredProccesses[priority], node);  
-}
-
-static proccessNode * getAndRemoveProccessNodeFromPID(uint16_t pid){ //Muy feo
-    for(uint8_t i = 0; i < PRIORITY_COUNT; i++){
-        for(proccessNode* iter = activeProccesses[i].first, *prev = iter; iter != NULL; prev = iter, iter = iter->next){
-            if(iter->proccess.pid == pid){
-                if(prev == iter){
-                    activeProccesses[i].first = iter->next;
-                    if(iter->next == NULL)
-                        activeProccesses[i].last = NULL;
-                } else {
-                    prev->next = iter->next;
-                    if(iter->next == NULL)
-                        activeProccesses[i].last = prev;
-                }
-            return iter;  
-            }
-        }
-        for(proccessNode* iter = expiredProccesses[i].first, *prev = iter; iter != NULL; prev = iter, iter = iter->next){
-            if(iter->proccess.pid == pid){
-                if(prev == iter){
-                    expiredProccesses[i].first = iter->next;
-                    if(iter->next == NULL)
-                        expiredProccesses[i].last = NULL;
-                } else {
-                    prev->next = iter->next;
-                    if(iter->next == NULL)
-                        expiredProccesses[i].last = prev;
-                }
-            return iter;  
-            }
-        }
-    }
-    return NULL;
 }
 
 void exit(){
@@ -292,20 +266,10 @@ void dumpScheduler(){
     printint(runetimeLeft);
     putchar('\n');
 
-    println("Active Proccesses:");
-    for(uint8_t i = 0; i < PRIORITY_COUNT; i++){
-        for(proccessNode* iter = activeProccesses[i].first; iter != NULL; iter = iter->next){
-            dumpProccess(iter->proccess);
-            totalP++;
-        }
-    }
-
-    println("Expired Proccesses:");
-    for(uint8_t i = 0; i < PRIORITY_COUNT; i++){
-        for(proccessNode* iter = expiredProccesses[i].first; iter != NULL; iter = iter->next){
-            dumpProccess(iter->proccess);
-            totalP++;
-        }
+    println("Active Processes:");
+    for(proccessNode* iter = activeProccesses.first; iter != NULL; iter = iter->next){
+        dumpProccess(iter->proccess);
+        totalP++;
     }
 
     printString("Total Proccesses in System: ");
@@ -339,5 +303,11 @@ static void dumpProccess(proccess_t p){
             printString("BLOCKED"); break;
     }
     putchar('\n');
+}
+
+static int dummyFunction(int argc, char ** argv){
+    while(1)
+        _hlt();
+    return 0;
 }
 
