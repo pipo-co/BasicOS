@@ -272,10 +272,16 @@ void exit(){
 
 void kill(uint16_t pid){ 
     changeProccessState(pid, KILLED);
+
+    if(pid == runningProccessNode->proccess.pid) // Es lo mismo que exit
+        _hlt();
 }
 
 void block(uint16_t pid){
     changeProccessState(pid, BLOCKED);
+
+    if(pid == runningProccessNode->proccess.pid) // Espero a que el scheduler me saque
+        _hlt();
 }
 
 void unblock(uint16_t pid){
