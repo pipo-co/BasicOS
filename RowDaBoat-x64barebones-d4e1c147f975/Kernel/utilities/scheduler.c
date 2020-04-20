@@ -229,6 +229,9 @@ void loader2(int argc, char *argv[], int (*function)(int , char **)){
 }
 
 static void changeProccessState(uint16_t pid, enum states state){
+    if(pid == dummyProcessNode->proccess.pid)
+        return;
+
     if(runningProccessNode->proccess.pid == pid){
         runningProccessNode->proccess.state = state;
         return;

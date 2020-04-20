@@ -1,4 +1,4 @@
-#define BUDDY
+
 #ifdef BUDDY
 
 #include <memoryManager.h>
