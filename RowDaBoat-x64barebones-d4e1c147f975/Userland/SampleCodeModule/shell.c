@@ -365,6 +365,14 @@ static void arkanoid(int argcount, char * args[]){
         println("Wrong Arguments");
 }
 
+static void commandDumpMM(int argcount, char * args[]){
+    dumpMM();
+}
+
+static void commandDumpScheduler(int argcount, char * args[]){
+    dumpScheduler();
+}
+
 static void playLavander(int argcount, char * args[]){
     Lavander();
 }
@@ -387,12 +395,4 @@ static void playSadness(int argcount, char * args[]){
 
 static void playDefeat(int argcount, char * args[]){
     Defeat();
-}
-
-static void commandDumpMM(int argcount, char * args[]){
-    dumpMM();
-}
-
-static void commandDumpScheduler(int argcount, char * args[]){
-    dumpScheduler();
 }

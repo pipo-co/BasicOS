@@ -10,6 +10,10 @@ void loader2(int argc, char *argv[], int (*function)(int , char **));
 
 void kill(uint16_t pid);
 
+void block(uint16_t pid);
+
+void unblock(uint16_t pid);
+
 void exit();
 
 uint16_t getPID();

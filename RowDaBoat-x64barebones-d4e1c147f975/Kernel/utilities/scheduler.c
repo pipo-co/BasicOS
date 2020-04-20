@@ -28,6 +28,7 @@ typedef struct proccessNode{
 typedef struct{
     proccessNode * first;
     proccessNode * last;
+    uint16_t readyCount;
 }proccessNodeQueue;
 
 static proccessNodeQueue activeProccesses;
@@ -48,6 +49,7 @@ static void changeProccessState(uint16_t pid, enum states state);
 static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority);
 static uint16_t getNewPID();
 static int dummyFunction(int argc, char ** argv);
+static int hasReadyProcesses(proccessNodeQueue * q);
 
 static void dumpProccess(proccess_t p);
 
@@ -105,9 +107,19 @@ static uint64_t swapProccess(uint64_t rsp){
         }
     }
 
-    if(!isEmpty(&activeProccesses))
+    if(hasReadyProcesses(&activeProccesses)){
+
         runningProccessNode = pop(&activeProccesses);
-    else
+        while(runningProccessNode->proccess.state != READY){
+
+            if(runningProccessNode->proccess.state == KILLED)
+                removeProccess(runningProccessNode);
+            else if(runningProccessNode->proccess.state == BLOCKED)
+                push(&activeProccesses, runningProccessNode);
+            
+            runningProccessNode = pop(&activeProccesses);
+        }
+    }else
         runningProccessNode = dummyProcessNode;
 
     runtimeLeft = (PRIORITY_COUNT - runningProccessNode->proccess.priority) * TIME_MULT; //Heuristica
@@ -175,6 +187,9 @@ static void push(proccessNodeQueue * q, proccessNode * node){
 
     q->last = node;
     node->next = NULL;
+
+    if(node->proccess.state == READY)
+        q->readyCount++;
 }
 
 static proccessNode* pop(proccessNodeQueue * q){
@@ -188,11 +203,18 @@ static proccessNode* pop(proccessNodeQueue * q){
 
     q->first = q->first->next;
 
+    if(ans->proccess.state == READY)
+        q->readyCount--;
+
     return ans;
 }
 
 static int isEmpty(proccessNodeQueue * q){
     return q == NULL || q->first == NULL;
+}
+
+static int hasReadyProcesses(proccessNodeQueue * q){
+    return q != NULL && q->readyCount > 0;
 }
 
 static proccessNode * getProccessNodeFromPID(uint16_t pid){
@@ -216,8 +238,15 @@ static void changeProccessState(uint16_t pid, enum states state){
     }
 
     proccessNode * node = getProccessNodeFromPID(pid);
-    if(node != NULL)
+    if(node != NULL && node->proccess.state != KILLED){
+
+        if(node->proccess.state != READY && state == READY)
+            activeProccesses.readyCount++;
+        else if(node->proccess.state == READY && state != READY)
+            activeProccesses.readyCount--;
+
         node->proccess.state = state;
+    }
 }
 
 void changeProccessPriority(uint16_t pid, uint8_t priority){
@@ -243,6 +272,14 @@ void exit(){
 
 void kill(uint16_t pid){ 
     changeProccessState(pid, KILLED);
+}
+
+void block(uint16_t pid){
+    changeProccessState(pid, BLOCKED);
+}
+
+void unblock(uint16_t pid){
+    changeProccessState(pid, READY);
 }
 
 uint16_t getPID(){

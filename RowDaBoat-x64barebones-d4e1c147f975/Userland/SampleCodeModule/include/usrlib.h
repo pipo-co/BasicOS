@@ -113,4 +113,9 @@ extern void dumpScheduler();
 //syscall 18
 extern void changeProccessPriority(uint16_t pid, uint8_t prority);
 
+//syscall 19
+extern void block(uint16_t pid);
+
+//syscall 20
+extern void unblock(uint16_t pid);
 #endif
