@@ -3,6 +3,7 @@
 #include <shell.h>
 
 extern void _hlt();
+void dummyFuction();
 
 int main(){
 
@@ -21,4 +22,11 @@ int main(){
     // setCursorPos(0, 0);
     // print("Sesion finalizada");
     // return 0;
+}
+
+void dummyFuction(){
+     while(1){
+        println("I´m dummy");
+        _hlt();
+    }
 }

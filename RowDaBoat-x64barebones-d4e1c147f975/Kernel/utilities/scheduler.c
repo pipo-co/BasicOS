@@ -150,8 +150,6 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
     newSF.rcx = node->proccess.pid;
 
     memcpy((void *)(node->proccess.rsp), &newSF, sizeof(stackFrame));
-    //printhex(node->proccess.rsp);
-
     return node->proccess.pid;
 }
 

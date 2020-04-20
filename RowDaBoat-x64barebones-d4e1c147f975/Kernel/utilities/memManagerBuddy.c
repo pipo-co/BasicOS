@@ -1,3 +1,4 @@
+#define BUDDY
 #ifdef BUDDY
 
 #include <memoryManager.h>
@@ -32,6 +33,7 @@ static list_t * getBuddyAddress(list_t *node);
 static list_t * getPrincipalAdress(list_t *node);
 static void insertNodeAndJoinSpace(list_t* node);
 static void printBlockSize(uint8_t exp);
+uint8_t ispowerof2(uint32_t x) ;
 
 //Global variables
 static list_t *heap_base;
@@ -42,10 +44,14 @@ static uint8_t bucketCount;
 
 void initMM(void * heap_baseInit, uint32_t heap_sizeInit){
     heap_base = heap_baseInit;
-    printhex((uint64_t)heap_baseInit);
+    // printhex((uint64_t)heap_baseInit);
+    // putchar('\n');
     heap_size = availableMemory = heap_sizeInit;
-    printint(heap_size);
+    // printhex(heap_size);
+    // putchar('\n');
     bucketCount = intLog2(heap_size) - MIN_POWER + 1;
+    // printint(bucketCount);
+    // putchar('\n');
 
     if(bucketCount < 1) //TODO
         return; //Que  devolvemos??? 
@@ -78,13 +84,16 @@ void * malloc2(unsigned bytes){
         return NULL;
 
     list_t *ptr;
-    for(ptr = list_pop(&listArray[parentBucket]); parentBucket > bucket; parentBucket--){
+    for(ptr = list_pop(&listArray[parentBucket]); bucket < parentBucket ; parentBucket--){
         ptr->level--;
         createAndPushNode(&listArray[parentBucket - 1], getBuddyAddress(ptr), parentBucket - 1);
     }
     ptr->isFree = 0;
 
     availableMemory -= BINARY_POWER(bucket + MIN_POWER);
+    // printString("Memoria libre:");
+    // printhex(availableMemory);
+    // putchar('\n');
 
     return (void *)(ptr + 1);
 }
@@ -143,8 +152,8 @@ void dumpMM(){
             totalFreeSpace += nodeCount * BINARY_POWER(i + MIN_POWER);  
         }
     }
-    printString("Total Free Space: ");
-    printint(totalFreeSpace);
+    printString("Total Free Space: 0x");
+    printhex(totalFreeSpace);
     println(" B.");
 }
 
@@ -245,12 +254,21 @@ static uint8_t getBucket(uint32_t request){
     if(aux < MIN_POWER)
         return 0;
 
-    return intLog2(request) - MIN_POWER;
+    aux -= MIN_POWER;
+    if(ispowerof2(request))
+        return aux;
+
+    return aux + 1;
 }
 
 static int getFirstAvBucket(uint8_t minBucket){
     for(; minBucket < bucketCount && isListEmpty(&listArray[minBucket]); minBucket++);
 
     return (minBucket < bucketCount)? minBucket : -1;
+}
+
+//https://stackoverflow.com/questions/3638431/determine-if-an-int-is-a-power-of-2-or-not-in-a-single-line
+uint8_t ispowerof2(uint32_t x) {
+   return x && !(x & (x - 1));
 }
 #endif
