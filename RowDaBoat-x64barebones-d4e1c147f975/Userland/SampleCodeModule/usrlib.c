@@ -1,6 +1,7 @@
 //usrlib.c
 #include <stdint.h>
 #include <usrlib.h>
+#include <stddef.h>
 
 #define DEFAULT_FONT 0xFFFFFF
 #define DEFAULT_BACKGROUND 0X000000
@@ -146,4 +147,16 @@ uint64_t hexstringToInt(char * s){
 		rta += c*pow(16, i);
 	}
 	return rta;
+}
+
+int atoi(char * s){
+	if(s == NULL)
+		return 0;
+
+    int res = 0;
+
+    for (int i = 0; s[i] != '\0'; ++i) 
+        res = res * 10 + s[i] - '0';
+
+    return res; 
 }

@@ -79,17 +79,12 @@
     //beep: emite un sonido breve.
     static void playSound(int argcount, char * args[]);
 
-    //canciones disponibles.
-    static void playLavander(int argcount, char * args[]);
-    static void playForElisa(int argcount, char * args[]);
-    static void playDefeat(int argcount, char * args[]);
-    static void playSadness(int argcount, char * args[]);
-    static void playVictory(int argcount, char * args[]);
-    static void playEvangelion(int argcount, char * args[]);
-
-    //Kernel Dumps
-    static void commandDumpMM(int argcount, char * args[]);
-    static void commandDumpScheduler(int argcount, char * args[]);
+    //Scheduler Commands
+    static void cmdBlock(int argcount, char * args[]);
+    static void cmdUnblock(int argcount, char * args[]);
+    static void cmdKill(int argcount, char * args[]);
+    static void cmdGetPID();
+    static void cmdChangeProcessPriority(int argcount, char * args[]);
 //End
 
 void startShell(){
@@ -185,27 +180,32 @@ static void processInstruction(char * userInput){
 
 //Cargado de los modulos
 static void loadFunctions(){
-    loadFunction("inforeg",&getRegs, "Prints all the registers \n");
-    loadFunction("ticks",&ticksElpased, "Prints ticks elapsed from start. Arg: -s for seconds elapsed \n");
-    loadFunction("printArgs",&printArgs, "Prints all its arguments\n ");
-    loadFunction("help",&help, "Prints the description of all functions \n");
-    loadFunction("clock",&printCurrentTime, "Prints the current time. Args: -h prints current hours.  -m prints current minutes.  -s prints current seconds.\n");
-    loadFunction("printmem",&printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
-    loadFunction("triggerException0",&triggerException0, "Triggers Exception number 0 \n");
-    loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
-    loadFunction("arkanoid", &arkanoid, "Arkanoid Game! Args: No args for new game. -c to continue last game.\n");
-    loadFunction("beep",&playSound, "Plays a beep \n");
-    loadFunction("Lavander",&playLavander, "Plays an indie game's music");
-    loadFunction("Elisa", &playForElisa, "Music for a student\n");
-    loadFunction("Evangelion", &playEvangelion, "Evangelion theme\n"); 
-    loadFunction("SadMusic", &playSadness, "Music to listen when you are sad");
-    loadFunction("Victory", &playVictory, "Music to listen when you win");
-    loadFunction("Defeat", &playDefeat, "Music to listen when you are happyn't");
-    loadFunction("dumpMM", &commandDumpMM,"Memory Manager Dump");
-    loadFunction("dumpScheduler", &commandDumpScheduler,"Scheduler Dump");
+    loadFunction("inforeg", getRegs, "Prints all the registers \n");
+    loadFunction("ticks", ticksElpased, "Prints ticks elapsed from start. Arg: -s for seconds elapsed \n");
+    loadFunction("printArgs", printArgs, "Prints all its arguments\n ");
+    loadFunction("help", help, "Prints the description of all functions \n");
+    loadFunction("clock", printCurrentTime, "Prints the current time. Args: -h prints current hours.  -m prints current minutes.  -s prints current seconds.\n");
+    loadFunction("printmem", printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
+    loadFunction("triggerException0", triggerException0, "Triggers Exception number 0 \n");
+    loadFunction("triggerException6", triggerException6, "Triggers Exception number 6 \n");
+    loadFunction("arkanoid", arkanoid, "Arkanoid Game! Args: No args for new game. -c to continue last game.\n");
+    loadFunction("beep", playSound, "Plays a beep \n");
+    loadFunction("dumpMM", (void (*)(int, char**))dumpMM, "Memory Manager Dump \n");
+    loadFunction("dumpScheduler", (void (*)(int, char**))dumpScheduler,"Scheduler Dump \n");
+    loadFunction("block", cmdBlock,"Block process given it's PID \n");
+    loadFunction("unblock", cmdUnblock,"Unblock process given it's PID \n");
+    loadFunction("kill", cmdKill,"Kill process given it's PID \n");
+    loadFunction("getpid", (void (*)(int, char**))cmdGetPID,"Return running process PID \n");
+    loadFunction("changePriority", (void (*)(int, char**))cmdChangeProcessPriority,"Change process priority given it's PID \n");
+    // loadFunction("Lavander", (void (*)(int, char**))Lavander, "Plays an indie game's music");
+    // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");
+    // loadFunction("Evangelion", (void (*)(int, char**))Evangelion, "Evangelion theme\n"); 
+    // loadFunction("SadMusic", (void (*)(int, char**))Sadness, "Music to listen when you are sad");
+    // loadFunction("Victory", (void (*)(int, char**))Victory, "Music to listen when you win");
+    // loadFunction("Defeat", (void (*)(int, char**))Defeat, "Music to listen when you are happyn't");
 }
 
-static void loadFunction(char * string, void (*fn)(), char * desc){
+static void loadFunction(char * string, void (*fn)(int, char**), char * desc){
     functions[functionsSize].function = fn;
     functions[functionsSize].name = string;
     functions[functionsSize].description = desc;
@@ -365,34 +365,39 @@ static void arkanoid(int argcount, char * args[]){
         println("Wrong Arguments");
 }
 
-static void commandDumpMM(int argcount, char * args[]){
-    dumpMM();
+static void cmdBlock(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need process PID");
+        return;
+    }
+    block(atoi(args[0]));
 }
 
-static void commandDumpScheduler(int argcount, char * args[]){
-    dumpScheduler();
+static void cmdUnblock(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need process PID");
+        return;
+    }
+    unblock(atoi(args[0]));
 }
 
-static void playLavander(int argcount, char * args[]){
-    Lavander();
+static void cmdKill(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need process PID");
+        return;
+    }
+    kill(atoi(args[0]));
 }
 
-static void playVictory(int argcount, char * args[]){
-    Victory();
+static void cmdGetPID(){
+    printint(getPID());
+    putchar('\n');
 }
 
-static void playForElisa(int argcount, char * args[]){
-    forElisa();
-}
-
-static void playEvangelion(int argcount, char * args[]){
-    Evangelion();
-}
-
-static void playSadness(int argcount, char * args[]){
-    Sadness();
-}
-
-static void playDefeat(int argcount, char * args[]){
-    Defeat();
+static void cmdChangeProcessPriority(int argcount, char * args[]){
+    if(argcount < 2){
+        println("Need process PID and new Priority");
+        return;
+    }
+    changeProccessPriority(atoi(args[0]), atoi(args[1]));
 }
