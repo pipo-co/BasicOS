@@ -129,14 +129,14 @@ static uint64_t swapProccess(uint64_t rsp){
 
 uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv){
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
-    dumpMM();
+    //dumpMM();
     if(node == NULL)
         return 0;
 
     createProccess(node, name, fg, DEFAULT_PRIORITY);
     push(&activeProccesses, node);
-    if(node->proccess.pid != 1)
-        dumpScheduler();
+    // if(node->proccess.pid != 1)
+    //     dumpScheduler();
 
     stackFrame newSF;
     newSF.ss = 0;
@@ -150,7 +150,7 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
     newSF.rcx = node->proccess.pid;
 
     memcpy((void *)(node->proccess.rsp), &newSF, sizeof(stackFrame));
-    printhex(node->proccess.rsp);
+    //printhex(node->proccess.rsp);
 
     return node->proccess.pid;
 }
@@ -227,7 +227,6 @@ static proccessNode * getProccessNodeFromPID(uint16_t pid){
 
 void loader2(int argc, char *argv[], int (*function)(int , char **)){
     function(argc, argv);
-    println(runningProccessNode->proccess.name);
     exit();
 }
 

@@ -90,7 +90,7 @@
 void startShell(){
     //Se cargan los modulos
     loadFunctions();
-    clearScreen();
+    //clearScreen();
     setCursorPos(0,getScreenHeight() - 1);
     char userInput[USER_INPUT_SIZE];
     /*  comentado help

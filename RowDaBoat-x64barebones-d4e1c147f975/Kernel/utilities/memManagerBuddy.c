@@ -42,7 +42,7 @@ static uint8_t bucketCount;
 
 void initMM(void * heap_baseInit, uint32_t heap_sizeInit){
     heap_base = heap_baseInit;
-    printhex(heap_baseInit);
+    printhex((uint64_t)heap_baseInit);
     heap_size = availableMemory = heap_sizeInit;
     printint(heap_size);
     bucketCount = intLog2(heap_size) - MIN_POWER + 1;
