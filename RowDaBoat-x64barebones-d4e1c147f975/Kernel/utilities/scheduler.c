@@ -86,7 +86,7 @@ void initScheduler(){
 }
 
 uint64_t scheduler(uint64_t rsp){
-    if(runningProccessNode->proccess.state != KILLED && runtimeLeft > 0){
+    if(runningProccessNode->proccess.state == READY && runtimeLeft > 0){
         runtimeLeft--;
         return rsp;
     }
@@ -343,8 +343,10 @@ static void dumpProccess(proccess_t p){
 }
 
 static int dummyFunction(int argc, char ** argv){
-    while(1)
+    while(1){
+        println("Dummy");
         _hlt();
+    }
     return 0;
 }
 

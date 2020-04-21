@@ -87,6 +87,8 @@
     static void cmdChangeProcessPriority(int argcount, char * args[]);
 //End
 
+    static void prueba();
+
 void startShell(){
     //Se cargan los modulos
     loadFunctions();
@@ -164,11 +166,22 @@ static int readUserInput(char * buffer, int maxSize){
 //Funcion encargada de procesar el texto recibido. Se guardan los argumentos en un array 
 // y se verifica si el texto ingresado valida con el nombre de una funcion para asi llamarla.
 static void processInstruction(char * userInput){
+    int background = 0;
+
     char * arguments[MAX_ARGUMENTS_SIZE];
     int argCount = strtok(userInput,' ', arguments, MAX_ARGUMENTS_SIZE);
+
+    if(strcmp(arguments[argCount - 1], "&")){
+        background = 1;
+        argCount--;
+    }
+
     for (int i = 0; i < functionsSize; i++){
         if(strcmp(arguments[0], functions[i].name)){
-            functions[i].function(argCount - 1, arguments + 1);
+            if(background)
+                initializeProccess((int (*)(int,char**))functions[i].function, functions[i].name, 0, argCount - 1, arguments + 1);
+            else
+                functions[i].function(argCount - 1, arguments + 1);
             return;
         }
     }
@@ -197,7 +210,8 @@ static void loadFunctions(){
     loadFunction("kill", cmdKill,"Kill process given it's PID \n");
     loadFunction("getpid", (void (*)(int, char**))cmdGetPID,"Return running process PID \n");
     loadFunction("changePriority", (void (*)(int, char**))cmdChangeProcessPriority,"Change process priority given it's PID \n");
-    // loadFunction("Lavander", (void (*)(int, char**))Lavander, "Plays an indie game's music");
+    loadFunction("Lavander", (void (*)(int, char**))Lavander, "Plays an indie game's music");
+    loadFunction("prueba", (void (*)(int, char**))prueba, "Prueba");
     // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");
     // loadFunction("Evangelion", (void (*)(int, char**))Evangelion, "Evangelion theme\n"); 
     // loadFunction("SadMusic", (void (*)(int, char**))Sadness, "Music to listen when you are sad");
@@ -400,4 +414,11 @@ static void cmdChangeProcessPriority(int argcount, char * args[]){
         return;
     }
     changeProccessPriority(atoi(args[0]), atoi(args[1]));
+}
+
+static void prueba(){
+    while(1){
+        println("Prueba esta corriendo");
+        block(getPID());
+    }
 }
