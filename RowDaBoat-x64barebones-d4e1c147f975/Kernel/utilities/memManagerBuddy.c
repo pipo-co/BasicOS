@@ -152,8 +152,8 @@ void dumpMM(){
             totalFreeSpace += nodeCount * BINARY_POWER(i + MIN_POWER);  
         }
     }
-    printString("Total Free Space: 0x");
-    printhex(totalFreeSpace);
+    printString("Total Free Space: ");
+    printint(totalFreeSpace);
     println(" B.");
 }
 

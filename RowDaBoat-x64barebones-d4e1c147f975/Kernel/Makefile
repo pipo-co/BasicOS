@@ -29,7 +29,7 @@ $(KERNEL): $(STATICLIBS) $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) -T kernel.ld -o $(KERNEL) $(ALL_OBJECTS) $(STATICLIBS)
 
 %.o: %.c
-	$(GCC) $(GCCFLAGS) -I./include -I ./drivers/include -I./interrupts/include -I ./utilities/include -UBUDDY -c $< -o $@
+	$(GCC) $(GCCFLAGS) -I./include -I ./drivers/include -I./interrupts/include -I ./utilities/include -DBUDDY -c $< -o $@
 
 %.o : %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@
