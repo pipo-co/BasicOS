@@ -32,4 +32,7 @@ void printhex(uint64_t value);
 //Calcular el logaritmo en base 2 truncado a entero.
 uint8_t intLog2(uint64_t n);
 
+//Boolean. True if both strings are equal.
+int strcmp(char * s1, char * s2);
+
 #endif
