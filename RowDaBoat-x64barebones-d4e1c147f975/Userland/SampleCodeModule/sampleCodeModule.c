@@ -7,7 +7,9 @@ void dummyFuction();
 
 int main(){
 
-    int pid = initializeProccess((int (*)(int, char**))startShell, "Shell", 1, 0, 0);
+    int pid;
+
+    pid = initializeProccess((int (*)(int, char**))startShell, "Shell", 1, 0, 0);
     changeProccessPriority(pid, 0);
 
     while(1){
@@ -21,7 +23,7 @@ int main(){
     // clearScreen();
     // setCursorPos(0, 0);
     // print("Sesion finalizada");
-    // return 0;
+    return 0;
 }
 
 void dummyFuction(){

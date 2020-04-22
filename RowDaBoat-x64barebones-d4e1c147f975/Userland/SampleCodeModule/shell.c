@@ -85,6 +85,9 @@
     static void cmdKill(int argcount, char * args[]);
     static void cmdGetPID();
     static void cmdChangeProcessPriority(int argcount, char * args[]);
+
+    //Test Agodios
+    extern void test_mm();
 //End
 
     static void prueba();
@@ -212,6 +215,7 @@ static void loadFunctions(){
     loadFunction("changePriority", (void (*)(int, char**))cmdChangeProcessPriority,"Change process priority given it's PID \n");
     loadFunction("Lavander", (void (*)(int, char**))Lavander, "Plays an indie game's music");
     loadFunction("prueba", (void (*)(int, char**))prueba, "Prueba");
+    loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM");
     // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");
     // loadFunction("Evangelion", (void (*)(int, char**))Evangelion, "Evangelion theme\n"); 
     // loadFunction("SadMusic", (void (*)(int, char**))Sadness, "Music to listen when you are sad");
