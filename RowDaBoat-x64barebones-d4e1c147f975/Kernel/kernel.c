@@ -1,9 +1,7 @@
 //kernel.c
-//Archivo original, el mayor cambio fue sacar todos los print que 
-// realizaba al inicializar el kernel.
 
 #include <stdint.h>
-#include <string.h>
+//#include <string.h>
 #include <lib.h>
 #include <moduleLoader.h>
 #include <idtLoader.h>

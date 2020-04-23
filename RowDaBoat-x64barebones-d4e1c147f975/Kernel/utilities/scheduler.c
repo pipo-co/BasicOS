@@ -9,56 +9,7 @@
 #define PROCCESS_STACK_SIZE (8 * 1024 - sizeof(proccessNode)) //8 KiB
 #define DEFAULT_PRIORITY (PRIORITY_COUNT/2)
 
-//Sempahore
-#define MAX_SEMAPHORE 100
 
-
-enum states{READY, BLOCKED, KILLED};
-typedef struct proccess_t{
-    char * name;
-    uint16_t pid;
-    uint64_t rsp;
-    uint64_t rbp;
-    uint8_t fg;
-    uint8_t priority;
-    enum states state;
-}proccess_t;
-
-typedef struct proccessNode{
-    proccess_t proccess;
-    struct proccessNode * next;
-}proccessNode;
-
-typedef struct{
-    proccessNode * first;
-    proccessNode * last; 
-}proccessNodeQueue;
-
-static proccessNodeQueue activeProccesses;
-static uint16_t readyCount;
-
-static proccessNode * runningProccessNode;
-static uint64_t runtimeLeft;
-static uint16_t pidCounter = 1;
-
-static proccessNode * dummyProcessNode;
-
-static void removeProccess(proccessNode * node);
-static int isEmpty(proccessNodeQueue * q);
-static void push(proccessNodeQueue * q, proccessNode * node);
-static void pushActP(proccessNodeQueue * q, proccessNode * node);
-static proccessNode* pop(proccessNodeQueue * q);
-static proccessNode* popActP(proccessNodeQueue * q);
-static proccessNode * getProccessNodeFromPID(uint16_t pid);
-static uint64_t swapProccess(uint64_t rsp);
-static void changeProccessState(uint16_t pid, enum states state);
-static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority);
-static uint16_t getNewPID();
-static int dummyFunction(int argc, char ** argv);
-
-static void dumpProccess(proccess_t p);
-
-extern void _hlt();
 
 typedef struct stackFrame{ 
     uint64_t r15;
@@ -83,12 +34,64 @@ typedef struct stackFrame{
     uint64_t ss;    //0
 } stackFrame;
 
+enum states{READY, BLOCKED, KILLED};
+typedef struct proccess_t{
+    char * name;
+    uint16_t pid;
+    uint64_t rsp;
+    uint64_t rbp;
+    uint8_t fg;
+    uint8_t priority;
+    enum states state;
+}proccess_t;
+
+typedef struct proccessNode{
+    proccess_t proccess;
+    struct proccessNode * next;
+}proccessNode;
+
+typedef struct{
+    proccessNode * first;
+    proccessNode * last; 
+}proccessNodeQueue;
+
+static void removeProccess(proccessNode * node);
+static int isEmpty(proccessNodeQueue * q);
+static void push(proccessNodeQueue * q, proccessNode * node);
+static void pushActP(proccessNodeQueue * q, proccessNode * node);
+static proccessNode* pop(proccessNodeQueue * q);
+static proccessNode* popActP(proccessNodeQueue * q);
+static uint16_t dumpQueueProcesses(proccessNodeQueue * q);
+static proccessNode * getProccessNodeFromPID(uint16_t pid);
+static uint64_t swapProccess(uint64_t rsp);
+static void changeProccessState(uint16_t pid, enum states state);
+static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority);
+static uint16_t getNewPID();
+static int dummyFunction(int argc, char ** argv);
+
+static void dumpProccess(proccess_t p);
+
+extern void _hlt();
+
+
+static proccessNodeQueue activeProccesses;
+static uint16_t readyCount;
+
+static proccessNode * runningProccessNode;
+static uint64_t runtimeLeft;
+static uint16_t pidCounter = 1;
+
+static proccessNode * dummyProcessNode;
+
+
 
 //Semaphore
+#define MAX_SEMAPHORE 100
+
 typedef struct semaphore{
     uint16_t counter;
     char * name;
-    proccessNodeQueue blockedProcess;
+    proccessNodeQueue blockedProcesses;
     uint16_t dependantProcessesCount;
     uint8_t active;
 }semaphore_t;
@@ -98,6 +101,12 @@ typedef struct semaphores{
     uint16_t firstInactive;
     uint16_t size;
 }semaphores_t;
+
+static int32_t getSemIndexFromName(char * name);
+static void initializeSem(char * name, uint16_t initValue);
+static int isValidSem(uint16_t sem);
+static void dumpSemaphore(semaphore_t sem);
+
 
 static semaphores_t semaphores;
 
@@ -120,27 +129,31 @@ int32_t createSem(char * name, uint16_t initValue){
     return index;      
 }
 
-void semWait(uint16_t sem){
+int semWait(uint16_t sem){
     if(!isValidSem(sem))
-        return;
+        return -1;
 
     if(semaphores.semArray[sem].counter > 0){
         semaphores.semArray[sem].counter--;
-        return;
+        return 0;
     }
     
-    push(&semaphores.semArray[sem].blockedProcess, runningProccessNode);
+    push(&semaphores.semArray[sem].blockedProcesses, runningProccessNode);
     block(runningProccessNode->proccess.pid);
+
+    return 0;
 }
 
-int32_t semPost(uint16_t sem){
+int semPost(uint16_t sem){
     if(!isValidSem(sem))
-        return;
+        return -1;
 
-    if(!isEmpty(&semaphores.semArray[sem].blockedProcess))
-        unblock(pop(&semaphores.semArray[sem].blockedProcess)->proccess.pid);
+    if(!isEmpty(&semaphores.semArray[sem].blockedProcesses))
+        unblock(pop(&semaphores.semArray[sem].blockedProcesses)->proccess.pid);
     else
         semaphores.semArray[sem].counter++;
+    
+    return 0;
 }
 
 void removeSem(uint16_t sem){
@@ -154,8 +167,24 @@ void removeSem(uint16_t sem){
 
     semaphores.semArray[sem].active = 0;
 
+    semaphores.size--;
+
     if(sem < semaphores.firstInactive)
         semaphores.firstInactive = sem;
+}
+
+void dumpSemaphores(){
+    uint16_t activeCount = 0;
+    printString("Total semaphores: "); printint(semaphores.size); putchar('\n');
+
+    for(uint16_t i = 0; activeCount < semaphores.size; i++){
+        if(semaphores.semArray[i].active){
+            activeCount++;
+            printString("Semaphore Number: "); printint(activeCount); putchar('\n');
+            printString("Code: "); printint(i); putchar(' ');
+            dumpSemaphore(semaphores.semArray[i]);
+        }
+    }
 }
 
 static int32_t getSemIndexFromName(char * name){
@@ -178,8 +207,8 @@ static void initializeSem(char * name, uint16_t initValue){
     semaphores.semArray[index].name = name;
     semaphores.semArray[index].counter = initValue;
     semaphores.semArray[index].dependantProcessesCount = 1;
-    semaphores.semArray[index].blockedProcess.first = NULL;
-    semaphores.semArray[index].blockedProcess.last = NULL;
+    semaphores.semArray[index].blockedProcesses.first = NULL;
+    semaphores.semArray[index].blockedProcesses.last = NULL;
     
     semaphores.size++;
 
@@ -195,6 +224,22 @@ static void initializeSem(char * name, uint16_t initValue){
 static int isValidSem(uint16_t sem){
     return sem < MAX_SEMAPHORE && semaphores.semArray[sem].active;
 }
+
+static void dumpSemaphore(semaphore_t sem){
+    printString("Name: "); printString(sem.name);
+
+    printString(" Counter: "); printint(sem.counter);
+
+    printString(" Processes Dependant on Semaphore: "); printint(sem.dependantProcessesCount);
+
+    (sem.active)? printString(" Is Active") : printString(" Is Not Active(PROBLEM)"); putchar('\n');
+
+    if(!isEmpty(&sem.blockedProcesses)){
+        println("Processes blocked by Semaphore:");
+        dumpQueueProcesses(&sem.blockedProcesses);
+    }
+}
+//End Sempahore
 
 //Scheduler
 
@@ -219,7 +264,7 @@ static uint64_t swapProccess(uint64_t rsp){
             runningProccessNode->proccess.rsp = rsp;
             
         if(runningProccessNode->proccess.pid != dummyProcessNode->proccess.pid){ //Si estaba corriendo dummy, no hay que pushear
-            //BLOCKED CASE MISSING ?
+
             if(runningProccessNode->proccess.state == KILLED)
                 removeProccess(runningProccessNode);
             else
@@ -249,14 +294,12 @@ static uint64_t swapProccess(uint64_t rsp){
 
 uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv){
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
-    //dumpMM();
+
     if(node == NULL)
         return 0;
 
     createProccess(node, name, fg, DEFAULT_PRIORITY);
     pushActP(&activeProccesses, node);
-    // if(node->proccess.pid != 1)
-    //     dumpScheduler();
 
     stackFrame newSF;
     newSF.ss = 0;
@@ -307,13 +350,6 @@ static void push(proccessNodeQueue * q, proccessNode * node){
     node->next = NULL;
 }
 
-static void pushActP(proccessNodeQueue * q, proccessNode * node){
-    push(q,node);
-    
-    if(node->proccess.state == READY)
-        readyCount++;
-}
-
 static proccessNode* pop(proccessNodeQueue * q){
     if(q == NULL || isEmpty(q))
         return NULL;
@@ -328,11 +364,15 @@ static proccessNode* pop(proccessNodeQueue * q){
     return ans;
 }
 
-static proccessNode* popActP(proccessNodeQueue * q){
-    proccessNode* ans = pop(q);
-    if(ans->proccess.state == READY)
-        readyCount--;
-    return ans;
+static uint16_t dumpQueueProcesses(proccessNodeQueue * q){
+    uint16_t count = 0;
+
+    for(proccessNode* iter = q->first; iter != NULL; iter = iter->next){
+        putchar('\t');
+        dumpProccess(iter->proccess);
+        count++;
+    }
+    return count;
 }
 
 static int isEmpty(proccessNodeQueue * q){
@@ -345,6 +385,20 @@ static proccessNode * getProccessNodeFromPID(uint16_t pid){
                 return iter;
         }
     return NULL;
+}
+
+static void pushActP(proccessNodeQueue * q, proccessNode * node){
+    push(q,node);
+    
+    if(node->proccess.state == READY)
+        readyCount++;
+}
+
+static proccessNode* popActP(proccessNodeQueue * q){
+    proccessNode* ans = pop(q);
+    if(ans->proccess.state == READY)
+        readyCount--;
+    return ans;
 }
 
 void loader2(int argc, char *argv[], int (*function)(int , char **)){
@@ -428,32 +482,30 @@ void dumpScheduler(){
     }
 
     println("Active Processes:");
-    for(proccessNode* iter = activeProccesses.first; iter != NULL; iter = iter->next){
-        dumpProccess(iter->proccess);
-        totalP++;
-    }
+    totalP += dumpQueueProcesses(&activeProccesses);
 
     printString("Total Proccesses in System: ");
     printint(totalP);
     putchar('\n');
 
     printString("Total Proccesses Created: ");
-    printint(pidCounter - 1);
+    printint(pidCounter - 2); //No contamos dummy
     putchar('\n');
 }
 
 static void dumpProccess(proccess_t p){
-    printString("Name: ");
-    printString(p.name);
-    printString(" PID: ");
-    printint(p.pid);
-    printString(" RSP: 0x");
-    printhex(p.rsp);
-    printString(" RBP: 0x");
-    printhex(p.rbp);
+    printString("Name: "); printString(p.name);
+
+    printString(" PID: "); printint(p.pid);
+
+    printString(" RSP: 0x"); printhex(p.rsp);
+
+    printString(" RBP: 0x"); printhex(p.rbp);
+
     (p.fg)? printString(" Foreground ") : printString(" Background ");
-    printString("Priority: ");
-    printint(p.priority);
+
+    printString("Priority: "); printint(p.priority);
+
     printString(" State: ");
     switch(p.state){
         case READY:
