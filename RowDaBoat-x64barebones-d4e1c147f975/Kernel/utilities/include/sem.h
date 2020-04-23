@@ -9,6 +9,6 @@ int semPost(uint16_t sem);
 
 void removeSem(uint16_t sem);
 
-void dumpSemaphores();
+void dumpSem();
 
 #endif

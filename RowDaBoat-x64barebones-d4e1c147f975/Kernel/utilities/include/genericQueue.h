@@ -8,12 +8,13 @@ typedef struct genericQueueNode{
 
 typedef struct genericQueue{
     genericQueueNode * first;
-    genericQueueNode * last; 
+    genericQueueNode * last;
 }genericQueue;
 
-int enqueue(genericQueue * q, genericQueueNode * node);
 
-genericQueueNode * dequeue(genericQueue * q);
+int enqueue(genericQueue * q, void * data);
+
+void * dequeue(genericQueue * q);
 
 int isQueueEmpty(genericQueue * q);
 

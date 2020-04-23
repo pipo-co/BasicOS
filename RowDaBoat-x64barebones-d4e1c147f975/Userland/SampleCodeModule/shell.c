@@ -6,7 +6,7 @@
 
 //constantes para la definicion de arrays
 #define USER_INPUT_SIZE 50
-#define MAX_FUNCTIONS 20
+#define MAX_FUNCTIONS 100
 #define MAX_ARGUMENTS_SIZE 5
 
 #define END_OF_EXECUTION_KEY 27
@@ -86,11 +86,17 @@
     static void cmdGetPID();
     static void cmdChangeProcessPriority(int argcount, char * args[]);
 
+    //Semaphore Commands
+    static void cmdCreateSem(int argcount, char * args[]);
+    static void cmdRemoveSem(int argcount, char * args[]);
+    static void cmdSemWait(int argcount, char * args[]);
+    static void cmdSemPost(int argcount, char * args[]);
+
     //Test Agodios
     extern void test_mm();
 //End
 
-    static void prueba();
+static void semTester();
 
 void startShell(){
     //Se cargan los modulos
@@ -214,9 +220,14 @@ static void loadFunctions(){
     loadFunction("getpid", (void (*)(int, char**))cmdGetPID,"Return running process PID \n");
     loadFunction("changePriority", (void (*)(int, char**))cmdChangeProcessPriority,"Change process priority given it's PID \n");
     loadFunction("Lavander", (void (*)(int, char**))Lavander, "Plays an indie game's music");
-    loadFunction("prueba", (void (*)(int, char**))prueba, "Prueba");
-    loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM");
-    // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");
+    loadFunction("openSem", (void (*)(int, char**))cmdCreateSem, "Create new Semaphore or Open an existing one \n");
+    loadFunction("closeSem", (void (*)(int, char**))cmdRemoveSem, "Close an existing semaphore \n");
+    loadFunction("semWait", (void (*)(int, char**))cmdSemWait, "Sem Wait \n");
+    loadFunction("semPost", (void (*)(int, char**))cmdSemPost, "Sem Post \n");
+    loadFunction("dumpSem", (void (*)(int, char**))dumpSem, "Semaphores Dump \n");
+    loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM \n");
+    loadFunction("semtest", (void (*)(int, char**))semTester, "Sem Test \n");
+    // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");semTester
     // loadFunction("Evangelion", (void (*)(int, char**))Evangelion, "Evangelion theme\n"); 
     // loadFunction("SadMusic", (void (*)(int, char**))Sadness, "Music to listen when you are sad");
     // loadFunction("Victory", (void (*)(int, char**))Victory, "Music to listen when you win");
@@ -420,9 +431,55 @@ static void cmdChangeProcessPriority(int argcount, char * args[]){
     changeProccessPriority(atoi(args[0]), atoi(args[1]));
 }
 
-static void prueba(){
-    while(1){
-        println("Prueba esta corriendo");
-        block(getPID());
+static void cmdCreateSem(int argcount, char * args[]){
+    if(argcount < 2){
+        println("Need semaphore name and initial value");
+        return;
     }
+    
+    int32_t aux = createSem(args[0], atoi(args[1]));
+    if(aux == -1)
+        println("Error creating sem");
+    else
+        printint(aux);
+}
+
+static void cmdSemWait(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a semaphore valid code");
+        return;
+    }
+    
+    int aux = semWait(atoi(args[0]));
+    if(aux == -1)
+        println("Error in semWait");
+}
+
+static void cmdSemPost(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a semaphore valid code");
+        return;
+    }
+    
+    int aux = semPost(atoi(args[0]));
+    if(aux == -1)
+        println("Error in semPost");
+}
+
+static void cmdRemoveSem(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a semaphore valid code");
+        return;
+    }
+    removeSem(atoi(args[0]));
+}
+
+static void semTester(){
+    uint16_t sem = createSem("nachocapo", 0);
+    printint(sem); putchar('\n');
+    println("Hola, un post y me bloqueo");
+    if(semWait(sem) == -1)
+        println("Error!");
+    println("Hola, me desbloquearon, otro fav(post) y me bloqueo!");
+    removeSem(sem);
 }

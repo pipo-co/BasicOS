@@ -64,8 +64,7 @@ int main(){
 
 	initScheduler();
 
-	int pid = initializeProccess(sampleCodeModuleAddress, "Sample Code Module", 1, 0, NULL);
-	changeProccessPriority(pid, 4);
+	initializeProccess(sampleCodeModuleAddress, "Sample Code Module", 1, 0, NULL);
 
 	_hlt(); //Hace el sti y hlt
 

@@ -23,6 +23,12 @@ GLOBAL dumpScheduler
 GLOBAL changeProccessPriority
 GLOBAL block
 GLOBAL unblock
+GLOBAL createSem
+GLOBAL semWait
+GLOBAL semPost
+GLOBAL removeSem
+GLOBAL dumpSem
+
 
 %macro pushState 0
 	push rbx
@@ -136,3 +142,18 @@ block:
 
 unblock:
 	sysCaller 20
+
+createSem:
+	sysCaller 21
+
+semWait:
+	sysCaller 22
+
+semPost:
+	sysCaller 23
+
+removeSem:
+	sysCaller 24
+
+dumpSem:
+	sysCaller 25

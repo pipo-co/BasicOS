@@ -4,10 +4,10 @@
 #include <lib.h>
 #include <screenDriver.h>
 
-#define PRIORITY_COUNT 5
+#define MAX_PRIORITY 4
 #define TIME_MULT 2
 #define PROCCESS_STACK_SIZE (8 * 1024 - sizeof(proccessNode)) //8 KiB
-#define DEFAULT_PRIORITY (PRIORITY_COUNT/2)
+#define DEFAULT_PRIORITY 0
 
 typedef struct stackFrame{ 
     uint64_t r15;
@@ -50,30 +50,32 @@ typedef struct proccessNode{
 
 typedef struct{
     proccessNode * first;
-    proccessNode * last; 
+    proccessNode * last;
+    uint16_t readyCount; 
 }proccessNodeQueue;
-
-static void removeProccess(proccessNode * node);
-static int isEmpty(proccessNodeQueue * q);
-static void push(proccessNodeQueue * q, proccessNode * node);
-static void pushActP(proccessNodeQueue * q, proccessNode * node);
-static proccessNode* pop(proccessNodeQueue * q);
-static proccessNode* popActP(proccessNodeQueue * q);
-static uint16_t dumpQueueProcesses(proccessNodeQueue * q);
-static proccessNode * getProccessNodeFromPID(uint16_t pid);
-static uint64_t swapProccess(uint64_t rsp);
-static void changeProccessState(uint16_t pid, enum states state);
-static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority);
-static uint16_t getNewPID();
-static int dummyFunction(int argc, char ** argv);
-
-static void dumpProccess(proccess_t p);
 
 extern void _hlt();
 
+static uint64_t swapProccess(uint64_t rsp);
+
+static void removeProccess(proccessNode * node);
+static proccessNode * getProccessNodeFromPID(uint16_t pid);
+static void changeProccessState(uint16_t pid, enum states state);
+static void createProccess(proccessNode * node, char* name, uint8_t fg);
+static uint16_t getNewPID();
+static void dumpProccess(proccess_t p);
+
+static void loader2(int argc, char *argv[], int (*function)(int , char **));
+static int dummyFunction(int argc, char ** argv);
+
+//Process Queue Methods
+static int isProcessQueueEmpty(proccessNodeQueue * q);
+static void processEnqueue(proccessNodeQueue * q, proccessNode * node);
+static proccessNode* processDequeue(proccessNodeQueue * q);
+static uint16_t dumpQueueProcesses(proccessNodeQueue * q);
+
 
 static proccessNodeQueue activeProccesses;
-static uint16_t readyCount;
 
 static proccessNode * runningProccessNode;
 static uint64_t runtimeLeft;
@@ -81,13 +83,11 @@ static uint16_t pidCounter = 1;
 
 static proccessNode * dummyProcessNode;
 
-//Scheduler
 
 void initScheduler(){
     //Initialize Dummy Process
     initializeProccess(dummyFunction, "Dummy Process", 0, 0, NULL); //Mete al dummy process en la cola
-    dummyProcessNode = popActP(&activeProccesses); //Lo saco de la cola (es el unico Pc en ella)
-    dummyProcessNode->proccess.priority = PRIORITY_COUNT; //Para que su runtime sea 0
+    dummyProcessNode = processDequeue(&activeProccesses); //Lo saco de la cola (es el unico Pc en ella)
 }
 
 uint64_t scheduler(uint64_t rsp){
@@ -108,26 +108,26 @@ static uint64_t swapProccess(uint64_t rsp){
             if(runningProccessNode->proccess.state == KILLED)
                 removeProccess(runningProccessNode);
             else
-                pushActP(&activeProccesses, runningProccessNode);
+                processEnqueue(&activeProccesses, runningProccessNode);
         }
     }
 
-    if(readyCount > 0){
+    if(activeProccesses.readyCount > 0){
 
-        runningProccessNode = popActP(&activeProccesses);
+        runningProccessNode = processDequeue(&activeProccesses);
         while(runningProccessNode->proccess.state != READY){
 
             if(runningProccessNode->proccess.state == KILLED)
                 removeProccess(runningProccessNode);
             else if(runningProccessNode->proccess.state == BLOCKED)
-                pushActP(&activeProccesses, runningProccessNode);
+                processEnqueue(&activeProccesses, runningProccessNode);
             
-            runningProccessNode = popActP(&activeProccesses);
+            runningProccessNode = processDequeue(&activeProccesses);
         }
     }else
         runningProccessNode = dummyProcessNode;
 
-    runtimeLeft = (PRIORITY_COUNT - runningProccessNode->proccess.priority) * TIME_MULT; //Heuristica
+    runtimeLeft = runningProccessNode->proccess.priority + 1; //Heuristica
 
     return runningProccessNode->proccess.rsp;
 }
@@ -139,8 +139,8 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
     if(node == NULL)
         return 0;
 
-    createProccess(node, name, fg, DEFAULT_PRIORITY);
-    pushActP(&activeProccesses, node);
+    createProccess(node, name, fg);
+    processEnqueue(&activeProccesses, node);
 
     stackFrame newSF;
     newSF.ss = 0;
@@ -157,7 +157,7 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
     return node->proccess.pid;
 }
 
-static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t prority){
+static void createProccess(proccessNode * node, char* name, uint8_t fg){
     proccess_t * p = &node->proccess;
 
     p->rbp = (uint64_t)node + PROCCESS_STACK_SIZE + sizeof(proccessNode) - sizeof(uint64_t);
@@ -165,7 +165,7 @@ static void createProccess(proccessNode * node, char* name, uint8_t fg, uint8_t 
     p->name = name;
     p->pid = getNewPID();
     p->fg = fg;
-    p->priority = prority;
+    p->priority = DEFAULT_PRIORITY;
     p->state = READY;
 }
 
@@ -178,7 +178,7 @@ static void removeProccess(proccessNode * node){ //Faltan cosas capaz
     free2(node);
 }
 
-static void push(proccessNodeQueue * q, proccessNode * node){
+static void processEnqueue(proccessNodeQueue * q, proccessNode * node){
     if(q == NULL || node == NULL)
         return;
 
@@ -189,10 +189,13 @@ static void push(proccessNodeQueue * q, proccessNode * node){
 
     q->last = node;
     node->next = NULL;
+
+    if(node->proccess.state == READY)
+        activeProccesses.readyCount++;
 }
 
-static proccessNode* pop(proccessNodeQueue * q){
-    if(q == NULL || isEmpty(q))
+static proccessNode* processDequeue(proccessNodeQueue * q){
+    if(q == NULL || isProcessQueueEmpty(q))
         return NULL;
 
     proccessNode* ans = q->first;
@@ -202,83 +205,67 @@ static proccessNode* pop(proccessNodeQueue * q){
 
     q->first = q->first->next;
 
+    if(ans->proccess.state == READY)
+        activeProccesses.readyCount--;
+
     return ans;
 }
 
-static uint16_t dumpQueueProcesses(proccessNodeQueue * q){
-    uint16_t count = 0;
-
-    for(proccessNode* iter = q->first; iter != NULL; iter = iter->next){
-        putchar('\t');
-        dumpProccess(iter->proccess);
-        count++;
-    }
-    return count;
-}
-
-static int isEmpty(proccessNodeQueue * q){
+static int isProcessQueueEmpty(proccessNodeQueue * q){
     return q == NULL || q->first == NULL;
 }
 
 static proccessNode * getProccessNodeFromPID(uint16_t pid){
-        for(proccessNode* iter = activeProccesses.first; iter != NULL; iter = iter->next){
+        if(runningProccessNode->proccess.pid == pid)
+            return runningProccessNode;
+        
+        if(dummyProcessNode->proccess.pid == pid)
+            return dummyProcessNode;
+
+        for(proccessNode* iter = activeProccesses.first; iter != NULL; iter = iter->next){ //Lo busco en la cola
             if(iter->proccess.pid == pid)
                 return iter;
         }
+
     return NULL;
 }
 
-static void pushActP(proccessNodeQueue * q, proccessNode * node){
-    push(q,node);
-    
-    if(node->proccess.state == READY)
-        readyCount++;
-}
-
-static proccessNode* popActP(proccessNodeQueue * q){
-    proccessNode* ans = pop(q);
-    if(ans->proccess.state == READY)
-        readyCount--;
-    return ans;
-}
-
-void loader2(int argc, char *argv[], int (*function)(int , char **)){
+static void loader2(int argc, char *argv[], int (*function)(int , char **)){
     function(argc, argv);
     exit();
 }
 
 static void changeProccessState(uint16_t pid, enum states state){
-    if(pid == dummyProcessNode->proccess.pid)
+    proccessNode * node = getProccessNodeFromPID(pid);
+
+    if(node == NULL || node == dummyProcessNode) //No hay proceso asociado a pid
         return;
 
-    if(runningProccessNode->proccess.pid == pid){
+    if(node == runningProccessNode){
         runningProccessNode->proccess.state = state;
         return;
     }
 
-    proccessNode * node = getProccessNodeFromPID(pid);
-    if(node != NULL && node->proccess.state != KILLED){
+    
+    if(node->proccess.state != KILLED){
 
         if(node->proccess.state != READY && state == READY)
-            readyCount++;
+            activeProccesses.readyCount++;
+
         else if(node->proccess.state == READY && state != READY)
-            readyCount--;
+            activeProccesses.readyCount--;
 
         node->proccess.state = state;
     }
 }
 
 void changeProccessPriority(uint16_t pid, uint8_t priority){
-    if(priority >= PRIORITY_COUNT)
-        priority = PRIORITY_COUNT - 1;
+    if(priority > MAX_PRIORITY)
+        priority = MAX_PRIORITY;
 
-    proccessNode* node;
-    if(runningProccessNode->proccess.pid == pid)
-        node = runningProccessNode;
-    else 
-        node = getProccessNodeFromPID(pid);
+    proccessNode* node = getProccessNodeFromPID(pid);
 
-    if(node == NULL)
+    if(node == NULL || node == dummyProcessNode) //No hay process asociado a pid
         return;
 
     node->proccess.priority = priority;
@@ -311,6 +298,14 @@ uint16_t getPID(){
     return runningProccessNode->proccess.pid;
 }
 
+static int dummyFunction(int argc, char ** argv){
+    while(1){
+        println("Dummy");
+        _hlt();
+    }
+    return 0;
+}
+
 void dumpScheduler(){
     uint16_t totalP = 1; //El running proccess
 
@@ -335,17 +330,7 @@ void dumpScheduler(){
 }
 
 void dumpProcessFromPID(uint16_t pid){
-    proccessNode* node;
-
-    if(runningProccessNode->proccess.pid == pid)
-        node = runningProccessNode;
-
-    else if(dummyProcessNode->proccess.pid == pid)
-        node = dummyProcessNode;
-
-    else 
-        node = getProccessNodeFromPID(pid);
-
+    proccessNode* node = getProccessNodeFromPID(pid);
     if(node == NULL)
         return;
 
@@ -377,11 +362,13 @@ static void dumpProccess(proccess_t p){
     putchar('\n');
 }
 
-static int dummyFunction(int argc, char ** argv){
-    while(1){
-        println("Dummy");
-        _hlt();
-    }
-    return 0;
-}
+static uint16_t dumpQueueProcesses(proccessNodeQueue * q){
+    uint16_t count = 0;
 
+    for(proccessNode* iter = q->first; iter != NULL; iter = iter->next){
+        putchar('\t');
+        dumpProccess(iter->proccess);
+        count++;
+    }
+    return count;
+}

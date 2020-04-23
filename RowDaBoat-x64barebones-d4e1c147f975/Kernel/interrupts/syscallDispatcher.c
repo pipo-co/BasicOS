@@ -9,6 +9,7 @@
 #include <soundDriver.h>
 #include <memoryManager.h>
 #include <scheduler.h>
+#include <sem.h>
 
 //Funcion encargada de llamar a la funcion asociada a la systemCall llamada y pasarle 
 // los parametros correctos.
@@ -87,6 +88,23 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 		case 20:
 			//void unblock(uint16_t pid);
 			unblock(rsi);
+			break;
+		case 21:
+			//int32_t createSem(char * name, uint16_t initValue);
+			return createSem((char*)rsi, rdx);
+		case 22:
+			//int semWait(uint16_t sem);
+			return semWait(rsi);
+		case 23:
+			//int semPost(uint16_t sem);
+			return semPost(rsi);
+		case 24:
+			//void removeSem(uint16_t sem);
+			removeSem(rsi);
+			break;
+		case 25:
+			//void dumpSem();
+			dumpSem();
 			break;
 	}
 	return 0;

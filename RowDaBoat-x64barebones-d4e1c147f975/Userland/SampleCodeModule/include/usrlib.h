@@ -120,4 +120,20 @@ extern void block(uint16_t pid);
 
 //syscall 20
 extern void unblock(uint16_t pid);
+
+//syscall 21
+extern int32_t createSem(char * name, uint16_t initValue);
+
+//syscall 22
+extern int semWait(uint16_t sem);
+
+//syscall 23
+extern int semPost(uint16_t sem);
+
+//syscall 24
+extern void removeSem(uint16_t sem);
+
+//syscall 25
+extern void dumpSem();
+
 #endif

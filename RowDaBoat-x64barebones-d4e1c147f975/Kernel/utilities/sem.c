@@ -25,11 +25,7 @@ typedef struct semaphores{
 static int isValidSem(uint16_t sem);
 static void dumpSemaphore(semaphore_t sem);
 static int32_t getSemIndexFromName(char * name);
-static void initializeSem(char * name, uint16_t initValue);
-
-//Blocked Processes Pid Queue Methods
-static uint16_t blockedPidDequeue(genericQueue * q);
-static int blockedPidEnqueue(genericQueue * q, uint16_t n);
+static uint16_t initializeSem(char * name, uint16_t initValue);
 
 static semaphores_t semaphores;
 
@@ -47,7 +43,8 @@ int32_t createSem(char * name, uint16_t initValue){
     if(semaphores.size >= MAX_SEMAPHORE)
         return -1;
 
-    initializeSem(name, initValue);
+    index = initializeSem(name, initValue);    
+    printString("Sem real code: "); printint(index); putchar('\n'); //Test
 
     return index;      
 }
@@ -63,7 +60,7 @@ int semWait(uint16_t sem){
     
     uint16_t runningProcessPID = getPID();
 
-    if(blockedPidEnqueue(&semaphores.semArray[sem].blockedProcessesPidQueue, runningProcessPID) == -1)
+    if(enqueue(&semaphores.semArray[sem].blockedProcessesPidQueue, &runningProcessPID) == -1)
         return -1;
 
     block(runningProcessPID);
@@ -76,7 +73,7 @@ int semPost(uint16_t sem){
         return -1;
 
     if(!isQueueEmpty(&semaphores.semArray[sem].blockedProcessesPidQueue))
-        unblock(blockedPidDequeue(&semaphores.semArray[sem].blockedProcessesPidQueue));
+        unblock(*((uint16_t*)dequeue(&semaphores.semArray[sem].blockedProcessesPidQueue)));
     else
         semaphores.semArray[sem].counter++;
     
@@ -103,7 +100,7 @@ void removeSem(uint16_t sem){
         semaphores.firstInactive = sem;
 }
 
-void dumpSemaphores(){
+void dumpSem(){
     uint16_t activeCount = 0;
     printString("Total semaphores: "); printint(semaphores.size); putchar('\n');
 
@@ -130,7 +127,7 @@ static int32_t getSemIndexFromName(char * name){
     return -1;
 }
 
-static void initializeSem(char * name, uint16_t initValue){
+static uint16_t initializeSem(char * name, uint16_t initValue){
     uint16_t index = semaphores.firstInactive;
 
     semaphores.semArray[index].active = 1;
@@ -145,10 +142,11 @@ static void initializeSem(char * name, uint16_t initValue){
     for(uint16_t i = index + 1; i < MAX_SEMAPHORE; i++){
         if(!semaphores.semArray[i].active){
             semaphores.firstInactive = i;
-            return;
+            return index;
         }
     }
     semaphores.firstInactive = MAX_SEMAPHORE; //The array is full
+    return index;
 }
 
 static int isValidSem(uint16_t sem){
@@ -171,33 +169,4 @@ static void dumpSemaphore(semaphore_t sem){
             putchar('\t'); dumpProcessFromPID(*((uint16_t*)iter->data));
         }
     }
-}
-
-//Blocked Processes Pid Queue Logic
-
-static int blockedPidEnqueue(genericQueue * q, uint16_t pid){
-    if(q == NULL)
-        return -1;
-
-    genericQueueNode * node = malloc2(sizeof(genericQueueNode));
-    if(node == NULL)
-        return -1;
-
-    node->data = &pid; 
-
-    return enqueue(q, node);
-}
-
-static uint16_t blockedPidDequeue(genericQueue * q){
-
-    genericQueueNode * node = dequeue(q);
-
-    if(node == NULL)
-        return 0; //Manejo de error incorrecto
-
-    uint16_t pid = *((uint16_t*)node->data);
-
-    free2(node);
-
-    return pid;
 }

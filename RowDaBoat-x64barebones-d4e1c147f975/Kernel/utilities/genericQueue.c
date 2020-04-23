@@ -1,10 +1,17 @@
-#include <stdint.h>
 #include <stddef.h>
 #include <genericQueue.h>
+#include <memoryManager.h>
 
-int enqueue(genericQueue * q, genericQueueNode * node){
-    if(q == NULL || node == NULL)
+int enqueue(genericQueue * q, void * data){
+
+    if(q == NULL || data == NULL)
         return -1;
+
+    genericQueueNode * node = malloc2(sizeof(genericQueueNode));
+    if(node == NULL)
+        return -1;
+
+    node->data = data; 
 
     if(q->first == NULL)
         q->first = node;
@@ -17,16 +24,19 @@ int enqueue(genericQueue * q, genericQueueNode * node){
     return 0;
 }
 
-genericQueueNode * dequeue(genericQueue * q){
+void * dequeue(genericQueue * q){
     if(q == NULL || isQueueEmpty(q))
         return NULL;
 
-    genericQueueNode * ans = q->first;
+    genericQueueNode * node = q->first;
+    void * ans = node->data;
 
-    if(q->last == ans)
+    if(q->last == node)
         q->last = NULL;
 
     q->first = q->first->next;
+
+    free2(node);
 
     return ans;
 }
