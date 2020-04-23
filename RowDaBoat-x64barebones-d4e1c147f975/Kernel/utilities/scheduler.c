@@ -9,8 +9,6 @@
 #define PROCCESS_STACK_SIZE (8 * 1024 - sizeof(proccessNode)) //8 KiB
 #define DEFAULT_PRIORITY (PRIORITY_COUNT/2)
 
-
-
 typedef struct stackFrame{ 
     uint64_t r15;
     uint64_t r14;
@@ -82,164 +80,6 @@ static uint64_t runtimeLeft;
 static uint16_t pidCounter = 1;
 
 static proccessNode * dummyProcessNode;
-
-
-
-//Semaphore
-#define MAX_SEMAPHORE 100
-
-typedef struct semaphore{
-    uint16_t counter;
-    char * name;
-    proccessNodeQueue blockedProcesses;
-    uint16_t dependantProcessesCount;
-    uint8_t active;
-}semaphore_t;
-
-typedef struct semaphores{
-    semaphore_t semArray[MAX_SEMAPHORE];
-    uint16_t firstInactive;
-    uint16_t size;
-}semaphores_t;
-
-static int32_t getSemIndexFromName(char * name);
-static void initializeSem(char * name, uint16_t initValue);
-static int isValidSem(uint16_t sem);
-static void dumpSemaphore(semaphore_t sem);
-
-
-static semaphores_t semaphores;
-
-int32_t createSem(char * name, uint16_t initValue){
-    if(name == NULL)
-        return -1;
-
-    int index = getSemIndexFromName(name);
-
-    if(index != -1){
-        semaphores.semArray[index].dependantProcessesCount++;
-        return index;
-    }
-
-    if(semaphores.size >= MAX_SEMAPHORE)
-        return -1;
-
-    initializeSem(name, initValue);
-
-    return index;      
-}
-
-int semWait(uint16_t sem){
-    if(!isValidSem(sem))
-        return -1;
-
-    if(semaphores.semArray[sem].counter > 0){
-        semaphores.semArray[sem].counter--;
-        return 0;
-    }
-    
-    push(&semaphores.semArray[sem].blockedProcesses, runningProccessNode);
-    block(runningProccessNode->proccess.pid);
-
-    return 0;
-}
-
-int semPost(uint16_t sem){
-    if(!isValidSem(sem))
-        return -1;
-
-    if(!isEmpty(&semaphores.semArray[sem].blockedProcesses))
-        unblock(pop(&semaphores.semArray[sem].blockedProcesses)->proccess.pid);
-    else
-        semaphores.semArray[sem].counter++;
-    
-    return 0;
-}
-
-void removeSem(uint16_t sem){
-    if(!isValidSem(sem))
-        return;
-    
-    semaphores.semArray[sem].dependantProcessesCount--;
-
-    if(semaphores.semArray[sem].dependantProcessesCount > 0)
-        return;
-
-    semaphores.semArray[sem].active = 0;
-
-    semaphores.size--;
-
-    if(sem < semaphores.firstInactive)
-        semaphores.firstInactive = sem;
-}
-
-void dumpSemaphores(){
-    uint16_t activeCount = 0;
-    printString("Total semaphores: "); printint(semaphores.size); putchar('\n');
-
-    for(uint16_t i = 0; activeCount < semaphores.size; i++){
-        if(semaphores.semArray[i].active){
-            activeCount++;
-            printString("Semaphore Number: "); printint(activeCount); putchar('\n');
-            printString("Code: "); printint(i); putchar(' ');
-            dumpSemaphore(semaphores.semArray[i]);
-        }
-    }
-}
-
-static int32_t getSemIndexFromName(char * name){
-    uint16_t i = 0;
-
-    for(uint16_t activeSemCount = 0; activeSemCount < semaphores.size; i++){
-        if(semaphores.semArray[i].active){
-            activeSemCount++;
-            if(strcmp(name,semaphores.semArray[i].name))
-                return i;
-        }
-    }
-    return -1;
-}
-
-static void initializeSem(char * name, uint16_t initValue){
-    uint16_t index = semaphores.firstInactive;
-
-    semaphores.semArray[index].active = 1;
-    semaphores.semArray[index].name = name;
-    semaphores.semArray[index].counter = initValue;
-    semaphores.semArray[index].dependantProcessesCount = 1;
-    semaphores.semArray[index].blockedProcesses.first = NULL;
-    semaphores.semArray[index].blockedProcesses.last = NULL;
-    
-    semaphores.size++;
-
-    for(uint16_t i = index + 1; i < MAX_SEMAPHORE; i++){
-        if(!semaphores.semArray[i].active){
-            semaphores.firstInactive = i;
-            return;
-        }
-    }
-    semaphores.firstInactive = MAX_SEMAPHORE; //The array is full
-}
-
-static int isValidSem(uint16_t sem){
-    return sem < MAX_SEMAPHORE && semaphores.semArray[sem].active;
-}
-
-static void dumpSemaphore(semaphore_t sem){
-    printString("Name: "); printString(sem.name);
-
-    printString(" Counter: "); printint(sem.counter);
-
-    printString(" Processes Dependant on Semaphore: "); printint(sem.dependantProcessesCount);
-
-    (sem.active)? printString(" Is Active") : printString(" Is Not Active(PROBLEM)"); putchar('\n');
-
-    if(!isEmpty(&sem.blockedProcesses)){
-        println("Processes blocked by Semaphore:");
-        dumpQueueProcesses(&sem.blockedProcesses);
-    }
-}
-//End Sempahore
 
 //Scheduler
 
@@ -491,6 +331,24 @@ void dumpScheduler(){
     printString("Total Proccesses Created: ");
     printint(pidCounter - 2); //No contamos dummy
     putchar('\n');
+}
+
+void dumpProcessFromPID(uint16_t pid){
+    proccessNode* node;
+
+    if(runningProccessNode->proccess.pid == pid)
+        node = runningProccessNode;
+
+    else if(dummyProcessNode->proccess.pid == pid)
+        node = dummyProcessNode;
+
+    else 
+        node = getProccessNodeFromPID(pid);
+
+    if(node == NULL)
+        return;
+
+    dumpProccess(node->proccess);
 }
 
 static void dumpProccess(proccess_t p){

@@ -20,20 +20,10 @@ uint16_t getPID();
 
 void dumpScheduler();
 
+void dumpProcessFromPID(uint16_t pid);
+
 void initScheduler();
 
 void changeProccessPriority(uint16_t pid, uint8_t prority);
-
-//Semaphore
-
-int32_t createSem(char * name, uint16_t initValue);
-
-int semWait(uint16_t sem);
-
-int semPost(uint16_t sem);
-
-void removeSem(uint16_t sem);
-
-void dumpSemaphores();
 
 #endif
