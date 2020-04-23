@@ -22,18 +22,16 @@ typedef struct semaphores{
     uint16_t size;
 }semaphores_t;
 
-static int32_t getSemIndexFromName(char * name);
-static void initializeSem(char * name, uint16_t initValue);
 static int isValidSem(uint16_t sem);
 static void dumpSemaphore(semaphore_t sem);
+static int32_t getSemIndexFromName(char * name);
+static void initializeSem(char * name, uint16_t initValue);
 
 //Blocked Processes Pid Queue Methods
-static int blockedPidEnqueue(genericQueue * q, uint16_t n);
 static uint16_t blockedPidDequeue(genericQueue * q);
-
+static int blockedPidEnqueue(genericQueue * q, uint16_t n);
 
 static semaphores_t semaphores;
-
 
 int32_t createSem(char * name, uint16_t initValue){
     if(name == NULL)

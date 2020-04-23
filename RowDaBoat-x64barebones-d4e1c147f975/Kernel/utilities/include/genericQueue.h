@@ -17,8 +17,8 @@ genericQueueNode * dequeue(genericQueue * q);
 
 int isQueueEmpty(genericQueue * q);
 
-//void queuePeek(genericQueue *, void *);
+//void queuePeek(genericQueue *);
 
-//int getQueueSize(Queue *);
+//int getQueueSize(genericQueue *);
 
 #endif

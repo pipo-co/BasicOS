@@ -134,6 +134,7 @@ static uint64_t swapProccess(uint64_t rsp){
 
 uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv){
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
+    //genericQueueNode->data = node + sizeof(genericQueueNode);
 
     if(node == NULL)
         return 0;
