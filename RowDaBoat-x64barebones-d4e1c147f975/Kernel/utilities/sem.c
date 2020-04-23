@@ -4,23 +4,14 @@
 #include <memoryManager.h>
 #include <lib.h>
 #include <screenDriver.h>
+#include <genericQueue.h>
 
 #define MAX_SEMAPHORE 100
-
-typedef struct u16Node{
-    uint16_t num;
-    struct u16Node * next;
-}u16Node;
-
-typedef struct u16Queue{
-    u16Node * first;
-    u16Node * last; 
-}u16Queue;
 
 typedef struct semaphore{
     uint16_t counter;
     char * name;
-    u16Queue blockedProcessesPid;
+    genericQueue blockedProcessesPidQueue;
     uint16_t dependantProcessesCount;
     uint8_t active;
 }semaphore_t;
@@ -36,10 +27,9 @@ static void initializeSem(char * name, uint16_t initValue);
 static int isValidSem(uint16_t sem);
 static void dumpSemaphore(semaphore_t sem);
 
-//u16Queue Methods
-static int u16Push(u16Queue * q, uint16_t n);
-static uint16_t u16Pop(u16Queue * q);
-static int u16QueueIsEmpty(u16Queue * q);
+//Blocked Processes Pid Queue Methods
+static int blockedPidEnqueue(genericQueue * q, uint16_t n);
+static uint16_t blockedPidDequeue(genericQueue * q);
 
 
 static semaphores_t semaphores;
@@ -75,7 +65,7 @@ int semWait(uint16_t sem){
     
     uint16_t runningProcessPID = getPID();
 
-    if(u16Push(&semaphores.semArray[sem].blockedProcessesPid, runningProcessPID) == -1)
+    if(blockedPidEnqueue(&semaphores.semArray[sem].blockedProcessesPidQueue, runningProcessPID) == -1)
         return -1;
 
     block(runningProcessPID);
@@ -87,8 +77,8 @@ int semPost(uint16_t sem){
     if(!isValidSem(sem))
         return -1;
 
-    if(!u16QueueIsEmpty(&semaphores.semArray[sem].blockedProcessesPid))
-        unblock(u16Pop(&semaphores.semArray[sem].blockedProcessesPid));
+    if(!isQueueEmpty(&semaphores.semArray[sem].blockedProcessesPidQueue))
+        unblock(blockedPidDequeue(&semaphores.semArray[sem].blockedProcessesPidQueue));
     else
         semaphores.semArray[sem].counter++;
     
@@ -104,7 +94,7 @@ void removeSem(uint16_t sem){
     if(semaphores.semArray[sem].dependantProcessesCount > 0)
         return;
 
-    if(!u16QueueIsEmpty(&semaphores.semArray[sem].blockedProcessesPid))
+    if(!isQueueEmpty(&semaphores.semArray[sem].blockedProcessesPidQueue))
         println("Error Semaphores - Closed Sem With Blocked Processes");
 
     semaphores.semArray[sem].active = 0;
@@ -149,8 +139,8 @@ static void initializeSem(char * name, uint16_t initValue){
     semaphores.semArray[index].name = name;
     semaphores.semArray[index].counter = initValue;
     semaphores.semArray[index].dependantProcessesCount = 1;
-    semaphores.semArray[index].blockedProcessesPid.first = NULL; //Deberian ser innecesarios, pero por las dudas...
-    semaphores.semArray[index].blockedProcessesPid.last = NULL;
+    semaphores.semArray[index].blockedProcessesPidQueue.first = NULL; //Deberian ser innecesarios, pero por las dudas...
+    semaphores.semArray[index].blockedProcessesPidQueue.last = NULL;
     
     semaphores.size++;
 
@@ -176,55 +166,40 @@ static void dumpSemaphore(semaphore_t sem){
 
     (sem.active)? printString(" Is Active") : printString(" Is Not Active(PROBLEM)"); putchar('\n');
 
-    if(!u16QueueIsEmpty(&sem.blockedProcessesPid)){
+    if(!isQueueEmpty(&sem.blockedProcessesPidQueue)){
         println("Processes Blocked by Semaphore:");
 
-        for(u16Node* iter = sem.blockedProcessesPid.first; iter != NULL; iter = iter->next){
-            putchar('\t'); dumpProcessFromPID(iter->num);
+        for(genericQueueNode * iter = sem.blockedProcessesPidQueue.first; iter != NULL; iter = iter->next){
+            putchar('\t'); dumpProcessFromPID(*((uint16_t*)iter->data));
         }
     }
 }
 
-//u16Queue Logic
-static int u16Push(u16Queue * q, uint16_t n){
+//Blocked Processes Pid Queue Logic
+
+static int blockedPidEnqueue(genericQueue * q, uint16_t pid){
     if(q == NULL)
         return -1;
 
-    u16Node * node = malloc2(sizeof(u16Node));
+    genericQueueNode * node = malloc2(sizeof(genericQueueNode));
     if(node == NULL)
         return -1;
 
-    node->num = n; 
+    node->data = &pid; 
 
-    if(q->first == NULL)
-        q->first = node;
-    else
-        q->last->next = node;
-
-    q->last = node;
-    node->next = NULL;
-
-    return 0;
+    return enqueue(q, node);
 }
 
-static uint16_t u16Pop(u16Queue * q){
-    if(q == NULL || u16QueueIsEmpty(q))
+static uint16_t blockedPidDequeue(genericQueue * q){
+
+    genericQueueNode * node = dequeue(q);
+
+    if(node == NULL)
         return 0; //Manejo de error incorrecto
 
-    u16Node * ans = q->first;
+    uint16_t pid = *((uint16_t*)node->data);
 
-    if(q->last == ans)
-        q->last = NULL;
-
-    q->first = q->first->next;
-
-    uint16_t pid = ans->num;
-
-    free2(ans);
+    free2(node);
 
     return pid;
-}
-
-static int u16QueueIsEmpty(u16Queue * q){
-    return q == NULL || q->first == NULL;
 }
