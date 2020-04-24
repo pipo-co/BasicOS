@@ -54,7 +54,6 @@ typedef struct{
     uint16_t readyCount; 
 }proccessNodeQueue;
 
-extern void _hlt();
 
 static uint64_t swapProccess(uint64_t rsp);
 

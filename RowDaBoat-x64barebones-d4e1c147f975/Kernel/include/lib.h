@@ -20,6 +20,12 @@ extern uint8_t inb( uint16_t port);
 //Funcion para la realizacion de un out al mapa de entarda/salida.
 extern void outb( uint16_t port, uint8_t value);
 
+extern void _hlt();
+
+extern void _cli();
+
+extern void _sti();
+
 //Funcion auxiliar que permite obtener el valor del SP.
 extern uint64_t getSP();
 
