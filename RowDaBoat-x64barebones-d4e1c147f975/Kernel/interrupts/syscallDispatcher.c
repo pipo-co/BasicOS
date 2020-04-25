@@ -1,6 +1,7 @@
 //syscallDispatcher.c
 
 #include <stdint.h>
+#include <lib.h>
 #include <timerTick.h>
 #include <videoDriver.h>
 #include <screenDriver.h>
@@ -14,6 +15,8 @@
 //Funcion encargada de llamar a la funcion asociada a la systemCall llamada y pasarle 
 // los parametros correctos.
 uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9){
+	uint64_t aux;
+
 	switch(rdi){
         case 0:
 			//int ticks_elapsed();
@@ -90,17 +93,28 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			unblock(rsi);
 			break;
 		case 21:
+			_cli();
 			//int32_t createSem(char * name, uint16_t initValue);
-			return createSem((char*)rsi, rdx);
+			aux = createSem((char*)rsi, rdx);
+			_sti();
+			return aux;
 		case 22:
+			_cli();
 			//int semWait(uint16_t sem);
-			return semWait(rsi);
+			aux = semWait(rsi);
+			_sti();
+			return aux;
 		case 23:
+			_cli();
 			//int semPost(uint16_t sem);
-			return semPost(rsi);
+			aux = semPost(rsi);
+			_sti();
+			return aux;
 		case 24:
+			_cli();
 			//void removeSem(uint16_t sem);
 			removeSem(rsi);
+			_sti();
 			break;
 		case 25:
 			//void dumpSem();
