@@ -155,6 +155,9 @@ void dumpMM(){
         iter = iter->s.ptr;
     }
     putchar('\n');
+    printString("Available memory: ");
+    printint(getAvailableMemory());
+    putchar('\n');
 }
 
 #endif
