@@ -29,6 +29,11 @@ extern void _sti();
 //Funcion auxiliar que permite obtener el valor del SP.
 extern uint64_t getSP();
 
+//Funciones para evitar que dos procesos ejecuten las misma region simultaneamente
+extern void enter_critical_region(uint8_t * lock);
+
+extern void leave_critical_region(uint8_t * lock);
+
 int strilen(char * s);
 
 void printint(uint64_t value);

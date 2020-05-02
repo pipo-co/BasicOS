@@ -15,7 +15,6 @@
 //Funcion encargada de llamar a la funcion asociada a la systemCall llamada y pasarle 
 // los parametros correctos.
 uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rcx, uint64_t r8, uint64_t r9){
-	uint64_t aux;
 
 	switch(rdi){
         case 0:
@@ -93,28 +92,17 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			unblock(rsi);
 			break;
 		case 21:
-			_cli();
 			//int32_t createSem(char * name, uint16_t initValue);
-			aux = createSem((char*)rsi, rdx);
-			_sti();
-			return aux;
+			return createSem((char*)rsi, rdx);
 		case 22:
-			_cli();
 			//int semWait(uint16_t sem);
-			aux = semWait(rsi);
-			_sti();
-			return aux;
+			return semWait(rsi);
 		case 23:
-			_cli();
 			//int semPost(uint16_t sem);
-			aux = semPost(rsi);
-			_sti();
-			return aux;
+			return semPost(rsi);
 		case 24:
-			_cli();
 			//void removeSem(uint16_t sem);
 			removeSem(rsi);
-			_sti();
 			break;
 		case 25:
 			//void dumpSem();

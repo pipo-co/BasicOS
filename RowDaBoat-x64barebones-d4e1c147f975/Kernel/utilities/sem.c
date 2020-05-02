@@ -14,6 +14,7 @@ typedef struct semaphore{
     genericQueue blockedProcessesPidQueue;
     uint16_t dependantProcessesCount;
     uint8_t active;
+    uint8_t inUse;
 }semaphore_t;
 
 typedef struct semaphores{
@@ -29,22 +30,31 @@ static uint16_t initializeSem(char * name, uint16_t initValue);
 
 static semaphores_t semaphores;
 
+static uint8_t semCreationLock; //Only one Sem can be created or accessed at a time.
+
 int32_t createSem(char * name, uint16_t initValue){
     if(name == NULL)
         return -1;
+
+    enter_critical_region(&semCreationLock);
 
     int index = getSemIndexFromName(name);
 
     if(index != -1){
         semaphores.semArray[index].dependantProcessesCount++;
+        leave_critical_region(&semCreationLock);
         return index;
     }
 
-    if(semaphores.size >= MAX_SEMAPHORE)
+    if(semaphores.size >= MAX_SEMAPHORE){
+        leave_critical_region(&semCreationLock);
         return -1;
+    }
 
     index = initializeSem(name, initValue);    
     printString("Sem real code: "); printint(index); putchar('\n'); //Test
+
+    leave_critical_region(&semCreationLock);
 
     return index;      
 }
@@ -53,17 +63,24 @@ int semWait(uint16_t sem){
     if(!isValidSem(sem))
         return -1;
 
+    enter_critical_region(&semaphores.semArray[sem].inUse);
+
     if(semaphores.semArray[sem].counter > 0){
         semaphores.semArray[sem].counter--;
+        leave_critical_region(&semaphores.semArray[sem].inUse);
         return 0;
     }
     
     uint16_t runningProcessPID = getPID();
 
-    if(enqueue(&semaphores.semArray[sem].blockedProcessesPidQueue, &runningProcessPID) == -1)
+    if(enqueue(&semaphores.semArray[sem].blockedProcessesPidQueue, &runningProcessPID) == -1){
+        leave_critical_region(&semaphores.semArray[sem].inUse);
         return -1;
+    }
 
     block(runningProcessPID);
+
+    leave_critical_region(&semaphores.semArray[sem].inUse);
 
     return 0;
 }
@@ -72,22 +89,30 @@ int semPost(uint16_t sem){
     if(!isValidSem(sem))
         return -1;
 
+    enter_critical_region(&semaphores.semArray[sem].inUse);
+
     if(!isQueueEmpty(&semaphores.semArray[sem].blockedProcessesPidQueue))
         unblock(*((uint16_t*)dequeue(&semaphores.semArray[sem].blockedProcessesPidQueue)));
     else
         semaphores.semArray[sem].counter++;
     
+    leave_critical_region(&semaphores.semArray[sem].inUse);
+
     return 0;
 }
 
 void removeSem(uint16_t sem){
     if(!isValidSem(sem))
         return;
+
+    enter_critical_region(&semaphores.semArray[sem].inUse);
     
     semaphores.semArray[sem].dependantProcessesCount--;
 
-    if(semaphores.semArray[sem].dependantProcessesCount > 0)
+    if(semaphores.semArray[sem].dependantProcessesCount > 0){
+        leave_critical_region(&semaphores.semArray[sem].inUse);
         return;
+    }
 
     if(!isQueueEmpty(&semaphores.semArray[sem].blockedProcessesPidQueue))
         println("Error Semaphores - Closed Sem With Blocked Processes");
@@ -98,6 +123,8 @@ void removeSem(uint16_t sem){
 
     if(sem < semaphores.firstInactive)
         semaphores.firstInactive = sem;
+
+    leave_critical_region(&semaphores.semArray[sem].inUse);
 }
 
 void dumpSem(){
@@ -134,6 +161,7 @@ static uint16_t initializeSem(char * name, uint16_t initValue){
     semaphores.semArray[index].name = name;
     semaphores.semArray[index].counter = initValue;
     semaphores.semArray[index].dependantProcessesCount = 1;
+    semaphores.semArray[index].inUse = 0;
     semaphores.semArray[index].blockedProcessesPidQueue.first = NULL; //Deberian ser innecesarios, pero por las dudas...
     semaphores.semArray[index].blockedProcessesPidQueue.last = NULL;
     

@@ -7,6 +7,8 @@ GLOBAL getRtc
 GLOBAL inb
 GLOBAL outb
 GLOBAL getSP
+GLOBAL enter_critical_region
+GLOBAL leave_critical_region
 
 section .text
 	
@@ -57,5 +59,23 @@ outb:
 
 getSP:
 	mov rax, rsp
+	ret
+;
+
+enter_critical_region:
+	push rax
+
+.loop:
+	mov al, 1
+	xchg al, [rdi]
+	cmp al, 0
+	jne .loop
+
+	pop rax
+	ret
+;
+
+leave_critical_region:
+	mov BYTE [rdi], 0
 	ret
 ;
