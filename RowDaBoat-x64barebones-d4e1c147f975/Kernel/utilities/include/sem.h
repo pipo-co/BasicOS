@@ -11,4 +11,6 @@ void removeSem(uint16_t sem);
 
 void dumpSem();
 
+void dumpProcessesBlockedBySem(uint16_t sem);
+
 #endif

@@ -9,6 +9,7 @@
 #include <screenDriver.h>
 #include <memoryManager.h>
 #include <scheduler.h>
+#include <sem.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -58,7 +59,10 @@ int main(){
 
 	load_idt();
 
-	initMM(heapBaseAddress, HEAP_SIZE);	
+	initMM(heapBaseAddress, HEAP_SIZE);
+
+	if(initPipes() == -1)
+		return -1;
 
 	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
 

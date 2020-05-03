@@ -26,7 +26,7 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			break;
 		case 2:
 			//void printStringf( char * string, unsigned int font, unsigned int background);
-			printStringf((char *)rsi, rdx, rcx);
+			printStringf((char *) rsi, rdx, rcx);
 			break;
         case 3:
 			//char getKey();

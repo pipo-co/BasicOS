@@ -7,10 +7,11 @@
 #include <genericQueue.h>
 
 #define MAX_SEMAPHORE 100
+#define NAME_SIZE 20
 
 typedef struct semaphore{
     uint16_t counter;
-    char * name;
+    char name[NAME_SIZE];
     genericQueue blockedProcessesPidQueue;
     uint16_t dependantProcessesCount;
     uint8_t active;
@@ -24,7 +25,8 @@ typedef struct semaphores{
 }semaphores_t;
 
 static int isValidSem(uint16_t sem);
-static void dumpSemaphore(semaphore_t sem);
+static void dumpSemaphore(semaphore_t * sem);
+static void dumpBlockedProcessesQueue(semaphore_t * sem);
 static int32_t getSemIndexFromName(char * name);
 static uint16_t initializeSem(char * name, uint16_t initValue);
 
@@ -78,9 +80,9 @@ int semWait(uint16_t sem){
         return -1;
     }
 
-    block(runningProcessPID);
-
     leave_critical_region(&semaphores.semArray[sem].inUse);
+
+    block(runningProcessPID);
 
     return 0;
 }
@@ -106,6 +108,11 @@ void removeSem(uint16_t sem){
         return;
 
     enter_critical_region(&semaphores.semArray[sem].inUse);
+
+    if(!semaphores.semArray[sem].active){
+        leave_critical_region(&semaphores.semArray[sem].inUse);
+        return;
+    }
     
     semaphores.semArray[sem].dependantProcessesCount--;
 
@@ -136,9 +143,16 @@ void dumpSem(){
             activeCount++;
             printString("Semaphore Number: "); printint(activeCount); putchar('\n');
             printString("Code: "); printint(i); putchar(' ');
-            dumpSemaphore(semaphores.semArray[i]);
+            dumpSemaphore(&semaphores.semArray[i]);
         }
     }
+}
+
+void dumpProcessesBlockedBySem(uint16_t sem){
+    if(!isValidSem(sem))
+        return;
+
+    dumpBlockedProcessesQueue(&semaphores.semArray[sem]);
 }
 
 static int32_t getSemIndexFromName(char * name){
@@ -147,7 +161,7 @@ static int32_t getSemIndexFromName(char * name){
     for(uint16_t activeSemCount = 0; activeSemCount < semaphores.size; i++){
         if(semaphores.semArray[i].active){
             activeSemCount++;
-            if(strcmp(name,semaphores.semArray[i].name))
+            if(strcmp(name, semaphores.semArray[i].name))
                 return i;
         }
     }
@@ -158,7 +172,7 @@ static uint16_t initializeSem(char * name, uint16_t initValue){
     uint16_t index = semaphores.firstInactive;
 
     semaphores.semArray[index].active = 1;
-    semaphores.semArray[index].name = name;
+    strncpy(semaphores.semArray[index].name, name, NAME_SIZE - 1);
     semaphores.semArray[index].counter = initValue;
     semaphores.semArray[index].dependantProcessesCount = 1;
     semaphores.semArray[index].inUse = 0;
@@ -181,20 +195,24 @@ static int isValidSem(uint16_t sem){
     return sem < MAX_SEMAPHORE && semaphores.semArray[sem].active;
 }
 
-static void dumpSemaphore(semaphore_t sem){
-    printString("Name: "); printString(sem.name);
+static void dumpSemaphore(semaphore_t * sem){
+    printString("Name: "); printString(sem->name);
 
-    printString(" Counter: "); printint(sem.counter);
+    printString(" Counter: "); printint(sem->counter);
 
-    printString(" Processes Dependant on Semaphore: "); printint(sem.dependantProcessesCount);
+    printString(" Processes Dependant on Semaphore: "); printint(sem->dependantProcessesCount);
 
-    (sem.active)? printString(" Is Active") : printString(" Is Not Active(PROBLEM)"); putchar('\n');
+    (sem->active)? printString(" Is Active") : printString(" Is Not Active(PROBLEM)"); putchar('\n');
 
-    if(!isQueueEmpty(&sem.blockedProcessesPidQueue)){
+    if(!isQueueEmpty(&sem->blockedProcessesPidQueue)){
         println("Processes Blocked by Semaphore:");
 
-        for(genericQueueNode * iter = sem.blockedProcessesPidQueue.first; iter != NULL; iter = iter->next){
-            putchar('\t'); dumpProcessFromPID(*((uint16_t*)iter->data));
-        }
+        dumpBlockedProcessesQueue(sem);
+    }
+}
+
+static void dumpBlockedProcessesQueue(semaphore_t * sem){
+    for(genericQueueNode * iter = sem->blockedProcessesPidQueue.first; iter != NULL; iter = iter->next){
+        putchar('\t'); dumpProcessFromPID(*((uint16_t*)iter->data));
     }
 }

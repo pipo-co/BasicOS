@@ -121,3 +121,23 @@ int strcmp(char * s1, char * s2){
 
 	return *s1 == 0 && *s2 == 0;
 }
+  int strcat (char *dest,  char *src){
+    char *p;
+    char *q;
+
+    for (q = dest; *q != '\0'; q++);
+    
+    for(p = src; *p != '\0'; p++, q++)
+       *q = *p;
+    
+    *q = '\0';
+
+    return dest;
+  }
+
+void strncpy(char * dest, char * source, uint32_t n){
+	int i;
+	for(i = 0; i < n - 1 && source[i] != 0; i++)
+		dest[i] = source[i];
+	dest[i] = 0;
+}
