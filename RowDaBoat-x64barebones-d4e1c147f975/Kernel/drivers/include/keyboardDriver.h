@@ -11,6 +11,8 @@
 #define CAPSLOCK_DOWN 58
 #define ESC 27
 
+int initKeyboardDriver();
+
 //Permite verificar si existe un valor esperando en el registro del teclado
 extern int keyboardActivated();
 

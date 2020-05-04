@@ -9,7 +9,8 @@
 #include <rtcDriver.h>
 #include <soundDriver.h>
 #include <memoryManager.h>
-#include <scheduler.h>
+#include <scheduler.h> 
+#include <IORouter.h> 
 #include <sem.h>
 
 //Funcion encargada de llamar a la funcion asociada a la systemCall llamada y pasarle 
@@ -25,12 +26,12 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			drawPixel(rsi, rdx, rcx); 
 			break;
 		case 2:
-			//void printStringf( char * string, unsigned int font, unsigned int background);
-			printStringf((char *) rsi, rdx, rcx);
+			//void routePrintStringf( char * string, unsigned int font, unsigned int background);
+			routePrintStringf((char *) rsi, rdx, rcx);
 			break;
         case 3:
-			//char getKey();
-            return getKey();
+			//char getchar();
+            return getchar();
 		case 4:
 			//void setCursorPos(unsigned int x, unsigned int y);
 			setCursorPos(rsi, rdx);
@@ -73,8 +74,8 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			//uint16_t getPID();
 			return getPID();
 		case 16:
-			//uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv);
-			return initializeProccess((int (*)(int, char**))rsi, (char*)rdx, rcx, r8, (char**)r9);
+			//uint16_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
+			return initializeProccess((int (*)(int, char**))rsi, rdx, rcx, (char**)r8, (uint16_t *)r9);
 		case 17:
 			//void dumpScheduler();
 			dumpScheduler();

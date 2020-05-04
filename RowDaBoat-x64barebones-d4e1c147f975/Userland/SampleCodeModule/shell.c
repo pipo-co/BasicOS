@@ -111,7 +111,7 @@ void startShell(){
 
     //Se espera hasta que se reciba un enter y luego, se procesa el texto ingresado.
     //Si coincide con el nombre de una funcion se la ejecuta, sino se vuelve a modo lectura.
-    while(readUserInput(userInput,USER_INPUT_SIZE)){
+    while(readUserInput(userInput, USER_INPUT_SIZE)){
         processInstruction(userInput);
         setCursorPos(0,getScreenHeight() - 1);
         printf("Fleshy: $>", 0x5CFEE4, 0);
@@ -188,7 +188,7 @@ static void processInstruction(char * userInput){
     for (int i = 0; i < functionsSize; i++){
         if(strcmp(arguments[0], functions[i].name)){
             if(background)
-                initializeProccess((int (*)(int,char**))functions[i].function, functions[i].name, 0, argCount - 1, arguments + 1);
+                initializeProccess((int (*)(int,char**))functions[i].function, 0, argCount, arguments, 0);
             else
                 functions[i].function(argCount - 1, arguments + 1);
             return;

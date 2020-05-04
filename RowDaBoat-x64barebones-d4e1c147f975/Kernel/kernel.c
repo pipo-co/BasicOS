@@ -1,7 +1,6 @@
 //kernel.c
 
 #include <stdint.h>
-//#include <string.h>
 #include <lib.h>
 #include <moduleLoader.h>
 #include <idtLoader.h>
@@ -10,6 +9,8 @@
 #include <memoryManager.h>
 #include <scheduler.h>
 #include <sem.h>
+#include <pipe.h>
+#include <keyboardDriver.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -64,11 +65,15 @@ int main(){
 	if(initPipes() == -1)
 		return -1;
 
+	if(initKeyboardDriver() == -1)
+		return -1;
+
 	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
 
 	initScheduler();
 
-	initializeProccess(sampleCodeModuleAddress, "Sample Code Module", 1, 0, NULL);
+	char * argv[] = {"Sample Code Module"};
+	initializeProccess(sampleCodeModuleAddress, 1, 1, argv, NULL);
 
 	_hlt(); //Hace el sti y hlt
 

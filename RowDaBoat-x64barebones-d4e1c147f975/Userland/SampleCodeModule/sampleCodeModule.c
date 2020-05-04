@@ -8,8 +8,8 @@ void dummyFuction();
 int main(){
 
     int pid;
-
-    pid = initializeProccess((int (*)(int, char**))startShell, "Shell", 1, 0, 0);
+    char * argv[] = {"Shell"};
+    pid = initializeProccess((int (*)(int, char**))startShell, 1, 1, argv, 0);
     changeProccessPriority(pid, 4);
     // startShell();
 

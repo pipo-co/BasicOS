@@ -1,7 +1,9 @@
 //keyboardDriver.capsLock
 // Driver del teclado, obtencion de los scancodes y devolucion de los caracteres correspondientes
 
+#include <stdint.h>
 #include <keyboardDriver.h>
+#include <sem.h>
 
 #define BUFFER_SIZE 15
 
@@ -46,11 +48,18 @@ extern unsigned char getKeyboardScancode();
 //Variables
     static int shiftActivated = 0;
     static int capsLock = 0;
+    static uint16_t charAvailableSem;
 
     //Buffer con los codigos ascii de las teclas precionadas, forma de cola (FIFO)
     char keyBuffer[BUFFER_SIZE];
     unsigned int bufferCount = 0;
 //End Variables
+
+int initKeyboardDriver(){
+    if((charAvailableSem = createSem("keyboard", 0)) == -1)
+        return -1;
+    return 0;
+}
 
 
 int storeKey(){
@@ -79,8 +88,7 @@ int isCapsActivated(){
 }
 
 char getKey(){
-    if(bufferCount <= 0)
-        return 0;
+    semWait(charAvailableSem);
     
     return getKeyFromBuffer();
 }
@@ -95,8 +103,10 @@ static void processScancode(unsigned char scancode){
 }
 
 static void storeInBuffer(char c){
-    if(bufferCount < BUFFER_SIZE)
+    if(bufferCount < BUFFER_SIZE){
         keyBuffer[bufferCount++] = c;
+        semPost(charAvailableSem);
+    }
 }
 
 //Funcion auxiliar para el manejo de la cola

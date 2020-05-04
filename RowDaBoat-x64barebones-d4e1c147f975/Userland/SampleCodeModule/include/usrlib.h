@@ -107,7 +107,7 @@ extern void kill(uint16_t pid);
 extern uint16_t getPID();
 
 //syscall 16:
-extern uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv);
+extern uint16_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
 
 //syscall 17:
 extern void dumpScheduler();

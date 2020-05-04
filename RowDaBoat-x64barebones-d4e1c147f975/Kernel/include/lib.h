@@ -46,7 +46,7 @@ uint8_t intLog2(uint64_t n);
 //Boolean. True if both strings are equal.
 int strcmp(char * s1, char * s2);
 
-int strcat(char *dest , char *source);
+char * strcat(char *dest , char *source);
 
 void strncpy(char * dest, char * source, uint32_t n);
   

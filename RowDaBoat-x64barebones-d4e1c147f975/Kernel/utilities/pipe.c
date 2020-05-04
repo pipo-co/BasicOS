@@ -39,7 +39,6 @@ static void dumpPipe(pipe_t * pipe);
 //Circular static queue
 static void pipeEnqueue(pipe_t * pipeQueue, char c);
 static char pipeDequeue(pipe_t * pipeQueue);
-static char isPipeQueueEmpty(pipe_t * pipeQueue);
 
 
 int initPipes(){

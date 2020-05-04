@@ -40,6 +40,8 @@ typedef struct proccess_t{
     uint64_t rbp;
     uint8_t fg;
     uint8_t priority;
+    uint16_t stdIn;
+    uint16_t stdOut;
     enum states state;
 }proccess_t;
 
@@ -60,7 +62,8 @@ static uint64_t swapProccess(uint64_t rsp);
 static void removeProccess(proccessNode * node);
 static proccessNode * getProccessNodeFromPID(uint16_t pid);
 static void changeProccessState(uint16_t pid, enum states state);
-static void createProccess(proccessNode * node, char* name, uint8_t fg);
+static void createProccess(proccessNode * node, char* name, uint8_t fg, uint16_t * stdFd);
+static char ** copyArguments(char ** newArgv, int argc, char ** argv);
 static uint16_t getNewPID();
 static void dumpProccess(proccess_t p);
 
@@ -85,7 +88,8 @@ static proccessNode * dummyProcessNode;
 
 void initScheduler(){
     //Initialize Dummy Process
-    initializeProccess(dummyFunction, "Dummy Process", 0, 0, NULL); //Mete al dummy process en la cola
+    char * argv[] = {"Dummy Process"};
+    initializeProccess(dummyFunction, 0, 1, argv, NULL); //Mete al dummy process en la cola
     dummyProcessNode = processDequeue(&activeProccesses); //Lo saco de la cola (es el unico Pc en ella)
 }
 
@@ -131,14 +135,15 @@ static uint64_t swapProccess(uint64_t rsp){
     return runningProccessNode->proccess.rsp;
 }
 
-uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t fg, int argc, char ** argv){
+uint16_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd){
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
-    //genericQueueNode->data = node + sizeof(genericQueueNode);
 
     if(node == NULL)
         return 0;
 
-    createProccess(node, name, fg);
+    
+    argv = copyArguments((char **)(((uint64_t)node) + sizeof(proccessNode)), argc, argv);
+    createProccess(node, argv[0], fg, stdFd);
     processEnqueue(&activeProccesses, node);
 
     stackFrame newSF;
@@ -147,8 +152,8 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
     newSF.rflags = 0x202;
     newSF.cs = 0x8;
     newSF.rip = (uint64_t) loader2;
-    newSF.rdi = argc;
-    newSF.rsi = (uint64_t) argv;
+    newSF.rdi = argc - 1;
+    newSF.rsi = (uint64_t) ++argv;
     newSF.rdx = (uint64_t) function;
     newSF.rcx = node->proccess.pid;
 
@@ -156,7 +161,22 @@ uint16_t initializeProccess(int (*function)(int , char **), char* name, uint8_t 
     return node->proccess.pid;
 }
 
-static void createProccess(proccessNode * node, char* name, uint8_t fg){
+static char ** copyArguments(char ** newArgv, int argc, char ** argv){
+    char * dest = (char*)(((uint64_t)newArgv) + sizeof(char *) * argc); //char * dest = (char*)newArgv + argc ??
+
+    for(uint16_t i = 0; i < argc; i++){
+        newArgv[i] = dest;
+        for(char* aux = argv[i]; *aux; aux++, dest++){
+            *dest = *aux;
+        }
+        *dest = 0;
+        dest++;
+    }
+    
+    return newArgv;
+}
+
+static void createProccess(proccessNode * node, char* name, uint8_t fg, uint16_t * stdFd){
     proccess_t * p = &node->proccess;
 
     p->rbp = (uint64_t)node + PROCCESS_STACK_SIZE + sizeof(proccessNode) - sizeof(uint64_t);
@@ -166,6 +186,8 @@ static void createProccess(proccessNode * node, char* name, uint8_t fg){
     p->fg = fg;
     p->priority = DEFAULT_PRIORITY;
     p->state = READY;
+    p->stdIn = (stdFd)? stdFd[0] : 0;
+    p->stdOut = (stdFd)? stdFd[1] : 0;
 }
 
 static uint16_t getNewPID(){
@@ -295,6 +317,14 @@ void unblock(uint16_t pid){
 
 uint16_t getPID(){
     return runningProccessNode->proccess.pid;
+}
+
+uint16_t getRunningProcessStdIn(){
+    return runningProccessNode->proccess.stdIn;
+}
+
+uint16_t getRunningProcessStdOut(){
+    return runningProccessNode->proccess.stdOut;
 }
 
 static int dummyFunction(int argc, char ** argv){
