@@ -28,6 +28,11 @@ GLOBAL semWait
 GLOBAL semPost
 GLOBAL removeSem
 GLOBAL dumpSem
+GLOBAL openPipe
+GLOBAL writePipe
+GLOBAL readPipe
+GLOBAL closePipe
+GLOBAL dumpPipes
 
 
 %macro pushState 0
@@ -157,3 +162,18 @@ removeSem:
 
 dumpSem:
 	sysCaller 25
+
+openPipe:
+	sysCaller 26
+
+writePipe:
+	sysCaller 27
+
+readPipe:
+	sysCaller 28
+
+closePipe:
+	sysCaller 29
+
+dumpPipes:
+	sysCaller 30

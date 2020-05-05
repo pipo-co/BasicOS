@@ -92,6 +92,12 @@
     static void cmdSemWait(int argcount, char * args[]);
     static void cmdSemPost(int argcount, char * args[]);
 
+    //Pipe Commands
+    static void cmdOpenPipe(int argcount, char * args[]);
+    static void cmdWritePipe(int argcount, char * args[]);
+    static void cmdReadPipe(int argcount, char * args[]);
+    static void cmdClosePipe(int argcount, char * args[]);
+
     //Test Agodios
     extern void test_mm();
 //End
@@ -218,14 +224,19 @@ static void loadFunctions(){
     loadFunction("unblock", cmdUnblock,"Unblock process given it's PID \n");
     loadFunction("kill", cmdKill,"Kill process given it's PID \n");
     loadFunction("getpid", (void (*)(int, char**))cmdGetPID,"Return running process PID \n");
-    loadFunction("changePriority", (void (*)(int, char**))cmdChangeProcessPriority,"Change process priority given it's PID \n");
+    loadFunction("changePriority", cmdChangeProcessPriority,"Change process priority given it's PID \n");
     loadFunction("Lavander", (void (*)(int, char**))Lavander, "Plays an indie game's music");
-    loadFunction("openSem", (void (*)(int, char**))cmdCreateSem, "Create new Semaphore or Open an existing one \n");
-    loadFunction("closeSem", (void (*)(int, char**))cmdRemoveSem, "Close an existing semaphore \n");
-    loadFunction("semWait", (void (*)(int, char**))cmdSemWait, "Sem Wait \n");
-    loadFunction("semPost", (void (*)(int, char**))cmdSemPost, "Sem Post \n");
+    loadFunction("openSem", cmdCreateSem, "Create new Semaphore or Open an existing one \n");
+    loadFunction("closeSem", cmdRemoveSem, "Close an existing semaphore \n");
+    loadFunction("semWait", cmdSemWait, "Sem Wait \n");
+    loadFunction("semPost", cmdSemPost, "Sem Post \n");
     loadFunction("dumpSem", (void (*)(int, char**))dumpSem, "Semaphores Dump \n");
     loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM \n");
+    loadFunction("openPipe", cmdOpenPipe, "Create new Pipe or open an existing one \n");
+    loadFunction("writePipe", cmdWritePipe, "Write Char to pipe \n");
+    loadFunction("readPipe", cmdReadPipe, "Read Char from Pipe \n");
+    loadFunction("closePipe", cmdClosePipe, "Close Existing pipe \n");
+    loadFunction("dumpPipes", (void (*)(int, char**))dumpPipes, "Pipes Dump \n");
     loadFunction("semtest", (void (*)(int, char**))semTester, "Sem Test \n");
     // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");semTester
     // loadFunction("Evangelion", (void (*)(int, char**))Evangelion, "Evangelion theme\n"); 
@@ -440,8 +451,12 @@ static void cmdCreateSem(int argcount, char * args[]){
     int32_t aux = createSem(args[0], atoi(args[1]));
     if(aux == -1)
         println("Error creating sem");
-    else
+    else {
+        print("Sem code: ");
         printint(aux);
+        putchar('\n');
+    }
+       
 }
 
 static void cmdSemWait(int argcount, char * args[]){
@@ -473,6 +488,54 @@ static void cmdRemoveSem(int argcount, char * args[]){
     }
     removeSem(atoi(args[0]));
 }
+
+static void cmdOpenPipe(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a pipe name");
+        return;
+    }
+    int aux = openPipe(args[0]);
+    if(aux == -1)
+        println("Error creating pipe");
+    else {
+        print("Pipe code: ");
+        printint(aux);
+        putchar('\n');
+    }
+}
+
+static void cmdWritePipe(int argcount, char * args[]){
+    if(argcount < 2){
+        println("Need a pipe valid code and char to write");
+        return;
+    }
+    
+    int aux = writePipe(atoi(args[0]), args[1][0]);
+    if(aux == -1)
+        println("Error in writePipe");
+}
+
+static void cmdReadPipe(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a pipe valid code");
+        return;
+    }
+    
+    char c = readPipe(atoi(args[0]));
+    if(c == 0)
+        println("Error in readPipe");
+    putchar(c);
+    putchar('\n');
+}
+
+static void cmdClosePipe(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a pipe valid code");
+        return;
+    }
+    closePipe(atoi(args[0]));
+}
+
 
 static void semTester(){
     uint16_t sem = createSem("nachocapo", 0);

@@ -12,6 +12,7 @@
 #include <scheduler.h> 
 #include <IORouter.h> 
 #include <sem.h>
+#include <pipe.h>
 
 //Funcion encargada de llamar a la funcion asociada a la systemCall llamada y pasarle 
 // los parametros correctos.
@@ -108,6 +109,23 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 		case 25:
 			//void dumpSem();
 			dumpSem();
+			break;
+		case 26:
+			//int32_t openPipe(char * pipeName)
+			return openPipe((char*)rsi);
+		case 27:
+			//int writePipe(uint16_t pipe, char c)
+			return writePipe(rsi, (char)rdx);
+		case 28:
+			//char readPipe(uint16_t pipe)
+			return readPipe(rsi);
+		case 29:
+			//void closePipe(uint16_t pipe)
+			closePipe(rsi);
+			break;
+		case 30:
+			//void dumpPipes()
+			dumpPipes();
 			break;
 	}
 	return 0;

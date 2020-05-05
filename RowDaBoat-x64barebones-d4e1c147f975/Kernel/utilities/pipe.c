@@ -82,7 +82,7 @@ int writePipe(uint16_t pipeId, char c){
     pipeId--;
 
     if(!pipes.pipeArray[pipeId].active)
-        return 0;
+        return -1;
 
     semWait(pipes.pipeArray[pipeId].writeSem);
 
@@ -95,7 +95,7 @@ int writePipe(uint16_t pipeId, char c){
 
 char readPipe(uint16_t pipeId){
     if(!isValidPipe(pipeId))
-        return -1;
+        return 0;
 
     pipeId--;
 
@@ -147,6 +147,7 @@ void dumpPipes(){
     printString("Number of pipes active: ");printint(pipes.size);putchar('\n');
     for(int i = 0; i < MAX_PIPE; i++){
         if(pipes.pipeArray[i].active){
+            printString("Code: "); printint(i + 1);putchar(' ');
             dumpPipe(&pipes.pipeArray[i]);
         }
     }
@@ -181,7 +182,7 @@ static int initializePipe(char * pipeName){
 
     //Encontrar el proximo inactive
     for(int i = pipeId + 1; i < MAX_PIPE; i++){
-        if(!pipes.pipeArray[pipeId].active){
+        if(!pipes.pipeArray[i].active){
             pipes.firstInactive = i;
             return pipeId;
         }
@@ -201,7 +202,7 @@ static void dumpPipe(pipe_t * pipe){
 
     printString(" ReadSemCode: "); printint(pipe->readSem);
 
-    printString(" WriteSemCode: "); printint(pipe->readSem);
+    printString(" WriteSemCode: "); printint(pipe->writeSem);
 
     (pipe->active)? printString(" Is Active") : printString(" Is Not Active(PROBLEM)"); putchar('\n');
 
@@ -213,7 +214,7 @@ static void dumpPipe(pipe_t * pipe){
 
 
 static int32_t getPipeId(char * name){
-    uint16_t i = 0;
+    int i = 0;
 
     for(uint16_t activePipeCount = 0; activePipeCount < pipes.size; i++){
         if(pipes.pipeArray[i].active){

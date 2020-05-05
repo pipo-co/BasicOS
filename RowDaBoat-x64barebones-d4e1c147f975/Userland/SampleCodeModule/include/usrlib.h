@@ -136,4 +136,19 @@ extern void removeSem(uint16_t sem);
 //syscall 25
 extern void dumpSem();
 
+//syscall 26
+extern int32_t openPipe(char * pipeName);
+
+//syscall 27
+extern int writePipe(uint16_t pipe, char c);
+
+//syscall 28
+extern char readPipe(uint16_t pipe);
+
+//syscall 29
+extern void closePipe(uint16_t pipe);
+
+//syscall 30
+extern void dumpPipes();
+
 #endif
