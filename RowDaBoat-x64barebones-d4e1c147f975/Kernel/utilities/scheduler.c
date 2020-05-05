@@ -35,12 +35,12 @@ typedef struct stackFrame{
 enum states{READY, BLOCKED, KILLED};
 typedef struct proccess_t{
     char * name;
-    uint16_t pid;
+    uint16_t pid;       //No existe pid 0, reservado para error.
     uint64_t rsp;
     uint64_t rbp;
     uint8_t fg;
     uint8_t priority;
-    uint16_t stdIn;
+    uint16_t stdIn;     // 0 significa teclado/pantalla.
     uint16_t stdOut;
     enum states state;
 }proccess_t;

@@ -3,6 +3,8 @@
 
 int initPipes();
 
+
+// Devuelve el numero de pipe abierto. Empiezan en 1, el 0 se reserva para pantalla/teclado.
 int32_t openPipe(char * pipeName);
 
 int writePipe(uint16_t pipe, char c);
