@@ -9,6 +9,7 @@ GLOBAL outb
 GLOBAL getSP
 GLOBAL enter_critical_region
 GLOBAL leave_critical_region
+GLOBAL callTimerTick
 
 section .text
 	
@@ -77,5 +78,10 @@ enter_critical_region:
 
 leave_critical_region:
 	mov BYTE [rdi], 0
+	ret
+;
+
+callTimerTick:
+	int 20h
 	ret
 ;

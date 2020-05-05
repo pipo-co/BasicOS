@@ -34,6 +34,8 @@ extern void enter_critical_region(uint8_t * lock);
 
 extern void leave_critical_region(uint8_t * lock);
 
+extern void callTimerTick();
+
 int strilen(char * s);
 
 void printint(uint64_t value);

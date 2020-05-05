@@ -294,21 +294,20 @@ void changeProccessPriority(uint16_t pid, uint8_t priority){
 
 void exit(){
     kill(runningProccessNode->proccess.pid);
-    _hlt();
 }
 
 void kill(uint16_t pid){ 
     changeProccessState(pid, KILLED);
 
     if(pid == runningProccessNode->proccess.pid) // Es lo mismo que exit
-        _hlt();
+        callTimerTick();
 }
 
 void block(uint16_t pid){
     changeProccessState(pid, BLOCKED);
 
     if(pid == runningProccessNode->proccess.pid) // Espero a que el scheduler me saque
-        _hlt();
+        callTimerTick();
 }
 
 void unblock(uint16_t pid){
@@ -329,7 +328,7 @@ uint16_t getRunningProcessStdOut(){
 
 static int dummyFunction(int argc, char ** argv){
     while(1){
-        println("Dummy");
+        //println("Dummy");
         _hlt();
     }
     return 0;
