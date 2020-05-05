@@ -147,7 +147,7 @@ void dumpPipes(){
     printString("Number of pipes active: ");printint(pipes.size);putchar('\n');
     for(int i = 0; i < MAX_PIPE; i++){
         if(pipes.pipeArray[i].active){
-            printString("Code: "); printint(i + 1);putchar(' ');
+            printString("Code: "); printint(i + 1); putchar(' ');
             dumpPipe(&pipes.pipeArray[i]);
         }
     }
