@@ -21,7 +21,7 @@ typedef void (*shellFunction)(int, char**);
     //Estructura para el guardado de los modulos. Puntero a la funcion pertinente,
     // nombre con el cual se la llama y una breve descripcion de su funcionamiento. 
     typedef struct{
-        void (*function)(int argcount, char * args[]);
+        shellFunction function;
         char * name;
         char * description;
     }functionPackage;
@@ -36,7 +36,7 @@ typedef void (*shellFunction)(int, char**);
 //Protoripos
     //Funciones para el cargado del fuctionArray. Carga todos los modulos disponibles.
     static void loadFunctions();
-    static void loadFunction(char * string, void (*fn)(), char * desc);
+    static void loadFunction(char * string, shellFunction fn, char * desc);
     static shellFunction getFunction(char * functionName);
 
     //Funciones utilizadas para la operacion de la shell.
@@ -220,14 +220,12 @@ static void processInstruction(char * userInput){
         return;
         
     } else {
-        for (int i = 0; i < functionsSize; i++) {
-            if(strcmp(arguments[0], functions[i].name)){
-                if(background)
-                    initializeProccess((int (*)(int,char**))functions[i].function, 0, argCount, arguments, 0);
-                else
-                    functions[i].function(argCount - 1, arguments + 1);
-                return;
-            }
+        shellFunction function = getFunction(arguments[0]);
+
+        if(function != NULL){
+            if(initializeProccess((int (*)(int,char**))function, !background, argCount, arguments, 0) == 0)
+                println("There was a problem creating the new process");
+            return;
         }
     }
     
@@ -249,36 +247,36 @@ static void loadFunctions(){
     loadFunction("triggerException6", triggerException6, "Triggers Exception number 6 \n");
     loadFunction("arkanoid", arkanoid, "Arkanoid Game! Args: No args for new game. -c to continue last game.\n");
     loadFunction("beep", playSound, "Plays a beep \n");
-    loadFunction("dumpMM", (void (*)(int, char**))dumpMM, "Memory Manager Dump \n");
-    loadFunction("dumpScheduler", (void (*)(int, char**))dumpScheduler,"Scheduler Dump \n");
+    loadFunction("dumpMM", (shellFunction)dumpMM, "Memory Manager Dump \n");
+    loadFunction("dumpScheduler", (shellFunction)dumpScheduler,"Scheduler Dump \n");
     loadFunction("block", cmdBlock,"Block process given it's PID \n");
     loadFunction("unblock", cmdUnblock,"Unblock process given it's PID \n");
     loadFunction("kill", cmdKill,"Kill process given it's PID \n");
-    loadFunction("getpid", (void (*)(int, char**))cmdGetPID,"Return running process PID \n");
+    loadFunction("getpid", (shellFunction)cmdGetPID,"Return running process PID \n");
     loadFunction("changePriority", cmdChangeProcessPriority,"Change process priority given it's PID \n");
-    loadFunction("Lavander", (void (*)(int, char**))Lavander, "Plays an indie game's music");
+    loadFunction("Lavander", (shellFunction)Lavander, "Plays an indie game's music");
     loadFunction("openSem", cmdCreateSem, "Create new Semaphore or Open an existing one \n");
     loadFunction("closeSem", cmdRemoveSem, "Close an existing semaphore \n");
     loadFunction("semWait", cmdSemWait, "Sem Wait \n");
     loadFunction("semPost", cmdSemPost, "Sem Post \n");
-    loadFunction("dumpSem", (void (*)(int, char**))dumpSem, "Semaphores Dump \n");
+    loadFunction("dumpSem", (shellFunction)dumpSem, "Semaphores Dump \n");
     loadFunction("openPipe", cmdOpenPipe, "Create new Pipe or open an existing one \n");
     loadFunction("writePipe", cmdWritePipe, "Write String to pipe \n");
     loadFunction("readPipe", cmdReadPipe, "Read Char from Pipe \n");
     loadFunction("closePipe", cmdClosePipe, "Close Existing pipe \n");
-    loadFunction("dumpPipes", (void (*)(int, char**))dumpPipes, "Pipes Dump \n");
-    loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM \n");
-    loadFunction("testScheduler", (void (*)(int, char**))test_processes, "Test Scheduler \n");
-    loadFunction("semtest", (void (*)(int, char**))semTester, "Sem Test \n");
+    loadFunction("dumpPipes", (shellFunction)dumpPipes, "Pipes Dump \n");
+    loadFunction("testMM", (shellFunction)test_mm, "Test MM \n");
+    loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler \n");
+    loadFunction("semtest", (shellFunction)semTester, "Sem Test \n");
     loadFunction("prueba", prueba, "Sem Test \n");
-    // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");semTester
-    // loadFunction("Evangelion", (void (*)(int, char**))Evangelion, "Evangelion theme\n"); 
-    // loadFunction("SadMusic", (void (*)(int, char**))Sadness, "Music to listen when you are sad");
-    // loadFunction("Victory", (void (*)(int, char**))Victory, "Music to listen when you win");
-    // loadFunction("Defeat", (void (*)(int, char**))Defeat, "Music to listen when you are happyn't");
+    // loadFunction("Elisa", (shellFunction)forElisa, "Music for a student\n");semTester
+    // loadFunction("Evangelion", (shellFunction)Evangelion, "Evangelion theme\n"); 
+    // loadFunction("SadMusic", (shellFunction)Sadness, "Music to listen when you are sad");
+    // loadFunction("Victory", (shellFunction)Victory, "Music to listen when you win");
+    // loadFunction("Defeat", (shellFunction)Defeat, "Music to listen when you are happyn't");
 }
 
-static void loadFunction(char * string, void (*fn)(int, char**), char * desc){
+static void loadFunction(char * string, shellFunction fn, char * desc){
     functions[functionsSize].function = fn;
     functions[functionsSize].name = string;
     functions[functionsSize].description = desc;
@@ -330,7 +328,7 @@ static shellFunction getFunction(char * functionName){
 }
 
 static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], uint16_t pipeCount, int isFg){
-    void (*functionsArray[MAX_CONCAT_PIPES + 1])(int,char**);
+    shellFunction functionsArray[MAX_CONCAT_PIPES + 1];
     uint64_t childPid[MAX_CONCAT_PIPES + 1];
     uint16_t pipesId[MAX_CONCAT_PIPES];
 
@@ -354,6 +352,7 @@ static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], u
     uintToBase(pipeCount - 1, name, 10);
     strcat(name, defaultPipeName);
 
+    // En pipesId me guardo los id de todos los pipes abiertos, para luego poder cerrarlos
     // El ultimo proceso escribe a pantalla y recibe del pipe a su izquierda, el cual creamos
     pipesId[pipeCount - 1] = openPipe(name);
     stdFd[0] = pipesId[pipeCount - 1];
@@ -395,8 +394,6 @@ static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], u
     stdFd[1] = stdFd[0];
     stdFd[0] = 0;
     childPid[0] = initializeProccess((int (*)(int,char**))functionsArray[0], isFg, pipeLocation[0], arguments, stdFd);
-
-    // TODO: IMPLEMENTAR WAIT wait(childPid)
 
     // Libera los pipes creados, de izquierda a derecha.
     // Para eso, se asegura mediante un wait que los hijos hayan terminado de usar el recurso.
