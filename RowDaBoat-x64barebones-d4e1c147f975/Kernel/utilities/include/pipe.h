@@ -13,6 +13,8 @@ char readPipe(uint16_t pipe);
 
 void closePipe(uint16_t pipe);
 
+int writeStringPipe(uint16_t pipeId, char * s);
+
 void dumpPipes();
 
 #endif

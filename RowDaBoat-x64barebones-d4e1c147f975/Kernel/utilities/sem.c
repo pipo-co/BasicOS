@@ -52,7 +52,7 @@ int32_t createSem(char * name, uint16_t initValue){
     if(name == NULL)
         return -1;
 
-    enter_critical_region(&semCreationLock);
+    enter_critical_region(&semCreationLock); //Unica critical region larga
 
     int index = getSemIndexFromName(name);
 
@@ -155,7 +155,6 @@ void dumpSem(){
     for(uint16_t i = 0; activeCount < semaphores.size; i++){
         if(semaphores.semArray[i].active){
             activeCount++;
-            printString("Semaphore Number: "); printint(activeCount); putchar('\n');
             printString("Code: "); printint(i); putchar(' ');
             dumpSemaphore(&semaphores.semArray[i]);
         }
@@ -218,7 +217,7 @@ static void dumpSemaphore(semaphore_t * sem){
 
     printString(" Counter: "); printint(sem->counter);
 
-    printString(" Processes Dependant on Semaphore: "); printint(sem->dependantProcessesCount);
+    printString(" Processes Dependant on Semaphore: "); printint(sem->dependantProcessesCount); putchar('\n');
 
     if(!isQueueEmpty(&sem->blockedProcessesPidQueue)){
         println("Processes Blocked by Semaphore:");
@@ -242,6 +241,8 @@ static int pidEnqueue(pidQueue_t * q, uint16_t pid){
     q->tail = (q->tail + 1) % MAX_BLOCKED_PROCESSES;
 
     q->size++;
+
+    return 0;
 }
 
 static uint16_t pidDequeue(pidQueue_t * q){

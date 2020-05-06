@@ -140,7 +140,7 @@ extern void dumpSem();
 extern int32_t openPipe(char * pipeName);
 
 //syscall 27
-extern int writePipe(uint16_t pipe, char c);
+extern int writePipe(uint16_t pipe, char * s);
 
 //syscall 28
 extern char readPipe(uint16_t pipe);

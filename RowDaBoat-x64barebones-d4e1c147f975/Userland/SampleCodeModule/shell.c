@@ -26,7 +26,7 @@
     //Cantidad de funciones disponibles
     int functionsSize = 0;
 
-    int cursorTick = 0;
+    //int cursorTick = 0;
 
 //End
 //Protoripos
@@ -39,8 +39,8 @@
     static void processInstruction(char * userInput);
 
     //Funciones auxiliares para tener un cursor parpadeante. 
-    static void tickCursor();
-    static void turnOffCursor();
+    //static void tickCursor();
+    //static void turnOffCursor();
     
     //Modulos - Funciones ejecutables desde la shell
     //inforeg: imprimir el valor de todos los registros
@@ -131,20 +131,22 @@ static int readUserInput(char * buffer, int maxSize){
     
     int counter = 0;
     char c;
-    int currentTimerTick;
-    int lastTimerTick = -1;
+    
+    //int currentTimerTick;
+    //int lastTimerTick = -1;
     
     while((counter < maxSize - 1) && (c = getChar()) != '\n' ){
 
-        //Parpadeo del cursor.
+        /*//Parpadeo del cursor.
         currentTimerTick = getTicksElapsed();
         if(currentTimerTick != lastTimerTick && currentTimerTick % 10 == 0){
             tickCursor();
             lastTimerTick = currentTimerTick;
-        }
+        }*/
+
         //Procesado de la tecla presionada
         if(c){
-            turnOffCursor();
+            //turnOffCursor();
 
             if(c == END_OF_EXECUTION_KEY)
                 return 0;
@@ -172,7 +174,7 @@ static int readUserInput(char * buffer, int maxSize){
             }
         }
     }
-    turnOffCursor();
+    //turnOffCursor();
     buffer[counter++] = '\0';
     putchar('\n');
     return 1;
@@ -184,7 +186,7 @@ static void processInstruction(char * userInput){
     int background = 0;
 
     char * arguments[MAX_ARGUMENTS_SIZE];
-    int argCount = strtok(userInput,' ', arguments, MAX_ARGUMENTS_SIZE);
+    int argCount = strtok(userInput, ' ', arguments, MAX_ARGUMENTS_SIZE);
 
     if(strcmp(arguments[argCount - 1], "&")){
         background = 1;
@@ -233,7 +235,7 @@ static void loadFunctions(){
     loadFunction("dumpSem", (void (*)(int, char**))dumpSem, "Semaphores Dump \n");
     loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM \n");
     loadFunction("openPipe", cmdOpenPipe, "Create new Pipe or open an existing one \n");
-    loadFunction("writePipe", cmdWritePipe, "Write Char to pipe \n");
+    loadFunction("writePipe", cmdWritePipe, "Write String to pipe \n");
     loadFunction("readPipe", cmdReadPipe, "Read Char from Pipe \n");
     loadFunction("closePipe", cmdClosePipe, "Close Existing pipe \n");
     loadFunction("dumpPipes", (void (*)(int, char**))dumpPipes, "Pipes Dump \n");
@@ -252,20 +254,20 @@ static void loadFunction(char * string, void (*fn)(int, char**), char * desc){
     functionsSize++;
 }
 
-static void tickCursor(){
-    if(cursorTick)
-        putchar('\b');
-    else
-        putcharf(' ', 0, CURSOR_COLOR);
+// static void tickCursor(){
+//     if(cursorTick)
+//         putchar('\b');
+//     else
+//         putcharf(' ', 0, CURSOR_COLOR);
     
-    cursorTick = !cursorTick;
-}
+//     cursorTick = !cursorTick;
+// }
 
-static void turnOffCursor(){
-    if(cursorTick)
-        putchar('\b');
-    cursorTick = 0;
-}
+// static void turnOffCursor(){
+//     if(cursorTick)
+//         putchar('\b');
+//     cursorTick = 0;
+// }
 
 //Modulos
 static void ticksElpased(int argcount, char * args[]){
@@ -455,8 +457,7 @@ static void cmdCreateSem(int argcount, char * args[]){
         print("Sem code: ");
         printint(aux);
         putchar('\n');
-    }
-       
+    }    
 }
 
 static void cmdSemWait(int argcount, char * args[]){
@@ -506,11 +507,11 @@ static void cmdOpenPipe(int argcount, char * args[]){
 
 static void cmdWritePipe(int argcount, char * args[]){
     if(argcount < 2){
-        println("Need a pipe valid code and char to write");
+        println("Need a pipe valid code and string to write");
         return;
     }
     
-    int aux = writePipe(atoi(args[0]), args[1][0]);
+    int aux = writePipe(atoi(args[0]), args[1]);
     if(aux == -1)
         println("Error in writePipe");
 }

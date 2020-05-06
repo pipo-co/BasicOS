@@ -35,6 +35,7 @@ static int isValidPipe(uint16_t pipeId);
 static int initializePipe(char * pipeName);
 static int32_t getPipeId(char * pipeName);
 static void dumpPipe(pipe_t * pipe);
+static void updateFirstInactive(uint16_t oldValue);
 
 //Circular static queue
 static void pipeEnqueue(pipe_t * pipeQueue, char c);
@@ -143,6 +144,16 @@ void closePipe(uint16_t pipeId){
     semPost(pipes.pipeCreationSem);
 }
 
+int writeStringPipe(uint16_t pipeId, char * s){
+    if(!isValidPipe(pipeId) || !pipes.pipeArray[pipeId - 1].active)
+        return -1;
+
+    while(*s)
+        writePipe(pipeId, *s++);
+    
+    return 0;
+}
+
 void dumpPipes(){
     printString("Number of pipes active: ");printint(pipes.size);putchar('\n');
     for(int i = 0; i < MAX_PIPE; i++){
@@ -180,15 +191,19 @@ static int initializePipe(char * pipeName){
 
     pipes.size++;
 
-    //Encontrar el proximo inactive
-    for(int i = pipeId + 1; i < MAX_PIPE; i++){
+    updateFirstInactive(pipeId);
+    
+    return pipeId;
+}
+
+static void updateFirstInactive(uint16_t oldValue){
+    for(int i = oldValue + 1; i < MAX_PIPE; i++){
         if(!pipes.pipeArray[i].active){
             pipes.firstInactive = i;
-            return pipeId;
+            return;
         }
     }
     pipes.firstInactive = MAX_PIPE;
-    return pipeId;
 }
 
 static void dumpPipe(pipe_t * pipe){
@@ -202,9 +217,7 @@ static void dumpPipe(pipe_t * pipe){
 
     printString(" ReadSemCode: "); printint(pipe->readSem);
 
-    printString(" WriteSemCode: "); printint(pipe->writeSem);
-
-    (pipe->active)? printString(" Is Active") : printString(" Is Not Active(PROBLEM)"); putchar('\n');
+    printString(" WriteSemCode: "); printint(pipe->writeSem); putchar('\n');
 
     println("Processes Blocked by Pipe: ");
 

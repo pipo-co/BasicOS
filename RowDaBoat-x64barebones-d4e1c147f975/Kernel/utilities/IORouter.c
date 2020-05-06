@@ -11,12 +11,8 @@ void routePrintStringf(char * string, unsigned int font, unsigned int background
 
     if(fd == 0)
         printStringf(string, font, background);
-    else {
-        while(string){
-            writePipe(fd, *string);
-            string++;
-        }
-    }
+    else
+        writeStringPipe(fd, string);
 }
 
 char getchar(){
