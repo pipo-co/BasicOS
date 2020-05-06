@@ -101,25 +101,25 @@ extern void dumpMM();
 extern void exit();
 
 //syscall 14:
-extern void kill(uint16_t pid);
+extern void kill(uint64_t pid);
 
 //syscall 15:
-extern uint16_t getPID();
+extern uint64_t getPID();
 
 //syscall 16:
-extern uint16_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
+extern uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
 
 //syscall 17:
 extern void dumpScheduler();
 
 //syscall 18
-extern void changeProccessPriority(uint16_t pid, uint8_t prority);
+extern void changeProccessPriority(uint64_t pid, uint8_t prority);
 
 //syscall 19
-extern void block(uint16_t pid);
+extern void block(uint64_t pid);
 
 //syscall 20
-extern void unblock(uint16_t pid);
+extern void unblock(uint64_t pid);
 
 //syscall 21
 extern int32_t createSem(char * name, uint16_t initValue);

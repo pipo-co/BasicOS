@@ -10,7 +10,7 @@
 #define MAX_BLOCKED_PROCESSES 20
 
 typedef struct pidQueue{
-    uint16_t queue[MAX_BLOCKED_PROCESSES];
+    uint64_t queue[MAX_BLOCKED_PROCESSES];
     uint16_t head;
     uint16_t tail;
     uint16_t size; 
@@ -38,8 +38,8 @@ static uint16_t initializeSem(char * name, uint16_t initValue);
 static void updateFirstInactive(uint16_t oldValue);
 
 //Static Circular Queue Methods
-static int pidEnqueue(pidQueue_t * q, uint16_t pid);
-static uint16_t pidDequeue(pidQueue_t * q);
+static int pidEnqueue(pidQueue_t * q, uint64_t pid);
+static uint64_t pidDequeue(pidQueue_t * q);
 static int isQueueEmpty(pidQueue_t * q);
 static void initializePidQueue(pidQueue_t * q);
 static void dumpBlockedProcesses(pidQueue_t * q);
@@ -87,7 +87,7 @@ int semWait(uint16_t sem){
         return 0;
     }
     
-    uint16_t runningProcessPID = getPID();
+    uint64_t runningProcessPID = getPID();
 
     if(pidEnqueue(&semaphores.semArray[sem].blockedProcessesPidQueue, runningProcessPID) == -1){
         leave_critical_region(&semaphores.semArray[sem].inUse);
@@ -232,7 +232,7 @@ static void dumpBlockedProcesses(pidQueue_t * q){
     }
 }
 
-static int pidEnqueue(pidQueue_t * q, uint16_t pid){
+static int pidEnqueue(pidQueue_t * q, uint64_t pid){
     if(q->size >= MAX_BLOCKED_PROCESSES)
         return -1;
 
@@ -245,7 +245,7 @@ static int pidEnqueue(pidQueue_t * q, uint16_t pid){
     return 0;
 }
 
-static uint16_t pidDequeue(pidQueue_t * q){
+static uint64_t pidDequeue(pidQueue_t * q){
     if(isQueueEmpty(q))
         return 0;
 

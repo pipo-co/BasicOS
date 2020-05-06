@@ -7,7 +7,7 @@ void dummyFuction();
 
 int main(){
 
-    int pid;
+    uint64_t pid;
     char * argv[] = {"Shell"};
     pid = initializeProccess((int (*)(int, char**))startShell, 1, 1, argv, 0);
     changeProccessPriority(pid, 4);

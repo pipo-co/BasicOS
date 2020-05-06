@@ -68,29 +68,29 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			exit();
 			break;
 		case 14:
-			//void kill(uint16_t pid);
+			//void kill(uint64_t pid);
 			kill(rsi);
 			break;
 		case 15:
-			//uint16_t getPID();
+			//uint64_t getPID();
 			return getPID();
 		case 16:
-			//uint16_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
+			//uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
 			return initializeProccess((int (*)(int, char**))rsi, rdx, rcx, (char**)r8, (uint16_t *)r9);
 		case 17:
 			//void dumpScheduler();
 			dumpScheduler();
 			break;
 		case 18:
-			//void changeProccessPriority(uint16_t pid, uint8_t prority);
+			//void changeProccessPriority(uint64_t pid, uint8_t prority);
 			changeProccessPriority(rsi, rdx);
 			break;
 		case 19:
-			//void block(uint16_t pid);
+			//void block(uint64_t pid);
 			block(rsi);
 			break;
 		case 20:
-			//void unblock(uint16_t pid);
+			//void unblock(uint64_t pid);
 			unblock(rsi);
 			break;
 		case 21:

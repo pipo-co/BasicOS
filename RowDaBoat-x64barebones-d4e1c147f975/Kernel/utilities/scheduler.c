@@ -35,7 +35,7 @@ typedef struct stackFrame{
 enum states{READY, BLOCKED, KILLED};
 typedef struct proccess_t{
     char * name;
-    uint16_t pid;       //No existe pid 0, reservado para error.
+    uint64_t pid;       //No existe pid 0, reservado para error.
     uint64_t rsp;
     uint64_t rbp;
     uint8_t fg;
@@ -60,11 +60,11 @@ typedef struct{
 static uint64_t swapProccess(uint64_t rsp);
 
 static void removeProccess(proccessNode * node);
-static proccessNode * getProccessNodeFromPID(uint16_t pid);
-static void changeProccessState(uint16_t pid, enum states state);
+static proccessNode * getProccessNodeFromPID(uint64_t pid);
+static void changeProccessState(uint64_t pid, enum states state);
 static void createProccess(proccessNode * node, char* name, uint8_t fg, uint16_t * stdFd);
 static char ** copyArguments(char ** newArgv, int argc, char ** argv);
-static uint16_t getNewPID();
+static uint64_t getNewPID();
 static void dumpProccess(proccess_t p);
 
 static void loader2(int argc, char *argv[], int (*function)(int , char **));
@@ -74,14 +74,14 @@ static int dummyFunction(int argc, char ** argv);
 static int isProcessQueueEmpty(proccessNodeQueue * q);
 static void processEnqueue(proccessNodeQueue * q, proccessNode * node);
 static proccessNode* processDequeue(proccessNodeQueue * q);
-static uint16_t dumpQueueProcesses(proccessNodeQueue * q);
+static uint64_t dumpQueueProcesses(proccessNodeQueue * q);
 
 
 static proccessNodeQueue activeProccesses;
 
 static proccessNode * runningProccessNode;
 static uint64_t runtimeLeft;
-static uint16_t pidCounter = 1;
+static uint64_t pidCounter = 1;
 
 static proccessNode * dummyProcessNode;
 
@@ -135,7 +135,7 @@ static uint64_t swapProccess(uint64_t rsp){
     return runningProccessNode->proccess.rsp;
 }
 
-uint16_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd){
+uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd){
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
 
     if(node == NULL)
@@ -190,7 +190,7 @@ static void createProccess(proccessNode * node, char* name, uint8_t fg, uint16_t
     p->stdOut = (stdFd)? stdFd[1] : 0;
 }
 
-static uint16_t getNewPID(){
+static uint64_t getNewPID(){
     pidCounter++;
     return pidCounter - 1;
 }
@@ -236,7 +236,7 @@ static int isProcessQueueEmpty(proccessNodeQueue * q){
     return q == NULL || q->first == NULL;
 }
 
-static proccessNode * getProccessNodeFromPID(uint16_t pid){
+static proccessNode * getProccessNodeFromPID(uint64_t pid){
         if(runningProccessNode->proccess.pid == pid)
             return runningProccessNode;
         
@@ -256,7 +256,7 @@ static void loader2(int argc, char *argv[], int (*function)(int , char **)){
     exit();
 }
 
-static void changeProccessState(uint16_t pid, enum states state){
+static void changeProccessState(uint64_t pid, enum states state){
     proccessNode * node = getProccessNodeFromPID(pid);
 
     if(node == NULL || node == dummyProcessNode) //No hay proceso asociado a pid
@@ -280,7 +280,7 @@ static void changeProccessState(uint16_t pid, enum states state){
     }
 }
 
-void changeProccessPriority(uint16_t pid, uint8_t priority){
+void changeProccessPriority(uint64_t pid, uint8_t priority){
     if(priority > MAX_PRIORITY)
         priority = MAX_PRIORITY;
 
@@ -296,25 +296,25 @@ void exit(){
     kill(runningProccessNode->proccess.pid);
 }
 
-void kill(uint16_t pid){ 
+void kill(uint64_t pid){ 
     changeProccessState(pid, KILLED);
 
     if(pid == runningProccessNode->proccess.pid) // Es lo mismo que exit
         callTimerTick();
 }
 
-void block(uint16_t pid){
+void block(uint64_t pid){
     changeProccessState(pid, BLOCKED);
 
     if(pid == runningProccessNode->proccess.pid) // Espero a que el scheduler me saque
         callTimerTick();
 }
 
-void unblock(uint16_t pid){
+void unblock(uint64_t pid){
     changeProccessState(pid, READY);
 }
 
-uint16_t getPID(){
+uint64_t getPID(){
     return runningProccessNode->proccess.pid;
 }
 
@@ -335,7 +335,7 @@ static int dummyFunction(int argc, char ** argv){
 }
 
 void dumpScheduler(){
-    uint16_t totalP = 1; //El running proccess
+    uint64_t totalP = 1; //El running proccess
 
     if(runningProccessNode != NULL){
         println("Current Running Proccess:");
@@ -357,7 +357,7 @@ void dumpScheduler(){
     putchar('\n');
 }
 
-void dumpProcessFromPID(uint16_t pid){
+void dumpProcessFromPID(uint64_t pid){
     proccessNode* node = getProccessNodeFromPID(pid);
     if(node == NULL)
         return;
@@ -390,8 +390,8 @@ static void dumpProccess(proccess_t p){
     putchar('\n');
 }
 
-static uint16_t dumpQueueProcesses(proccessNodeQueue * q){
-    uint16_t count = 0;
+static uint64_t dumpQueueProcesses(proccessNodeQueue * q){
+    uint64_t count = 0;
 
     for(proccessNode* iter = q->first; iter != NULL; iter = iter->next){
         putchar('\t');

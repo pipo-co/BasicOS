@@ -100,6 +100,7 @@
 
     //Test Agodios
     extern void test_mm();
+    extern void test_processes();
 //End
 
 static void semTester();
@@ -233,12 +234,13 @@ static void loadFunctions(){
     loadFunction("semWait", cmdSemWait, "Sem Wait \n");
     loadFunction("semPost", cmdSemPost, "Sem Post \n");
     loadFunction("dumpSem", (void (*)(int, char**))dumpSem, "Semaphores Dump \n");
-    loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM \n");
     loadFunction("openPipe", cmdOpenPipe, "Create new Pipe or open an existing one \n");
     loadFunction("writePipe", cmdWritePipe, "Write String to pipe \n");
     loadFunction("readPipe", cmdReadPipe, "Read Char from Pipe \n");
     loadFunction("closePipe", cmdClosePipe, "Close Existing pipe \n");
     loadFunction("dumpPipes", (void (*)(int, char**))dumpPipes, "Pipes Dump \n");
+    loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM \n");
+    loadFunction("testScheduler", (void (*)(int, char**))test_processes, "Test Scheduler \n");
     loadFunction("semtest", (void (*)(int, char**))semTester, "Sem Test \n");
     // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");semTester
     // loadFunction("Evangelion", (void (*)(int, char**))Evangelion, "Evangelion theme\n"); 
