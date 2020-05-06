@@ -259,7 +259,7 @@ static void loader2(int argc, char *argv[], int (*function)(int , char **)){
 static void changeProccessState(uint64_t pid, enum states state){
     proccessNode * node = getProccessNodeFromPID(pid);
 
-    if(node == NULL || node == dummyProcessNode) //No hay proceso asociado a pid
+    if(node == NULL || node == dummyProcessNode || node->proccess.state == KILLED) //No hay proceso asociado a pid
         return;
 
     if(node == runningProccessNode){
@@ -267,17 +267,13 @@ static void changeProccessState(uint64_t pid, enum states state){
         return;
     }
 
-    
-    if(node->proccess.state != KILLED){
+    if(node->proccess.state != READY && state == READY)
+        activeProccesses.readyCount++;
 
-        if(node->proccess.state != READY && state == READY)
-            activeProccesses.readyCount++;
+    else if(node->proccess.state == READY && state != READY)
+        activeProccesses.readyCount--;
 
-        else if(node->proccess.state == READY && state != READY)
-            activeProccesses.readyCount--;
-
-        node->proccess.state = state;
-    }
+    node->proccess.state = state;
 }
 
 void changeProccessPriority(uint64_t pid, uint8_t priority){
