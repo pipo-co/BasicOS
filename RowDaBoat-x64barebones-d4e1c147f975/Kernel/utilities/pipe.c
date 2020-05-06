@@ -219,6 +219,11 @@ static void dumpPipe(pipe_t * pipe){
 
     printString(" WriteSemCode: "); printint(pipe->writeSem); putchar('\n');
 
+    printString("Content: "); 
+    for(int i = pipe->head; i != pipe->tail; i = i + 1 % PIPE_SIZE)
+        putchar(pipe->buffer[i]);
+    putchar('\n');
+
     println("Processes Blocked by Pipe: ");
 
     dumpProcessesBlockedBySem(pipe->readSem);

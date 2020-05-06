@@ -418,6 +418,10 @@ static void dumpProccess(proccess_t p){
         case BLOCKED:
             printString("BLOCKED"); break;
     }
+
+    printString(" StdIn: "); printint(p.stdIn);
+    printString(" StdOut: "); printint(p.stdOut);
+
     putchar('\n');
 }
 

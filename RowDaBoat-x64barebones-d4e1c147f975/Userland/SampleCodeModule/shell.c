@@ -45,7 +45,7 @@ typedef void (*shellFunction)(int, char**);
 
     //Funciones auxiliares funcionamiento pipes
     static int getPipesFunctions(char * arguments[], uint16_t pipeLocation[], uint16_t pipeCount, shellFunction fArr[]);
-    static void freePipesResources(uint64_t childPid[], uint16_t pipeCount, int isFg);
+    static void freePipesResources(uint64_t childPid[], uint16_t pipesId[], uint16_t pipeCount, int isFg);
     static int getPipeLocations(char * arguments[], int argc, uint16_t pipeLocation[]);
     static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], uint16_t pipeCount, int isFg);
 
@@ -112,6 +112,9 @@ typedef void (*shellFunction)(int, char**);
     //Test Agodios
     extern void test_mm();
     extern void test_processes();
+
+    // Pruebas
+    static void prueba(int argc, char ** argv);
 //End
 
 static void semTester();
@@ -267,6 +270,7 @@ static void loadFunctions(){
     loadFunction("testMM", (void (*)(int, char**))test_mm, "Test MM \n");
     loadFunction("testScheduler", (void (*)(int, char**))test_processes, "Test Scheduler \n");
     loadFunction("semtest", (void (*)(int, char**))semTester, "Sem Test \n");
+    loadFunction("prueba", prueba, "Sem Test \n");
     // loadFunction("Elisa", (void (*)(int, char**))forElisa, "Music for a student\n");semTester
     // loadFunction("Evangelion", (void (*)(int, char**))Evangelion, "Evangelion theme\n"); 
     // loadFunction("SadMusic", (void (*)(int, char**))Sadness, "Music to listen when you are sad");
@@ -328,6 +332,7 @@ static shellFunction getFunction(char * functionName){
 static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], uint16_t pipeCount, int isFg){
     void (*functionsArray[MAX_CONCAT_PIPES + 1])(int,char**);
     uint64_t childPid[MAX_CONCAT_PIPES + 1];
+    uint16_t pipesId[MAX_CONCAT_PIPES];
 
     // Inicializa functionsArray con los respectivos punteros a funcion de cada funcion de la shell, en orden.
     // De haber algun nombre invalido, falla.
@@ -350,7 +355,8 @@ static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], u
     strcat(name, defaultPipeName);
 
     // El ultimo proceso escribe a pantalla y recibe del pipe a su izquierda, el cual creamos
-    stdFd[0] = openPipe(name);
+    pipesId[pipeCount - 1] = openPipe(name);
+    stdFd[0] = pipesId[pipeCount - 1];
     stdFd[1] = 0;
        
     for(uint16_t i = pipeCount - 1; i > 0; i--){
@@ -367,33 +373,34 @@ static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], u
         strcat(name, defaultPipeName);
 
         // Inicializamos el proceso a la derecha del pipe, por eso la funcion es i + 1.
-        childPid[i + 1] = initializeProccess((int (*)(int,char**))functions[i + 1].function, 0, auxArgc, auxArgv, stdFd);
+        childPid[i + 1] = initializeProccess((int (*)(int,char**))functionsArray[i + 1], 0, auxArgc, auxArgv, stdFd);
 
         // Configuramos los fd del siguiente proceso a inicializar.
         // Su salida es la entrada del proceso creado anteriormente.
         // Su entrada es el pipe a su izquierda que hay que crear.
+        pipesId[i - 1] = openPipe(name);
         stdFd[1] = stdFd[0];
-        stdFd[0] = openPipe(name);
+        stdFd[0] = pipesId[i - 1];
     }
 
     // Para no abrir pipes demas, el segundo proceso debe ser creado a mano.
     // Es el correspondiente a i = 0.
     auxArgc = ((1 < pipeCount)? pipeLocation[1] : argc) - pipeLocation[0] - 1;
     auxArgv = arguments + pipeLocation[0] + 1;
-    childPid[1] = initializeProccess((int (*)(int,char**))functions[1].function, 0, auxArgc, auxArgv, stdFd);
+    childPid[1] = initializeProccess((int (*)(int,char**))functionsArray[1], 0, auxArgc, auxArgv, stdFd);
 
     // El primer proceso es un caso particular pues no tiene pipe a su izquierda.
     // Su entrada, si es que usa, debera ser el teclado.
     // Este es el unico proceso que podria ser fg. Esto fue indicado por parametro.
     stdFd[1] = stdFd[0];
     stdFd[0] = 0;
-    childPid[0] = initializeProccess((int (*)(int,char**))functions[0].function, isFg, pipeLocation[0], arguments, stdFd);
+    childPid[0] = initializeProccess((int (*)(int,char**))functionsArray[0], isFg, pipeLocation[0], arguments, stdFd);
 
     // TODO: IMPLEMENTAR WAIT wait(childPid)
 
     // Libera los pipes creados, de izquierda a derecha.
     // Para eso, se asegura mediante un wait que los hijos hayan terminado de usar el recurso.
-    freePipesResources(childPid, pipeCount, isFg);
+    freePipesResources(childPid, pipesId, pipeCount, isFg);
 }
 
 static int getPipesFunctions(char * arguments[], uint16_t pipeLocation[], uint16_t pipeCount, shellFunction fArr[]){
@@ -408,7 +415,7 @@ static int getPipesFunctions(char * arguments[], uint16_t pipeLocation[], uint16
     return 0;
 }
 
-static void freePipesResources(uint64_t childPid[], uint16_t pipeCount, int isFg){
+static void freePipesResources(uint64_t childPid[], uint16_t pipesId[], uint16_t pipeCount, int isFg){
 
     // Si es foreground, el wait ya lo hubiese hecho automaticamente
     if(!isFg)
@@ -417,14 +424,14 @@ static void freePipesResources(uint64_t childPid[], uint16_t pipeCount, int isFg
     for(uint16_t i = 0; i < pipeCount; i++){
         waitChild(childPid[i + 1]);
 
-        closePipe(i);
+        closePipe(pipesId[i]);
     }
 }
 
 
 //Modulos
 static void ticksElpased(int argcount, char * args[]){
-    if(strcmp(args[0],"-s"))
+    if(argcount > 0 && strcmp(args[0],"-s"))
         printint(getTicksElapsed() / 18);
     else
         printint(getTicksElapsed());
@@ -699,4 +706,13 @@ static void semTester(){
         println("Error!");
     println("Hola, me desbloquearon, otro fav(post) y me bloqueo!");
     removeSem(sem);
+}
+
+static void prueba(int argc, char ** argv){
+    char c;
+    while((c = getChar()) != '\n')
+        putchar(c);
+
+    print(argv[0]);
+    putchar('\n');
 }
