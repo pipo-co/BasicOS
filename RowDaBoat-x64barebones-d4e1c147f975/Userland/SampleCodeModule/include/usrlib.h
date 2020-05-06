@@ -38,6 +38,8 @@ int strcmp(char * s1, char * s2);
 
 int strlen(char * s);
 
+char * strcat(char *dest , char *source);
+
 //Funcion para cortar un string terminado en cero utilizando un delimitador provisto.
 // Modifica el string.
 int strtok(char * s, char delim, char * array[], int arraySize);
@@ -150,5 +152,8 @@ extern void closePipe(uint16_t pipe);
 
 //syscall 30
 extern void dumpPipes();
+
+//syscall 31
+extern void waitChild(uint64_t pid);
 
 #endif

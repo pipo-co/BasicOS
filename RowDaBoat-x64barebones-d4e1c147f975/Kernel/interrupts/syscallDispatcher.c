@@ -127,6 +127,10 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			//void dumpPipes()
 			dumpPipes();
 			break;
+		case 31:
+			//void wait(uint64_t pid);
+			wait(rsi);
+			break;
 	}
 	return 0;
 }

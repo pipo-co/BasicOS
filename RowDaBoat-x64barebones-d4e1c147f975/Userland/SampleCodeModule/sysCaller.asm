@@ -33,6 +33,7 @@ GLOBAL writePipe
 GLOBAL readPipe
 GLOBAL closePipe
 GLOBAL dumpPipes
+GLOBAL waitChild
 
 
 %macro pushState 0
@@ -177,3 +178,6 @@ closePipe:
 
 dumpPipes:
 	sysCaller 30
+
+waitChild:
+	sysCaller 31

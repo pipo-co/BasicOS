@@ -7,16 +7,14 @@ void dummyFuction();
 
 int main(){
 
-    uint64_t pid;
     char * argv[] = {"Shell"};
-    pid = initializeProccess((int (*)(int, char**))startShell, 1, 1, argv, 0);
-    changeProccessPriority(pid, 4);
+    initializeProccess((int (*)(int, char**))startShell, 1, 1, argv, 0);
     // startShell();
 
 
-    // clearScreen();
-    // setCursorPos(0, 0);
-    // print("Sesion finalizada");
+    clearScreen();
+    setCursorPos(0, 0);
+    print("Sesion finalizada");
     return 0;
 }
 

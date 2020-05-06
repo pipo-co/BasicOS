@@ -100,10 +100,26 @@ int strlen(char * s){
 	return rta;
 }
 
+char * strcat(char *dest,  char *src){
+	char *p;
+    char *q;
+
+    for (q = dest; *q != '\0'; q++);
+    
+    for(p = src; *p != '\0'; p++, q++)
+       *q = *p;
+    
+    *q = '\0';
+
+	return dest;
+}
+
 int strtok(char * s, char delim, char * array[], int arraySize){
 	int arrayIndex = 0;
+
 	if(*s != delim && *s != '\0')
 		array[arrayIndex++] = s;
+		
 	while( *s != '\0' ){
 		if(*s == delim){
 			*s = 0;

@@ -19,6 +19,8 @@ void exit();
 
 uint64_t getPID();
 
+void wait(uint64_t pid);
+
 void dumpScheduler();
 
 void dumpProcessFromPID(uint64_t pid);

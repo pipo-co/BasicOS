@@ -75,7 +75,7 @@ int main(){
 	char * argv[] = {"Sample Code Module"};
 	initializeProccess(sampleCodeModuleAddress, 1, 1, argv, NULL);
 
-	_hlt(); //Hace el sti y hlt
+	_hlt(); //Hace el sti y hlt. Primer TimerTick
 
 	println("No deberiamos llegar aca");
 	return 0;

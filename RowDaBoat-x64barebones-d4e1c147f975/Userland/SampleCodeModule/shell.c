@@ -1,4 +1,5 @@
 //shell.c
+#include <stddef.h>
 #include <shell.h>
 #include <usrlib.h>
 #include <arkanoid.h>
@@ -7,11 +8,14 @@
 //constantes para la definicion de arrays
 #define USER_INPUT_SIZE 50
 #define MAX_FUNCTIONS 100
-#define MAX_ARGUMENTS_SIZE 5
+#define MAX_ARGUMENTS_SIZE 20
+#define MAX_CONCAT_PIPES 10
 
 #define END_OF_EXECUTION_KEY 27
 #define GAME_RETURNING_KEY '\t'
 #define CURSOR_COLOR 0x00FF00
+
+typedef void (*shellFunction)(int, char**);
 
 //Vars
     //Estructura para el guardado de los modulos. Puntero a la funcion pertinente,
@@ -33,10 +37,17 @@
     //Funciones para el cargado del fuctionArray. Carga todos los modulos disponibles.
     static void loadFunctions();
     static void loadFunction(char * string, void (*fn)(), char * desc);
+    static shellFunction getFunction(char * functionName);
 
     //Funciones utilizadas para la operacion de la shell.
     static int readUserInput(char * buffer, int maxSize);
     static void processInstruction(char * userInput);
+
+    //Funciones auxiliares funcionamiento pipes
+    static int getPipesFunctions(char * arguments[], uint16_t pipeLocation[], uint16_t pipeCount, shellFunction fArr[]);
+    static void freePipesResources(uint64_t childPid[], uint16_t pipeCount, int isFg);
+    static int getPipeLocations(char * arguments[], int argc, uint16_t pipeLocation[]);
+    static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], uint16_t pipeCount, int isFg);
 
     //Funciones auxiliares para tener un cursor parpadeante. 
     //static void tickCursor();
@@ -185,8 +196,9 @@ static int readUserInput(char * buffer, int maxSize){
 // y se verifica si el texto ingresado valida con el nombre de una funcion para asi llamarla.
 static void processInstruction(char * userInput){
     int background = 0;
-
     char * arguments[MAX_ARGUMENTS_SIZE];
+    uint16_t pipeLocation[MAX_CONCAT_PIPES];
+
     int argCount = strtok(userInput, ' ', arguments, MAX_ARGUMENTS_SIZE);
 
     if(strcmp(arguments[argCount - 1], "&")){
@@ -194,15 +206,28 @@ static void processInstruction(char * userInput){
         argCount--;
     }
 
-    for (int i = 0; i < functionsSize; i++){
-        if(strcmp(arguments[0], functions[i].name)){
-            if(background)
-                initializeProccess((int (*)(int,char**))functions[i].function, 0, argCount, arguments, 0);
-            else
-                functions[i].function(argCount - 1, arguments + 1);
-            return;
+    int pipeCount = getPipeLocations(arguments, argCount, pipeLocation);
+
+    if(pipeCount == -1){
+        println("Incorrect use of pipes");
+        return;
+
+    } else if(pipeCount > 0){
+        processPipe(arguments, argCount, pipeLocation, pipeCount, !background);
+        return;
+        
+    } else {
+        for (int i = 0; i < functionsSize; i++) {
+            if(strcmp(arguments[0], functions[i].name)){
+                if(background)
+                    initializeProccess((int (*)(int,char**))functions[i].function, 0, argCount, arguments, 0);
+                else
+                    functions[i].function(argCount - 1, arguments + 1);
+                return;
+            }
         }
     }
+    
     if(*userInput != 0){
         print(userInput);
         println(" not found");
@@ -270,6 +295,132 @@ static void loadFunction(char * string, void (*fn)(int, char**), char * desc){
 //         putchar('\b');
 //     cursorTick = 0;
 // }
+
+static int getPipeLocations(char * arguments[], int argc, uint16_t pipeLocation[]){
+    static char * pipe = "|";
+
+    uint16_t count = 0;
+
+    if(strcmp(arguments[0], pipe) || strcmp(arguments[argc - 1], pipe)) //No se puede empezar o terminar con pipe
+        return -1;
+
+    for(uint16_t i = 1; i < argc; i++){
+        if(strcmp(arguments[i], pipe)){
+
+            if(strcmp(arguments[i+1], pipe)) //No puede haber dos pipes seguidos
+                return -1;
+                
+            pipeLocation[count++] = i;
+        }
+    }
+    return count;
+}
+
+static shellFunction getFunction(char * functionName){
+    for (int i = 0; i < functionsSize; i++) {
+        if(strcmp(functionName, functions[i].name)){
+            return functions[i].function;
+        }
+    }
+    return NULL;
+}
+
+static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], uint16_t pipeCount, int isFg){
+    void (*functionsArray[MAX_CONCAT_PIPES + 1])(int,char**);
+    uint64_t childPid[MAX_CONCAT_PIPES + 1];
+
+    // Inicializa functionsArray con los respectivos punteros a funcion de cada funcion de la shell, en orden.
+    // De haber algun nombre invalido, falla.
+    if(getPipesFunctions(arguments, pipeLocation, pipeCount, functionsArray) == -1){
+        println("One of the functions called between pipes is invalid");
+        return;
+    }
+
+    static char defaultPipeName[] = "_shellPipe";
+    char name[15]; // Buffer auxiliar para armar el nombre de los pipes
+    uint16_t stdFd[2]; // Array donde guardamos los fd de los nuevos procesos. IN = 0; OUT = 1;
+
+    int auxArgc;
+    char ** auxArgv;
+
+    // Inicializamos los procesos de derecha a izquierda
+
+    // Armamos el nombre del ultimo pipe (id_defaultPipeName)
+    uintToBase(pipeCount - 1, name, 10);
+    strcat(name, defaultPipeName);
+
+    // El ultimo proceso escribe a pantalla y recibe del pipe a su izquierda, el cual creamos
+    stdFd[0] = openPipe(name);
+    stdFd[1] = 0;
+       
+    for(uint16_t i = pipeCount - 1; i > 0; i--){
+
+        // La cantidad de argumentos es el indice del pipe a la derecha, menos el que esta a la izquierda menos 1
+        // Incluye el nombre de la funcion. Si es el ultimo, el pipe de la derecha vendria a ser equivalente a argc
+        auxArgc = ((i < pipeCount - 1)? pipeLocation[i+1] : argc) - pipeLocation[i] - 1;
+
+        // argv es el indice donde esta el nombre de la funcion, es decir, a la derecha del pipe.
+        auxArgv = arguments + pipeLocation[i] + 1;
+
+        // Armamos el nombre del pipe
+        uintToBase(i - 1, name, 10);
+        strcat(name, defaultPipeName);
+
+        // Inicializamos el proceso a la derecha del pipe, por eso la funcion es i + 1.
+        childPid[i + 1] = initializeProccess((int (*)(int,char**))functions[i + 1].function, 0, auxArgc, auxArgv, stdFd);
+
+        // Configuramos los fd del siguiente proceso a inicializar.
+        // Su salida es la entrada del proceso creado anteriormente.
+        // Su entrada es el pipe a su izquierda que hay que crear.
+        stdFd[1] = stdFd[0];
+        stdFd[0] = openPipe(name);
+    }
+
+    // Para no abrir pipes demas, el segundo proceso debe ser creado a mano.
+    // Es el correspondiente a i = 0.
+    auxArgc = ((1 < pipeCount)? pipeLocation[1] : argc) - pipeLocation[0] - 1;
+    auxArgv = arguments + pipeLocation[0] + 1;
+    childPid[1] = initializeProccess((int (*)(int,char**))functions[1].function, 0, auxArgc, auxArgv, stdFd);
+
+    // El primer proceso es un caso particular pues no tiene pipe a su izquierda.
+    // Su entrada, si es que usa, debera ser el teclado.
+    // Este es el unico proceso que podria ser fg. Esto fue indicado por parametro.
+    stdFd[1] = stdFd[0];
+    stdFd[0] = 0;
+    childPid[0] = initializeProccess((int (*)(int,char**))functions[0].function, isFg, pipeLocation[0], arguments, stdFd);
+
+    // TODO: IMPLEMENTAR WAIT wait(childPid)
+
+    // Libera los pipes creados, de izquierda a derecha.
+    // Para eso, se asegura mediante un wait que los hijos hayan terminado de usar el recurso.
+    freePipesResources(childPid, pipeCount, isFg);
+}
+
+static int getPipesFunctions(char * arguments[], uint16_t pipeLocation[], uint16_t pipeCount, shellFunction fArr[]){
+
+    if((fArr[0] = getFunction(arguments[0])) == NULL)
+        return -1;
+
+    for(uint16_t p = 0; p < pipeCount; p++){
+        if((fArr[p + 1] = getFunction(arguments[pipeLocation[p] + 1])) == NULL)
+            return -1;
+    }
+    return 0;
+}
+
+static void freePipesResources(uint64_t childPid[], uint16_t pipeCount, int isFg){
+
+    // Si es foreground, el wait ya lo hubiese hecho automaticamente
+    if(!isFg)
+        waitChild(childPid[0]);
+    
+    for(uint16_t i = 0; i < pipeCount; i++){
+        waitChild(childPid[i + 1]);
+
+        closePipe(i);
+    }
+}
+
 
 //Modulos
 static void ticksElpased(int argcount, char * args[]){

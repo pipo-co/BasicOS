@@ -5,9 +5,11 @@
 #include <screenDriver.h>
 
 #define MAX_PRIORITY 4
+//#define MAX_PROCESS_FOREGROUND 32
 #define TIME_MULT 2
 #define PROCCESS_STACK_SIZE (8 * 1024 - sizeof(proccessNode)) //8 KiB
-#define DEFAULT_PRIORITY 0
+#define DEFAULT_BACKGROUND_PRIORITY 0
+#define DEFAULT_FOREGROUND_PRIORITY MAX_PRIORITY
 
 typedef struct stackFrame{ 
     uint64_t r15;
@@ -42,6 +44,8 @@ typedef struct proccess_t{
     uint8_t priority;
     uint16_t stdIn;     // 0 significa teclado/pantalla.
     uint16_t stdOut;
+    uint64_t pPid;
+    uint8_t awakeParent;
     enum states state;
 }proccess_t;
 
@@ -56,6 +60,10 @@ typedef struct{
     uint16_t readyCount; 
 }proccessNodeQueue;
 
+// typedef struct{
+//     proccess_t  * stack[MAX_PROCESS_FOREGROUND];
+//     uint8_t index;
+// }foregroundProccess_t;
 
 static uint64_t swapProccess(uint64_t rsp);
 
@@ -85,6 +93,7 @@ static uint64_t pidCounter = 1;
 
 static proccessNode * dummyProcessNode;
 
+//static foregroundProccess_t  foregroundProccess;
 
 void initScheduler(){
     //Initialize Dummy Process
@@ -108,9 +117,14 @@ static uint64_t swapProccess(uint64_t rsp){
             
         if(runningProccessNode->proccess.pid != dummyProcessNode->proccess.pid){ //Si estaba corriendo dummy, no hay que pushear
 
-            if(runningProccessNode->proccess.state == KILLED)
-                removeProccess(runningProccessNode);
-            else
+            if(runningProccessNode->proccess.state == KILLED){
+
+                if(runningProccessNode->proccess.awakeParent)
+                    unblock(runningProccessNode->proccess.pPid);
+                
+                removeProccess(runningProccessNode); 
+
+            } else
                 processEnqueue(&activeProccesses, runningProccessNode);
         }
     }
@@ -136,12 +150,16 @@ static uint64_t swapProccess(uint64_t rsp){
 }
 
 uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd){
+
+    // Solo un proceso foreground puede crear otro
+    if(fg && !runningProccessNode->proccess.fg)
+        return 0;
+
     proccessNode * node = malloc2(PROCCESS_STACK_SIZE + sizeof(proccessNode));
 
     if(node == NULL)
         return 0;
 
-    
     argv = copyArguments((char **)(((uint64_t)node) + sizeof(proccessNode)), argc, argv);
     createProccess(node, argv[0], fg, stdFd);
     processEnqueue(&activeProccesses, node);
@@ -158,6 +176,12 @@ uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc
     newSF.rcx = node->proccess.pid;
 
     memcpy((void *)(node->proccess.rsp), &newSF, sizeof(stackFrame));
+
+    if(runningProccessNode != NULL && fg){
+        block(runningProccessNode->proccess.pid);
+        return runningProccessNode->proccess.pid; // Ya el valor de retorno no tiene sentido
+    }
+
     return node->proccess.pid;
 }
 
@@ -184,10 +208,12 @@ static void createProccess(proccessNode * node, char* name, uint8_t fg, uint16_t
     p->name = name;
     p->pid = getNewPID();
     p->fg = fg;
-    p->priority = DEFAULT_PRIORITY;
+    p->priority = (fg)? DEFAULT_FOREGROUND_PRIORITY : DEFAULT_BACKGROUND_PRIORITY;
     p->state = READY;
     p->stdIn = (stdFd)? stdFd[0] : 0;
     p->stdOut = (stdFd)? stdFd[1] : 0;
+    p->pPid = (runningProccessNode)? runningProccessNode->proccess.pid : 0;
+    p->awakeParent = (runningProccessNode && fg)? 1 : 0;
 }
 
 static uint64_t getNewPID(){
@@ -322,6 +348,15 @@ uint16_t getRunningProcessStdOut(){
     return runningProccessNode->proccess.stdOut;
 }
 
+void wait(uint64_t pid){
+    proccessNode * child;
+    
+    if((child = getProccessNodeFromPID(pid)) != NULL){
+        child->proccess.awakeParent = 1;
+        block(runningProccessNode->proccess.pid);
+    } 
+}
+
 static int dummyFunction(int argc, char ** argv){
     while(1){
         //println("Dummy");
@@ -396,3 +431,30 @@ static uint64_t dumpQueueProcesses(proccessNodeQueue * q){
     }
     return count;
 }
+
+// static uint8_t foregroundPush(proccess_t * p){
+
+//     if(p == NULL || foregroundProccess.index >= MAX_PROCESS_FOREGROUND)
+//         return -1;
+    
+//     p->state = BLOCKED;
+//     foregroundProccess.stack[index++] = p;
+
+//     return 0;
+// }
+
+// static proccess_t * foregroundPop(){
+
+//     if(foregroundProccess.index <= 0 || foregroundProccess.index > MAX_PROCESS_FOREGROUND)
+//         return NULL;
+    
+//     proccess_t * ans = foregroundProccess.stack[--index]
+    
+//     ans->state = READY;
+    
+//     return ans;
+// }
+
+// static uint8_t foregroundStackIsEmpty(){
+//     return foregroundProccess.index == 0;
+// }
