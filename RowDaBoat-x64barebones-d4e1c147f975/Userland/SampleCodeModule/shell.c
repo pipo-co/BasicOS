@@ -279,6 +279,7 @@ static void loadFunctions(){
     loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler \n");
     loadFunction("semtest", (shellFunction)semTester, "Sem Test \n");
     loadFunction("prueba", prueba, "Sem Test \n");
+    loadFunction("shell", (shellFunction)startShell, "Sem Test \n");
     // loadFunction("Elisa", (shellFunction)forElisa, "Music for a student\n");semTester
     // loadFunction("Evangelion", (shellFunction)Evangelion, "Evangelion theme\n"); 
     // loadFunction("SadMusic", (shellFunction)Sadness, "Music to listen when you are sad");
