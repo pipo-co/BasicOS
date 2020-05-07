@@ -176,3 +176,21 @@ int atoi(char * s){
 
     return res; 
 }
+
+void sleep(uint16_t ticks){
+	ticks += getTicksElapsed();
+	while(ticks > getTicksElapsed())
+		_hlt();
+	return;
+}
+
+int isVowel(char c){
+    static char vocal[] = {'a', 'e', 'i', 'o', 'u'};
+    static char toMayus = 'a' - 'A';
+
+	for(int i = 0; i < 5; i++){
+		if(c == vocal[i] || c == vocal[i] - toMayus)
+			return 1;
+	}
+	return 0;
+}

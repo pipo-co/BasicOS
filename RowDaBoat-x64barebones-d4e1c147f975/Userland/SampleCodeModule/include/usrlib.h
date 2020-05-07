@@ -53,6 +53,10 @@ uint64_t hexstringToInt(char * s);
 
 int atoi(char * s);
 
+void sleep(uint16_t ticks);
+
+int isVowel(char c);
+
 extern void _hlt();
 
 extern void _cli();
@@ -142,7 +146,7 @@ extern void dumpSem();
 extern int32_t openPipe(char * pipeName);
 
 //syscall 27
-extern int writePipe(uint16_t pipe, char * s);
+int writePipe(uint16_t pipeId, char c);
 
 //syscall 28
 extern char readPipe(uint16_t pipe);
@@ -154,6 +158,9 @@ extern void closePipe(uint16_t pipe);
 extern void dumpPipes();
 
 //syscall 31
+extern int writeStringPipe(uint16_t pipe, char * s);
+
+//syscall 32
 extern void waitChild(uint64_t pid);
 
 #endif

@@ -114,8 +114,8 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			//int32_t openPipe(char * pipeName)
 			return openPipe((char*)rsi);
 		case 27:
-			//int writeStringPipe(uint16_t pipeId, char * s)
-			return writeStringPipe(rsi, (char*)rdx);
+			//int writePipe(uint16_t pipeId, char c)
+			return writePipe(rsi, (char)rdx);
 		case 28:
 			//char readPipe(uint16_t pipe)
 			return readPipe(rsi);
@@ -128,6 +128,9 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			dumpPipes();
 			break;
 		case 31:
+			//int writeStringPipe(uint16_t pipeId, char * s)
+			return writeStringPipe(rsi, (char*)rdx);
+		case 32:
 			//void wait(uint64_t pid);
 			wait(rsi);
 			break;

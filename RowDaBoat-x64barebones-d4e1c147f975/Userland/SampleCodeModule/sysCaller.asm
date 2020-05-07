@@ -33,6 +33,7 @@ GLOBAL writePipe
 GLOBAL readPipe
 GLOBAL closePipe
 GLOBAL dumpPipes
+GLOBAL writeStringPipe
 GLOBAL waitChild
 
 
@@ -179,5 +180,8 @@ closePipe:
 dumpPipes:
 	sysCaller 30
 
-waitChild:
+writeStringPipe:
 	sysCaller 31
+
+waitChild:
+	sysCaller 32

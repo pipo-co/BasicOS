@@ -6,7 +6,7 @@
 #include <music.h>
 
 //constantes para la definicion de arrays
-#define USER_INPUT_SIZE 50
+#define USER_INPUT_SIZE 110
 #define MAX_FUNCTIONS 100
 #define MAX_ARGUMENTS_SIZE 20
 #define MAX_CONCAT_PIPES 10
@@ -96,6 +96,7 @@ typedef void (*shellFunction)(int, char**);
     static void cmdKill(int argcount, char * args[]);
     static void cmdGetPID();
     static void cmdChangeProcessPriority(int argcount, char * args[]);
+    static void loop(int argc, char ** argv);
 
     //Semaphore Commands
     static void cmdCreateSem(int argcount, char * args[]);
@@ -108,6 +109,11 @@ typedef void (*shellFunction)(int, char**);
     static void cmdWritePipe(int argcount, char * args[]);
     static void cmdReadPipe(int argcount, char * args[]);
     static void cmdClosePipe(int argcount, char * args[]);
+
+    //IPC functions
+    static void cat(int argc, char ** argv);
+    static void wc();
+    static void filter();
 
     //Test Agodios
     extern void test_mm();
@@ -265,6 +271,10 @@ static void loadFunctions(){
     loadFunction("readPipe", cmdReadPipe, "Read Char from Pipe \n");
     loadFunction("closePipe", cmdClosePipe, "Close Existing pipe \n");
     loadFunction("dumpPipes", (shellFunction)dumpPipes, "Pipes Dump \n");
+    loadFunction("loop", loop, "Prints PID every certain amount of ticks \n");
+    loadFunction("cat", cat, "Prints stdIn as it comes. You can configure the endkey, ESC by default \n");
+    loadFunction("wc", (shellFunction)wc, "Prints how many lines had it's stdIn \n");
+    loadFunction("filter", (shellFunction)filter, "Prints stdIn whithout vowels \n");
     loadFunction("testMM", (shellFunction)test_mm, "Test MM \n");
     loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler \n");
     loadFunction("semtest", (shellFunction)semTester, "Sem Test \n");
@@ -419,6 +429,10 @@ static void freePipesResources(uint64_t childPid[], uint16_t pipesId[], uint16_t
         waitChild(childPid[0]);
     
     for(uint16_t i = 0; i < pipeCount; i++){
+
+        // Por convencion de shell, le informa a los procesos EOF mediante un 0 en el pipe.
+        writePipe(pipesId[i], 0);
+
         waitChild(childPid[i + 1]);
 
         closePipe(pipesId[i]);
@@ -668,7 +682,7 @@ static void cmdWritePipe(int argcount, char * args[]){
         return;
     }
     
-    int aux = writePipe(atoi(args[0]), args[1]);
+    int aux = writeStringPipe(atoi(args[0]), args[1]);
     if(aux == -1)
         println("Error in writePipe");
 }
@@ -712,4 +726,53 @@ static void prueba(int argc, char ** argv){
 
     print(argv[0]);
     putchar('\n');
+}
+
+static void loop(int argc, char ** argv){
+    uint16_t ticks;
+
+    if(argc > 0)
+        ticks = atoi(argv[0]);
+    else
+        ticks = 32;
+
+    while(1){
+        sleep(ticks);
+        printint(getPID());
+        putchar('\n');
+    }
+}
+
+static void cat(int argc, char ** argv){
+    char endChar;
+    if(argc > 0)
+        endChar = argv[0][0];
+    else
+        endChar = 27; //ESC
+
+    char c;
+    while((c = getChar()) != endChar)
+        putchar(c);
+}
+
+static void wc(){
+    uint16_t counter = 0;
+    char c;
+
+    while((c = getChar()) != 0){
+        if(c == '\n')
+            counter++;
+    }
+
+    printint(counter);
+    putchar('\n');
+}
+
+static void filter(){
+
+    char c;
+    while((c = getChar()) != 0){
+        if(!isVowel(c))
+            putchar(c);
+    }
 }
