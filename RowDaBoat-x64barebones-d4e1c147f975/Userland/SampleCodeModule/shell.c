@@ -11,7 +11,7 @@
 #define MAX_ARGUMENTS_SIZE 20
 #define MAX_CONCAT_PIPES 10
 
-#define END_OF_EXECUTION_KEY 27
+#define EOF 27  // ESC
 #define GAME_RETURNING_KEY '\t'
 #define CURSOR_COLOR 0x00FF00
 
@@ -169,7 +169,7 @@ static int readUserInput(char * buffer, int maxSize){
         if(c){
             //turnOffCursor();
 
-            if(c == END_OF_EXECUTION_KEY)
+            if(c == EOF)
                 return 0;
 
             if(c == GAME_RETURNING_KEY){ //Tecla para arrancar arkanoid si hay un juego empezado.
@@ -431,8 +431,9 @@ static void freePipesResources(uint64_t childPid[], uint16_t pipesId[], uint16_t
     
     for(uint16_t i = 0; i < pipeCount; i++){
 
-        // Por convencion de shell, le informa a los procesos EOF mediante un 0 en el pipe.
-        writePipe(pipesId[i], 0);
+        // Se le informa a los procesos del EOF mediante la convencion que establecio shell.
+        // Se asume que los procesos siguen esta convencion.
+        writePipe(pipesId[i], EOF);
 
         waitChild(childPid[i + 1]);
 
@@ -722,7 +723,7 @@ static void semTester(){
 
 static void prueba(int argc, char ** argv){
     char c;
-    while((c = getChar()) != '\n')
+    while((c = getChar()) != EOF)
         putchar(c);
 
     print(argv[0]);
@@ -749,7 +750,7 @@ static void cat(int argc, char ** argv){
     if(argc > 0)
         endChar = argv[0][0];
     else
-        endChar = 27; //ESC
+        endChar = EOF;
 
     char c;
     while((c = getChar()) != endChar)
@@ -757,10 +758,10 @@ static void cat(int argc, char ** argv){
 }
 
 static void wc(){
-    uint16_t counter = 0;
+    uint16_t counter = 1;
     char c;
 
-    while((c = getChar()) != 0){
+    while((c = getChar()) != EOF){
         if(c == '\n')
             counter++;
     }
@@ -772,7 +773,7 @@ static void wc(){
 static void filter(){
 
     char c;
-    while((c = getChar()) != 0){
+    while((c = getChar()) != EOF){
         if(!isVowel(c))
             putchar(c);
     }
