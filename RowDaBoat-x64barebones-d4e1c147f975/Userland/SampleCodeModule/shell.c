@@ -6,7 +6,7 @@
 #include <music.h>
 
 //constantes para la definicion de arrays
-#define USER_INPUT_SIZE 110
+#define USER_INPUT_SIZE 100
 #define MAX_FUNCTIONS 100
 #define MAX_ARGUMENTS_SIZE 20
 #define MAX_CONCAT_PIPES 10

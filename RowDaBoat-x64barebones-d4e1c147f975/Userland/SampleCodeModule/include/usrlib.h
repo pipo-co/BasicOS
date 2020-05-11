@@ -9,6 +9,8 @@
 //Valores utilizados para llamar a la sysCall 7
 enum time{HOURS = 4, MINUTES = 2, SECONDS = 0};
 
+typedef uint16_t sem_t;
+
 //Funcion sacada de naiveConsole.
 uint32_t uintToBase(uint64_t value, char * buffer, uint32_t base);
 

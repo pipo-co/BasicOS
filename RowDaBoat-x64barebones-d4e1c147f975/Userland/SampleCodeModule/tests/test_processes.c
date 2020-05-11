@@ -6,23 +6,23 @@ void endless_loop(){
   while(1);
 }
 
-uint32_t my_create_process(char * name){
+uint64_t my_create_process(char * name){
   char * argv[1];
   argv[0] = name;
   return initializeProccess((int (*)(int, char**))endless_loop, 0, 1, argv, 0);
 }
 
-uint32_t my_kill(uint32_t pid){
+uint64_t my_kill(uint64_t pid){
   kill(pid);
   return 0;
 }
 
-uint32_t my_block(uint32_t pid){
+uint64_t my_block(uint64_t pid){
   block(pid);
   return 0;
 }
 
-uint32_t my_unblock(uint32_t pid){
+uint64_t my_unblock(uint64_t pid){
   unblock(pid);
   return 0;
 }
@@ -32,7 +32,7 @@ uint32_t my_unblock(uint32_t pid){
 enum State {ERROR, RUNNING, BLOCKED, KILLED};
 
 typedef struct P_rq{
-  uint32_t pid;
+  uint64_t pid;
   enum State state;
 }p_rq;
 
@@ -43,6 +43,8 @@ void test_processes(){
   uint8_t action;
 
   while (1){
+
+    sleep(1); // Le damos un timer tick al scheduler para que limpie los procesos KILLED
 
     // Create MAX_PROCESSES processes
     for(rq = 0; rq < MAX_PROCESSES; rq++){
