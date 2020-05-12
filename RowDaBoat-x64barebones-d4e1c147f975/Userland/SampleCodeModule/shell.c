@@ -4,6 +4,7 @@
 #include <usrlib.h>
 #include <arkanoid.h>
 #include <music.h>
+#include <phylo.h>
 
 //constantes para la definicion de arrays
 #define USER_INPUT_SIZE 100
@@ -278,6 +279,7 @@ static void loadFunctions(){
     loadFunction("testMM", (shellFunction)test_mm, "Test MM \n");
     loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler \n");
     loadFunction("semtest", (shellFunction)semTester, "Sem Test \n");
+    loadFunction("phylo", (shellFunction)phylo, "Dining philosophers \n");
     loadFunction("prueba", prueba, "Sem Test \n");
     loadFunction("shell", (shellFunction)startShell, "Sem Test \n");
     // loadFunction("Elisa", (shellFunction)forElisa, "Music for a student\n");semTester
