@@ -69,7 +69,7 @@ static uint64_t swapProccess(uint64_t rsp);
 
 static void removeProccess(proccessNode * node);
 static proccessNode * getProccessNodeFromPID(uint64_t pid);
-static void changeProccessState(uint64_t pid, enum states state);
+static int changeProccessState(uint64_t pid, enum states state);
 static void createProccess(proccessNode * node, char* name, uint8_t fg, uint16_t * stdFd);
 static char ** copyArguments(char ** newArgv, int argc, char ** argv);
 static uint64_t getNewPID();
@@ -282,16 +282,22 @@ static void loader2(int argc, char *argv[], int (*function)(int , char **)){
     exit();
 }
 
-static void changeProccessState(uint64_t pid, enum states state){
+static int changeProccessState(uint64_t pid, enum states state){
     proccessNode * node = getProccessNodeFromPID(pid);
 
     if(node == NULL || node == dummyProcessNode || node->proccess.state == KILLED) //No hay proceso asociado a pid
-        return;
+        return -1;
 
     if(node == runningProccessNode){
+        if(runningProccessNode->proccess.state == state)
+            return 1;
+
         runningProccessNode->proccess.state = state;
-        return;
+        return 0;
     }
+
+    if(node->proccess.state == state)
+        return 1;
 
     if(node->proccess.state != READY && state == READY)
         activeProccesses.readyCount++;
@@ -300,6 +306,8 @@ static void changeProccessState(uint64_t pid, enum states state){
         activeProccesses.readyCount--;
 
     node->proccess.state = state;
+
+    return 0;
 }
 
 void changeProccessPriority(uint64_t pid, uint8_t priority){
@@ -318,22 +326,26 @@ void exit(){
     kill(runningProccessNode->proccess.pid);
 }
 
-void kill(uint64_t pid){ 
-    changeProccessState(pid, KILLED);
+int kill(uint64_t pid){ 
+    int ans = changeProccessState(pid, KILLED);
 
     if(pid == runningProccessNode->proccess.pid) // Es lo mismo que exit
         callTimerTick();
+
+    return ans;
 }
 
-void block(uint64_t pid){
-    changeProccessState(pid, BLOCKED);
+int block(uint64_t pid){
+    int ans = changeProccessState(pid, BLOCKED);
 
     if(pid == runningProccessNode->proccess.pid) // Espero a que el scheduler me saque
         callTimerTick();
+
+    return ans;
 }
 
-void unblock(uint64_t pid){
-    changeProccessState(pid, READY);
+int unblock(uint64_t pid){
+    return changeProccessState(pid, READY);
 }
 
 uint64_t getPID(){

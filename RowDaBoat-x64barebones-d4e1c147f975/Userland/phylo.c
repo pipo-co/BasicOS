@@ -5,6 +5,7 @@
 #define MAX_PHIL 50
 #define MIN_PHIL 2
 #define SEM_NAME "_phyl"
+#define NAME_LEN 20
 #define EOF 27  // ESC
 
 #define LEFT_CHOPSTICK(p) (chopstick[p])
@@ -33,14 +34,13 @@ void phylo(){
             createPhylosopher();
             break;
         case 'r':
-            if(phyloCount> MIN_PHIL)
-                removePhylosopher();
+            removePhylosopher();
             break;
         }
     }
 }
 
-int evenPhylo(int argc, char ** argv){
+static int evenPhylo(int argc, char ** argv){
     
     uint16_t phyloID = atoi(argv[1]);
     if(phyloID % 2 != 0)
@@ -50,60 +50,143 @@ int evenPhylo(int argc, char ** argv){
         phylosophers[phyloID].state = HUNGRY;
         takeLeftChop(phyloID);
         takeRightChop(phyloID);
+
         phylosophers[phyloID].state = EATING;
         sleep(1);
+
         releaseRightChop(phyloID);
         releaseLeftChop(phyloID);
         phylosophers[phyloID].state = THINKING;
+        
         sleep(2);
     }
     return 0;
 }
 
-int oddPhylo(int argc, char ** argv){
+static int oddPhylo(int argc, char ** argv){
 
     uint16_t phyloID = atoi(argv[1]);
     if(phyloID % 2 == 0)
         return 1;
         
     while(1){
+        phylosophers[phyloID].state = HUNGRY;
         takeRightChop(phyloID);
         takeLeftChop(phyloID);
+
+        phylosophers[phyloID].state = EATING;
         sleep(1);
+
         releaseLeftChop(phyloID);
         releaseRightChop(phyloID);
+        phylosophers[phyloID].state = THINKING;
+
         sleep(2);
     }
     return 0;
 }   
 
-
-
 static void createPhylosopher(){
-    char phyloName[20];
-    char phyloID[20];
+    char phyloName[NAME_LEN];
+    char phyloID[NAME_LEN];
     uint16_t phylo = phyloCount;
 
     uintToBase(phylo, phyloName, 10);
     uintToBase(phylo, phyloID, 10);
     strcat(phyloName, SEM_NAME);
-    
-    chopstick[phylo] = createSem(phyloName, 1);
-
-    //if()
 
     phylosophers[phylo].state = THINKING;
+    
+    guaranteeThinkingPhylo(phylo - 1);
+
+    chopstick[phylo] = createSem(phyloName, 1);
+    phyloCount++;
+
+    unblock(phylosophers[phylo - 1].pid);
+
+    // if(phylosophers[phyloCount-1].state != THINKING){
+    //     semWait(chopstick[phylo]);
+    //     semPost(chopstick[0]);
+    // }
 
     char* argv[] = {phyloName, phyloID};
-    phylosophers[phylo].pid = initializeProccess((phyloCount % 2 == 0)? evenPhylo : oddPhylo, 0, 2, argv, NULL);
+    phylosophers[phylo].pid = initializeProccess((phylo % 2 == 0)? evenPhylo : oddPhylo, 0, 2, argv, NULL);
+}
 
-    phyloCount++;
+static void removePhylosopher(){
+   if(phyloCount <= MIN_PHIL)
+        return;
+
+    uint16_t phylo = phyloCount - 1;
+    uint16_t phyloLeft = phylo - 1;
+     
+    guaranteeThinkingPhylo(phylo - 1);
+    guaranteeThinkingPhylo(phyloLeft);
+
+    kill(phylosophers[phylo].pid);
+
+    phyloCount--;
+
+    unblock(phylosophers[phyloLeft].state);
+
+    removeSem(chopstick[phylo]);
 }
 
 static void init(){
-    phyloCount = 0;
+    char phyloName[NAME_LEN];
+    char phyloID[NAME_LEN];
 
-    for(; phyloCount < MIN_PHIL;){
-        createPhylosopher();
+    phyloCount = MIN_PHIL;
+
+    for(uint16_t i = 0; 0 < MIN_PHIL; i++){
+        uintToBase(i, phyloName, 10);
+        strcat(phyloName, SEM_NAME);
+        chopstick[i] = createSem(phyloName, 1);
     }
+
+    for(uint16_t i = 0; 0 < MIN_PHIL; i++){
+        uintToBase(i, phyloName, 10);
+        strcat(phyloName, SEM_NAME);
+        uintToBase(i, phyloID, 10);
+
+        phylosophers[i].state = THINKING;
+
+        char* argv[] = {phyloName, phyloID};
+        phylosophers[i].pid = initializeProccess((i % 2 == 0)? evenPhylo : oddPhylo, 0, 2, argv, NULL)
+    }
+}
+
+// Garantiza que el phylo especificado este bloqueado en el estado THINKING
+static void guaranteeThinkingPhylo(uint16_t phylo){
+    while(1){
+
+        // Phylo ya esta bloqueado entonces seguro no esta THINKING
+        if(block(phylosophers[phylo].pid) == 1)
+            sleep(1);
+
+        // Phylo esta usando los cubiertos
+        else if(phylosophers[phylo].state != THINKING){
+            unblock(phylosophers[phylo].pid);
+            sleep(1);
+        }   
+        // Phylo esta pensando
+        else
+            return;
+    }
+}
+
+static void takeRightChop(uint16_t phyloID){
+    semWait(RIGHT_CHOPSTICK(phyloID));
+}
+
+static void takeLeftChop(uint16_t phyloID){
+    semWait(LEFT_CHOPSTICK(phyloID));
+}
+
+static void releaseRightChop(uint16_t phyloID){
+    semPost(RIGHT_CHOPSTICK(phyloID));
+}
+
+static void releaseLeftChop(uint16_t phyloID){
+    semPost(LEFT_CHOPSTICK(phyloID));
 }

@@ -109,7 +109,7 @@ extern void dumpMM();
 extern void exit();
 
 //syscall 14:
-extern void kill(uint64_t pid);
+extern int kill(uint64_t pid);
 
 //syscall 15:
 extern uint64_t getPID();
@@ -124,10 +124,10 @@ extern void dumpScheduler();
 extern void changeProccessPriority(uint64_t pid, uint8_t prority);
 
 //syscall 19
-extern void block(uint64_t pid);
+extern int block(uint64_t pid);
 
 //syscall 20
-extern void unblock(uint64_t pid);
+extern int unblock(uint64_t pid);
 
 //syscall 21
 extern int32_t createSem(char * name, uint16_t initValue);

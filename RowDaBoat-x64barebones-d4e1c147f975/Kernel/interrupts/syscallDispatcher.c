@@ -68,9 +68,8 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			exit();
 			break;
 		case 14:
-			//void kill(uint64_t pid);
-			kill(rsi);
-			break;
+			//int kill(uint64_t pid);
+			return kill(rsi);
 		case 15:
 			//uint64_t getPID();
 			return getPID();
@@ -86,13 +85,11 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			changeProccessPriority(rsi, rdx);
 			break;
 		case 19:
-			//void block(uint64_t pid);
-			block(rsi);
-			break;
+			//int block(uint64_t pid);
+			return block(rsi);
 		case 20:
-			//void unblock(uint64_t pid);
-			unblock(rsi);
-			break;
+			//int unblock(uint64_t pid);
+			return unblock(rsi);
 		case 21:
 			//int32_t createSem(char * name, uint16_t initValue);
 			return createSem((char*)rsi, rdx);

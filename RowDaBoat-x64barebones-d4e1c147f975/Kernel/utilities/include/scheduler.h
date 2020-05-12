@@ -9,11 +9,11 @@ uint64_t scheduler(uint64_t rsp);
 //Tambien se permite que stdFd sea NULL, se tomaran ambos valores como 0.
 uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
 
-void kill(uint64_t pid);
+int kill(uint64_t pid);
 
-void block(uint64_t pid);
+int block(uint64_t pid);
 
-void unblock(uint64_t pid);
+int unblock(uint64_t pid);
 
 void exit();
 
