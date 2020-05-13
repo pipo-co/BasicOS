@@ -348,6 +348,11 @@ int unblock(uint64_t pid){
     return changeProccessState(pid, READY);
 }
 
+void skipTurn(){
+    runtimeLeft = 0;
+    callTimerTick();
+}
+
 uint64_t getPID(){
     return runningProccessNode->proccess.pid;
 }

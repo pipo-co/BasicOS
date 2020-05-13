@@ -15,6 +15,8 @@ int block(uint64_t pid);
 
 int unblock(uint64_t pid);
 
+void skipTurn();
+
 void exit();
 
 uint64_t getPID();

@@ -9,16 +9,18 @@
 #define EOF 27  // ESC
 #define PRINT_THINKING '.'
 #define PRINT_EATING 'E'
-#define TIME_MULT 2
+#define TIME_MULT 5
 
 #define LEFT_CHOPSTICK(p) (chopstick[p])
 #define RIGHT_CHOPSTICK(p) (chopstick[(p + 1) % phyloCount])
 
-enum state {HUNGRY, EATING, THINKING};
+enum state {EATING, THINKING};
 
 typedef struct phylo{
     uint64_t pid;
     enum state state;
+    uint8_t run;
+    uint8_t rightChop;
 }phylo_t;
 
 
@@ -27,7 +29,7 @@ static int oddPhylo(int argc, char ** argv);
 static void createPhylosopher();
 static void removePhylosopher();
 static void init(uint16_t initPhyloCount);
-static void guaranteeThinkingPhylo(uint16_t phylo);
+static void guaranteeFreeRightChop(uint16_t phylo);
 static void updateAndPrintTableState(uint16_t phyloId, enum state newState);
 static void freeResources();
 
@@ -45,10 +47,12 @@ static uint16_t phyloCount;
 static char tableState[MAX_PHIL + 1];
 
 void phylo(int argcount, char * args[]){
-    uint16_t initPhyloCount = MIN_PHIL;
+    uint16_t initPhyloCount;
 
     if(argcount > 0)
         initPhyloCount = atoi(args[0]);
+    else
+        initPhyloCount = MIN_PHIL;
 
     init(initPhyloCount);
     
@@ -72,9 +76,9 @@ static int evenPhylo(int argc, char ** argv){
     if(phyloID % 2 != 0)
         return 1;
 
-    while(1){
-        // Matamos HUNGRY??
-        phylosophers[phyloID].state = HUNGRY;
+    while(phylosophers[phyloID].run){
+        sleep(2 * TIME_MULT);
+
         takeLeftChop(phyloID);
         takeRightChop(phyloID);
 
@@ -82,13 +86,10 @@ static int evenPhylo(int argc, char ** argv){
         updateAndPrintTableState(phyloID, EATING);
         sleep(1 * TIME_MULT);
 
-        // Cambiar orden??
         updateAndPrintTableState(phyloID, THINKING);
         releaseRightChop(phyloID);
         releaseLeftChop(phyloID);
         phylosophers[phyloID].state = THINKING;
-        
-        sleep(2 * TIME_MULT);
     }
     return 0;
 }
@@ -99,8 +100,9 @@ static int oddPhylo(int argc, char ** argv){
     if(phyloID % 2 == 0)
         return 1;
 
-    while(1){
-        phylosophers[phyloID].state = HUNGRY;
+    while(phylosophers[phyloID].run){
+        sleep(2 * TIME_MULT);
+     
         takeRightChop(phyloID);
         takeLeftChop(phyloID);
 
@@ -109,11 +111,9 @@ static int oddPhylo(int argc, char ** argv){
         sleep(1 * TIME_MULT);
 
         updateAndPrintTableState(phyloID, THINKING);
-        releaseLeftChop(phyloID);
+        releaseLeftChop(phyloID);      
         releaseRightChop(phyloID);
         phylosophers[phyloID].state = THINKING;
-        
-        sleep(2 * TIME_MULT);
     }
     return 0;
 }   
@@ -132,8 +132,10 @@ static void createPhylosopher(){
 
     phylosophers[phylo].state = THINKING;
     tableState[phylo] = PRINT_THINKING;
+    phylosophers[phylo].run = 1;
+    phylosophers[phylo].rightChop = 0;
     
-    guaranteeThinkingPhylo(phylo - 1);
+    guaranteeFreeRightChop(phylo - 1);
 
     chopstick[phylo] = createSem(phyloName, 1);
     phyloCount++;
@@ -150,12 +152,13 @@ static void removePhylosopher(){
 
     uint16_t phylo = phyloCount - 1;
     uint16_t phyloLeft = phylo - 1;
-     
-    guaranteeThinkingPhylo(phylo);
-    guaranteeThinkingPhylo(phyloLeft);
 
-    println("hola");
-    kill(phylosophers[phylo].pid);
+    phylosophers[phylo].run = 0; // Equivalente a matar al phylo
+
+    guaranteeFreeRightChop(phyloLeft);
+
+    waitChild(phylosophers[phylo].pid);
+    
     tableState[phylo] = 0;
 
     phyloCount--;
@@ -191,26 +194,28 @@ static void init(uint16_t initPhyloCount){
         uintToBase(i, phyloID, 10);
 
         phylosophers[i].state = THINKING;
+        phylosophers[i].run = 1;
+        phylosophers[i].rightChop = 0;
 
         char* argv[] = {phyloName, phyloID};
         phylosophers[i].pid = initializeProccess((i % 2 == 0)? evenPhylo : oddPhylo, 0, 2, argv, NULL);
     }
 }
 
-// Garantiza que el phylo especificado este bloqueado en el estado THINKING
-static void guaranteeThinkingPhylo(uint16_t phylo){
+// Garantiza que el phylo especificado este bloqueado y con el chopstick derecho libre
+static void guaranteeFreeRightChop(uint16_t phylo){
     while(1){
 
-        // Phylo ya esta bloqueado entonces seguro no esta THINKING
+        // Phylo ya estaba bloqueado, no podemos garantizar que su chopstick derecho esta libre
         if(block(phylosophers[phylo].pid) == 1)
-            sleep(1);
+            skipTurn();
 
-        // Phylo esta usando los cubiertos
-        else if(phylosophers[phylo].state != THINKING){
+        // Phylo esta usando el chopstick derecho
+        else if(phylosophers[phylo].rightChop){
             unblock(phylosophers[phylo].pid);
-            sleep(1);
+            skipTurn();
         }   
-        // Phylo esta pensando
+        // Chopstick derecho esta libre
         else
             return;
     }
@@ -218,11 +223,14 @@ static void guaranteeThinkingPhylo(uint16_t phylo){
 
 static void freeResources(){
     for(uint16_t i = 0; i < phyloCount; i++)
-        kill(phylosophers[i].pid);
+        phylosophers[i].run = 0;
+
+    for(uint16_t i = 0; i < phyloCount; i++)
+        waitChild(phylosophers[i].pid);
 
     for(uint16_t i = 0; i < phyloCount; i++)
         removeSem(chopstick[i]);
-
+    
     phyloCount = 0;
 
     for(uint16_t i = 0; tableState[i] != 0; i++)
@@ -235,6 +243,7 @@ static void updateAndPrintTableState(uint16_t phyloId, enum state newState){
 }
 
 static void takeRightChop(uint16_t phyloID){
+    phylosophers[phyloID].rightChop = 1;
     semWait(RIGHT_CHOPSTICK(phyloID));
 }
 
@@ -244,6 +253,7 @@ static void takeLeftChop(uint16_t phyloID){
 
 static void releaseRightChop(uint16_t phyloID){
     semPost(RIGHT_CHOPSTICK(phyloID));
+    phylosophers[phyloID].rightChop = 0;
 }
 
 static void releaseLeftChop(uint16_t phyloID){

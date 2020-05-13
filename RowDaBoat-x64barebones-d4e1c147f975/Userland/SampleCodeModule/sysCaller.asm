@@ -35,6 +35,7 @@ GLOBAL closePipe
 GLOBAL dumpPipes
 GLOBAL writeStringPipe
 GLOBAL waitChild
+GLOBAL skipTurn
 
 
 %macro pushState 0
@@ -185,3 +186,6 @@ writeStringPipe:
 
 waitChild:
 	sysCaller 32
+
+skipTurn:
+	sysCaller 33

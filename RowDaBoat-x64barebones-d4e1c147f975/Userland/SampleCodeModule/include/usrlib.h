@@ -165,4 +165,7 @@ extern int writeStringPipe(uint16_t pipe, char * s);
 //syscall 32
 extern void waitChild(uint64_t pid);
 
+//syscall 33
+extern void skipTurn();
+
 #endif

@@ -131,6 +131,10 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			//void wait(uint64_t pid);
 			wait(rsi);
 			break;
+		case 33:
+			//void skipTurn();
+			skipTurn();
+			break;
 	}
 	return 0;
 }
