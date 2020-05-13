@@ -9,9 +9,10 @@
 #define EOF 27  // ESC
 #define PRINT_THINKING '.'
 #define PRINT_EATING 'E'
+#define TIME_MULT 2
 
 #define LEFT_CHOPSTICK(p) (chopstick[p])
-#define RIGHT_CHOPSTICK(p) (chopstick[p + 1 % phyloCount])
+#define RIGHT_CHOPSTICK(p) (chopstick[(p + 1) % phyloCount])
 
 enum state {HUNGRY, EATING, THINKING};
 
@@ -29,6 +30,7 @@ static void removePhylosopher();
 static void init();
 static void guaranteeThinkingPhylo(uint16_t phylo);
 static void updateAndPrintTableState(uint16_t phyloId, enum state newState);
+static void freeResources();
 
 static void takeRightChop(uint16_t phyloID);
 static void takeLeftChop(uint16_t phyloID);
@@ -39,10 +41,10 @@ static void releaseLeftChop(uint16_t phyloID);
 
 static sem_t chopstick[MAX_PHIL];
 
-phylo_t phylosophers[MAX_PHIL];
-uint16_t phyloCount;
+static phylo_t phylosophers[MAX_PHIL];
+static uint16_t phyloCount;
 
-char tableState[MAX_PHIL + 1];
+static char tableState[MAX_PHIL + 1];
 
 void phylo(){
     init();
@@ -58,41 +60,41 @@ void phylo(){
             break;
         }
     }
+    freeResources();
 }
 
 static int evenPhylo(int argc, char ** argv){
-    println("hola_even");
     
-    uint16_t phyloID = atoi(argv[1]);
+    uint16_t phyloID = atoi(argv[0]);
     if(phyloID % 2 != 0)
         return 1;
-    dumpScheduler();
+
     while(1){
         phylosophers[phyloID].state = HUNGRY;
         takeLeftChop(phyloID);
         takeRightChop(phyloID);
-        println("hasta aca");
+
         phylosophers[phyloID].state = EATING;
         updateAndPrintTableState(phyloID, EATING);
-        sleep(1);
+        sleep(1 * TIME_MULT);
 
+        // Cambiar orden??
+        updateAndPrintTableState(phyloID, THINKING);
         releaseRightChop(phyloID);
         releaseLeftChop(phyloID);
         phylosophers[phyloID].state = THINKING;
-        updateAndPrintTableState(phyloID, THINKING);
         
-        sleep(2);
+        sleep(2 * TIME_MULT);
     }
     return 0;
 }
 
 static int oddPhylo(int argc, char ** argv){
-    println("hola_odd");
     
-    uint16_t phyloID = atoi(argv[1]);
+    uint16_t phyloID = atoi(argv[0]);
     if(phyloID % 2 == 0)
         return 1;
-        
+
     while(1){
         phylosophers[phyloID].state = HUNGRY;
         takeRightChop(phyloID);
@@ -100,14 +102,14 @@ static int oddPhylo(int argc, char ** argv){
 
         phylosophers[phyloID].state = EATING;
         updateAndPrintTableState(phyloID, EATING);
-        sleep(1);
+        sleep(1 * TIME_MULT);
 
+        updateAndPrintTableState(phyloID, THINKING);
         releaseLeftChop(phyloID);
         releaseRightChop(phyloID);
         phylosophers[phyloID].state = THINKING;
-        updateAndPrintTableState(phyloID, THINKING);
 
-        sleep(2);
+        sleep(2 * TIME_MULT);
     }
     return 0;
 }   
@@ -147,15 +149,16 @@ static void removePhylosopher(){
     uint16_t phylo = phyloCount - 1;
     uint16_t phyloLeft = phylo - 1;
      
-    guaranteeThinkingPhylo(phylo - 1);
+    guaranteeThinkingPhylo(phylo);
     guaranteeThinkingPhylo(phyloLeft);
 
+    println("hola");
     kill(phylosophers[phylo].pid);
-    tableState[phylo] = ' ';
+    tableState[phylo] = 0;
 
     phyloCount--;
 
-    unblock(phylosophers[phyloLeft].state);
+    unblock(phylosophers[phyloLeft].pid);
 
     removeSem(chopstick[phylo]);
 }
@@ -207,9 +210,17 @@ static void guaranteeThinkingPhylo(uint16_t phylo){
     }
 }
 
+static void freeResources(){
+    for(uint16_t i = 0; i < phyloCount; i++)
+        kill(phylosophers[i].pid);
+
+    for(uint16_t i = 0; i < phyloCount; i++)
+        removeSem(chopstick[i]);
+}
+
 static void updateAndPrintTableState(uint16_t phyloId, enum state newState){
     tableState[phyloId] = (newState == EATING)? PRINT_EATING : PRINT_THINKING;
-    print(tableState);
+    println(tableState);
 }
 
 static void takeRightChop(uint16_t phyloID){
