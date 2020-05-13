@@ -29,7 +29,7 @@ extern void _sti();
 //Funcion auxiliar que permite obtener el valor del SP.
 extern uint64_t getSP();
 
-//Funciones para evitar que dos procesos ejecuten las misma region simultaneamente
+//Funciones para evitar que dos procesos ejecuten procesos dentro de esta misma region "critica" simultaneamente
 extern void enter_critical_region(uint8_t * lock);
 
 extern void leave_critical_region(uint8_t * lock);

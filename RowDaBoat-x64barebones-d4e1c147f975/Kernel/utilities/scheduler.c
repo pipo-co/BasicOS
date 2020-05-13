@@ -1,5 +1,6 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include <stdint.h>
 #include <scheduler.h>
 #include <memoryManager.h>
@@ -130,6 +131,7 @@ static uint64_t swapProccess(uint64_t rsp){
 
             if(runningProccessNode->proccess.state == KILLED)
                 removeProccess(runningProccessNode);
+
             else if(runningProccessNode->proccess.state == BLOCKED)
                 processEnqueue(&activeProccesses, runningProccessNode);
             

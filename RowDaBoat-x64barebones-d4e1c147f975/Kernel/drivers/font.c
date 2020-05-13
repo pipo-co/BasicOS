@@ -1,6 +1,6 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-//font.c
+
 //Archivo provisto por la catedra
 
 // Created from bdf2c Version 3, (c) 2009, 2010 by Lutz Sammer
