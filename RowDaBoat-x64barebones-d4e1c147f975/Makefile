@@ -10,7 +10,7 @@ kernel:
 	cd Kernel; make all
 
 kernelBuddy:
-	cd Kernel; make buddy
+	cd Kernel; make all MM=BUDDY
 
 userland:
 	cd Userland; make all

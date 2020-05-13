@@ -68,6 +68,8 @@ int initMM(void * heap_baseInit, uint32_t heap_sizeInit){
     }
     
     createAndPushNode(&listArray[bucketCount - 1], heap_base, bucketCount - 1);
+
+    return 0;
 }
 
 void * malloc2(unsigned bytes){
