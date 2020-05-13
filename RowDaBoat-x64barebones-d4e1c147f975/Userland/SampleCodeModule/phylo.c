@@ -112,7 +112,7 @@ static int oddPhylo(int argc, char ** argv){
         releaseLeftChop(phyloID);
         releaseRightChop(phyloID);
         phylosophers[phyloID].state = THINKING;
-
+        
         sleep(2 * TIME_MULT);
     }
     return 0;
@@ -222,6 +222,11 @@ static void freeResources(){
 
     for(uint16_t i = 0; i < phyloCount; i++)
         removeSem(chopstick[i]);
+
+    phyloCount = 0;
+
+    for(uint16_t i = 0; tableState[i] != 0; i++)
+        tableState[i] = 0;
 }
 
 static void updateAndPrintTableState(uint16_t phyloId, enum state newState){
