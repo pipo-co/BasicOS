@@ -185,6 +185,9 @@ static void init(uint16_t initPhyloCount){
         tableState[i] = PRINT_THINKING;
     }
 
+    // Mostramos que estan inicialmente todos pensando
+    println(tableState);
+
     for(uint16_t i = 0; i < initPhyloCount; i++){
         
         uintToBase(i, phyloName, 10);

@@ -178,7 +178,7 @@ uint64_t initializeProccess(void (*function)(int , char **), uint8_t fg, int arg
 }
 
 static char ** copyArguments(char ** newArgv, int argc, char ** argv){
-    char * dest = (char*)(((uint64_t)newArgv) + sizeof(char *) * argc); //char * dest = (char*)newArgv + argc ??
+    char * dest = (char*)(newArgv + argc);
 
     for(uint16_t i = 0; i < argc; i++){
         newArgv[i] = dest;
@@ -213,7 +213,7 @@ static uint64_t getNewPID(){
     return pidCounter - 1;
 }
 
-static void removeProccess(proccessNode * node){ //Faltan cosas capaz
+static void removeProccess(proccessNode * node){
     free2(node);
 }
 
