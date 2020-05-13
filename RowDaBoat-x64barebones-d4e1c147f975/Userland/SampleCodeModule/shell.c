@@ -1,4 +1,6 @@
-//shell.c
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include <stddef.h>
 #include <shell.h>
 #include <usrlib.h>
@@ -250,8 +252,9 @@ static void loadFunctions(){
     loadFunction("triggerException0", triggerException0, "Triggers Exception number 0 \n");
     loadFunction("triggerException6", triggerException6, "Triggers Exception number 6 \n");
     loadFunction("beep", playSound, "Plays a beep \n");
-    loadFunction("dumpMM", (shellFunction)dumpMM, "Memory Manager Dump \n");
-    loadFunction("ps", (shellFunction)dumpScheduler,"Scheduler Dump \n");
+    
+    loadFunction("mem", (shellFunction)dumpMM, "Prints Memory Manager State \n");
+    loadFunction("ps", (shellFunction)dumpScheduler,"Prints Scheduler State \n");
     loadFunction("block", cmdBlock,"Block process given it's PID \n");
     loadFunction("unblock", cmdUnblock,"Unblock process given it's PID \n");
     loadFunction("kill", cmdKill,"Kill process given it's PID \n");

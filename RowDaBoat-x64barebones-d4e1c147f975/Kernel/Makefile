@@ -1,7 +1,7 @@
 include Makefile.inc
 #Se modifico el archivo para que pueda compilar archivos en otras 
 # carpetas que no eran la original.
-MM=FREE
+MM=-UBUDDY
 KERNEL=kernel.bin
 SOURCES=$(wildcard *.c)
 SOURCES_ASM=$(wildcard asm/*.asm)
@@ -29,7 +29,7 @@ $(KERNEL): $(STATICLIBS) $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) -T kernel.ld -o $(KERNEL) $(ALL_OBJECTS) $(STATICLIBS)
 
 %.o: %.c
-	$(GCC) $(GCCFLAGS) -I./include -I ./drivers/include -I./interrupts/include -I ./utilities/include -D$(MM) -c $< -o $@
+	$(GCC) $(GCCFLAGS) -I./include -I ./drivers/include -I./interrupts/include -I ./utilities/include $(MM) -c $< -o $@
 
 %.o : %.asm
 	$(ASM) $(ASMFLAGS) $< -o $@
