@@ -44,7 +44,7 @@ void test_processes(){
 
   while (1){
 
-    sleep(1); // Le damos un timer tick al scheduler para que limpie los procesos KILLED
+    skipTurn(); // Le damos la oportunidad al scheduler para que limpie los procesos KILLED
 
     // Create MAX_PROCESSES processes
     for(rq = 0; rq < MAX_PROCESSES; rq++){
