@@ -5,6 +5,7 @@
 #include <memoryManager.h>
 #include <lib.h>
 #include <screenDriver.h>
+#include <sem.h>
 
 #define BLOCK_SIZE sizeof(node)
 #define HEAP_TOTAL_BLOCKS (heap_size / BLOCK_SIZE)
@@ -27,7 +28,13 @@ static void joinMem(node *left, node *right);
 
 static node* first;
 
-void initMM(void * heap_baseInit, uint32_t heap_sizeInit){
+static int16_t mutex;
+
+int initMM(void * heap_baseInit, uint32_t heap_sizeInit){
+    mutex = createSem("mutex_MM", 1);
+    if(mutex == -1)
+        return -1;
+
     heap_base = (node*)heap_baseInit;
     heap_size = heap_sizeInit;
     availableBlocks = HEAP_TOTAL_BLOCKS;
@@ -35,6 +42,8 @@ void initMM(void * heap_baseInit, uint32_t heap_sizeInit){
     first = heap_base;
     first->s.ptr = NULL;
     first->s.size = HEAP_TOTAL_BLOCKS;
+
+    return 0;
 }
 
 //Heavily inspired in C malloc
@@ -45,6 +54,8 @@ void * malloc2(uint32_t bytes){
     node* p;
     node* prevp = first; 
     uint32_t blocks = (bytes % BLOCK_SIZE == 0) ? bytes/BLOCK_SIZE + 1 : bytes/BLOCK_SIZE + 2;
+
+    semWait(mutex);
 
     for(p = first; p != NULL; prevp = p, p = p->s.ptr){
 
@@ -60,9 +71,14 @@ void * malloc2(uint32_t bytes){
                 p->s.size = blocks;
             }
             availableBlocks -= p->s.size;
+
+            semPost(mutex);
             return (void*)(p + 1);
         }
     }
+
+    semPost(mutex);
+
     return NULL;
 } 
 
@@ -87,15 +103,21 @@ int free2(void * ap){
     
     node* p;
 
+    semWait(mutex);
+
     if(first == NULL){
         first = bp;
         first->s.ptr = NULL;
+
+        semPost(mutex);
         return 0;
     }
 
     if(bp < first){   
         joinMem(bp, first);
         first = bp;
+
+        semPost(mutex);
         return 0;
     }
     
@@ -104,6 +126,8 @@ int free2(void * ap){
 
     if(p == bp || bp < p + p->s.size){
         println("Free: Pointer Already Freed");
+
+        semPost(mutex);
         return 3;
     }
 
@@ -113,6 +137,8 @@ int free2(void * ap){
 
     //Left Join
     joinMem(p, bp);
+
+    semPost(mutex);
 
     return 0;
 }

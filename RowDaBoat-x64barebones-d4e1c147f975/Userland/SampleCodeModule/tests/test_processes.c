@@ -9,7 +9,7 @@ void endless_loop(){
 uint64_t my_create_process(char * name){
   char * argv[1];
   argv[0] = name;
-  return initializeProccess((int (*)(int, char**))endless_loop, 0, 1, argv, 0);
+  return initializeProccess((void (*)(int, char**))endless_loop, 0, 1, argv, 0);
 }
 
 uint64_t my_kill(uint64_t pid){

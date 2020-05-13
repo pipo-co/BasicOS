@@ -60,13 +60,20 @@ int main(){
 
 	load_idt();
 
-	initMM(heapBaseAddress, HEAP_SIZE);
+	if(initMM(heapBaseAddress, HEAP_SIZE) == -1){
+		println("Error initializing Memory Manager");
+		return -1;	
+	}
+	
+	if(initPipes() == -1){
+		println("Error initializing Pipes");
+		return -1;	
+	}
 
-	if(initPipes() == -1)
-		return -1;
-
-	if(initKeyboardDriver() == -1)
-		return -1;
+	if(initKeyboardDriver() == -1){
+		println("Error initializing Keyboard Driver");
+		return -1;	
+	}
 
 	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
 

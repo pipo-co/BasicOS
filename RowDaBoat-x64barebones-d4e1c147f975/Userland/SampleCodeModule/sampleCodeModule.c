@@ -8,7 +8,7 @@ void dummyFuction();
 int main(){
 
     char * argv[] = {"Shell"};
-    initializeProccess((int (*)(int, char**))startShell, 1, 1, argv, 0);
+    initializeProccess((void (*)(int, char**))startShell, 1, 1, argv, 0);
     // startShell();
 
 

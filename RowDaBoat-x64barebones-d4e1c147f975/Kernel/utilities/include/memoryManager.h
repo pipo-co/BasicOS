@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-void initMM(void * heap_baseInit, uint32_t heap_sizeInit);
+int initMM(void * heap_baseInit, uint32_t heap_sizeInit);
 
 //Heavily inspired in C malloc
 void * malloc2(uint32_t bytes);

@@ -74,8 +74,8 @@ uint64_t syscallDispatcher(uint64_t rdi, uint64_t rsi, uint64_t rdx, uint64_t rc
 			//uint64_t getPID();
 			return getPID();
 		case 16:
-			//uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
-			return initializeProccess((int (*)(int, char**))rsi, rdx, rcx, (char**)r8, (uint16_t *)r9);
+			//uint64_t initializeProccess(void (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
+			return initializeProccess((void (*)(int, char**))rsi, rdx, rcx, (char**)r8, (uint16_t *)r9);
 		case 17:
 			//void dumpScheduler();
 			dumpScheduler();

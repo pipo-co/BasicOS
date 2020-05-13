@@ -18,8 +18,12 @@ void routePrintStringf(char * string, unsigned int font, unsigned int background
 char getchar(){
     uint16_t fd = getRunningProcessStdIn();
 
-    if(fd == 0)
-        return getKey();
+    if(fd == 0){
+        if(amIFg())
+            return getKey();
+        else
+            return 0; //Si alguien que no es foreground hace un getchar al teclado devuelve 0
+    }
 
     return readPipe(fd);
 }

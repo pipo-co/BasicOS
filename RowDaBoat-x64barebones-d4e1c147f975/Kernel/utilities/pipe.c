@@ -26,7 +26,7 @@ typedef struct pipes{
     pipe_t pipeArray[MAX_PIPE];
     uint16_t firstInactive;
     uint16_t size;
-    uint16_t pipeCreationSem;
+    uint16_t creationMutex;
 }pipes_t;
 
 static pipes_t pipes;
@@ -43,32 +43,32 @@ static char pipeDequeue(pipe_t * pipeQueue);
 
 
 int initPipes(){
-    if((pipes.pipeCreationSem = createSem("pipes", 1)) == -1)
+    if((pipes.creationMutex = createSem("mutex_pipes", 1)) == -1)
         return -1;
     return 0;
 }
 
 int32_t openPipe(char * pipeName){
 
-    semWait(pipes.pipeCreationSem);
+    semWait(pipes.creationMutex);
     
     int32_t pipeId = getPipeId(pipeName);
     
     //Ya existe un pipe con ese nombre 
     if(pipeId != -1){
         pipes.pipeArray[pipeId].connectedCount++;
-        semPost(pipes.pipeCreationSem);
+        semPost(pipes.creationMutex);
         return pipeId + 1;
     }
 
     if(pipes.size >= MAX_PIPE){
-        semPost(pipes.pipeCreationSem);
+        semPost(pipes.creationMutex);
         return -1;  
     }
 
     pipeId = initializePipe(pipeName);
 
-    semPost(pipes.pipeCreationSem);
+    semPost(pipes.creationMutex);
 
     if(pipeId == -1)
         return -1;
@@ -118,16 +118,16 @@ void closePipe(uint16_t pipeId){
         
     pipeId--;
 
-    semWait(pipes.pipeCreationSem);
+    semWait(pipes.creationMutex);
 
     if(!pipes.pipeArray[pipeId].active){
-        semPost(pipes.pipeCreationSem);
+        semPost(pipes.creationMutex);
         return;
     }
 
     pipes.pipeArray[pipeId].connectedCount--;
     if(pipes.pipeArray[pipeId].connectedCount > 0){
-        semPost(pipes.pipeCreationSem);
+        semPost(pipes.creationMutex);
         return;
     }
 
@@ -141,7 +141,7 @@ void closePipe(uint16_t pipeId){
     pipes.size--;
     
 
-    semPost(pipes.pipeCreationSem);
+    semPost(pipes.creationMutex);
 }
 
 int writeStringPipe(uint16_t pipeId, char * s){

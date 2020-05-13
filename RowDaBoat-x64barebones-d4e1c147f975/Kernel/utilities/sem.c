@@ -68,7 +68,6 @@ int32_t createSem(char * name, uint16_t initValue){
     }
 
     index = initializeSem(name, initValue);    
-    printString("Sem real code: "); printint(index); putchar('\n'); //Test
 
     leave_critical_region(&semCreationLock);
 

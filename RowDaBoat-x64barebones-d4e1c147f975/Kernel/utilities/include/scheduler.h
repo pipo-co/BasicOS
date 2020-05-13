@@ -7,7 +7,7 @@ uint64_t scheduler(uint64_t rsp);
 //El nombre de la funcion se encuentra como primer elemento de argv, pero esto no le llega al nuevo proceso.
 //stdFd debe ser un array de 2 elementos, el primero el fd de stdIn, y el segundo el de stdOut.
 //Tambien se permite que stdFd sea NULL, se tomaran ambos valores como 0.
-uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
+uint64_t initializeProccess(void (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd);
 
 int kill(uint64_t pid);
 
@@ -34,5 +34,7 @@ void changeProccessPriority(uint64_t pid, uint8_t prority);
 uint16_t getRunningProcessStdIn();
 
 uint16_t getRunningProcessStdOut();
+
+uint8_t amIFg();
 
 #endif

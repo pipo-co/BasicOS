@@ -5,7 +5,6 @@
 #include <screenDriver.h>
 
 #define MAX_PRIORITY 4
-//#define MAX_PROCESS_FOREGROUND 32
 #define TIME_MULT 2
 #define PROCCESS_STACK_SIZE (8 * 1024 - sizeof(proccessNode)) //8 KiB
 #define DEFAULT_BACKGROUND_PRIORITY 0
@@ -60,11 +59,6 @@ typedef struct{
     uint16_t readyCount; 
 }proccessNodeQueue;
 
-// typedef struct{
-//     proccess_t  * stack[MAX_PROCESS_FOREGROUND];
-//     uint8_t index;
-// }foregroundProccess_t;
-
 static uint64_t swapProccess(uint64_t rsp);
 
 static void removeProccess(proccessNode * node);
@@ -75,8 +69,8 @@ static char ** copyArguments(char ** newArgv, int argc, char ** argv);
 static uint64_t getNewPID();
 static void dumpProccess(proccess_t p);
 
-static void loader2(int argc, char *argv[], int (*function)(int , char **));
-static int dummyFunction(int argc, char ** argv);
+static void loader2(int argc, char *argv[], void (*function)(int , char **));
+static void dummyFunction(int argc, char ** argv);
 
 //Process Queue Methods
 static int isProcessQueueEmpty(proccessNodeQueue * q);
@@ -93,13 +87,11 @@ static uint64_t pidCounter = 1;
 
 static proccessNode * dummyProcessNode;
 
-//static foregroundProccess_t  foregroundProccess;
-
 void initScheduler(){
-    //Initialize Dummy Process
+    // Initialize Dummy Process
     char * argv[] = {"Dummy Process"};
-    initializeProccess(dummyFunction, 0, 1, argv, NULL); //Mete al dummy process en la cola
-    dummyProcessNode = processDequeue(&activeProccesses); //Lo saco de la cola (es el unico Pc en ella)
+    initializeProccess(dummyFunction, 0, 1, argv, NULL); // Mete al dummy process en la cola
+    dummyProcessNode = processDequeue(&activeProccesses); // Lo saco de la cola (es el unico Pc en ella)
 }
 
 uint64_t scheduler(uint64_t rsp){
@@ -149,7 +141,7 @@ static uint64_t swapProccess(uint64_t rsp){
     return runningProccessNode->proccess.rsp;
 }
 
-uint64_t initializeProccess(int (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd){
+uint64_t initializeProccess(void (*function)(int , char **), uint8_t fg, int argc, char ** argv, uint16_t * stdFd){
 
     // Solo un proceso foreground puede crear otro
     if(fg && !runningProccessNode->proccess.fg)
@@ -277,7 +269,7 @@ static proccessNode * getProccessNodeFromPID(uint64_t pid){
     return NULL;
 }
 
-static void loader2(int argc, char *argv[], int (*function)(int , char **)){
+static void loader2(int argc, char *argv[], void (*function)(int , char **)){
     function(argc, argv);
     exit();
 }
@@ -365,6 +357,10 @@ uint16_t getRunningProcessStdOut(){
     return runningProccessNode->proccess.stdOut;
 }
 
+uint8_t amIFg(){
+    return runningProccessNode->proccess.fg;
+}
+
 void wait(uint64_t pid){
     proccessNode * child;
     
@@ -374,12 +370,11 @@ void wait(uint64_t pid){
     } 
 }
 
-static int dummyFunction(int argc, char ** argv){
+static void dummyFunction(int argc, char ** argv){
     while(1){
         //println("Dummy");
         _hlt();
     }
-    return 0;
 }
 
 void dumpScheduler(){
@@ -452,30 +447,3 @@ static uint64_t dumpQueueProcesses(proccessNodeQueue * q){
     }
     return count;
 }
-
-// static uint8_t foregroundPush(proccess_t * p){
-
-//     if(p == NULL || foregroundProccess.index >= MAX_PROCESS_FOREGROUND)
-//         return -1;
-    
-//     p->state = BLOCKED;
-//     foregroundProccess.stack[index++] = p;
-
-//     return 0;
-// }
-
-// static proccess_t * foregroundPop(){
-
-//     if(foregroundProccess.index <= 0 || foregroundProccess.index > MAX_PROCESS_FOREGROUND)
-//         return NULL;
-    
-//     proccess_t * ans = foregroundProccess.stack[--index]
-    
-//     ans->state = READY;
-    
-//     return ans;
-// }
-
-// static uint8_t foregroundStackIsEmpty(){
-//     return foregroundProccess.index == 0;
-// }

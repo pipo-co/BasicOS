@@ -56,7 +56,7 @@ extern unsigned char getKeyboardScancode();
 //End Variables
 
 int initKeyboardDriver(){
-    if((charAvailableSem = createSem("keyboard", 0)) == -1)
+    if((charAvailableSem = createSem("keyboard_counter", 0)) == -1)
         return -1;
     return 0;
 }

@@ -9,7 +9,7 @@
 #define EOF 27  // ESC
 #define PRINT_THINKING '.'
 #define PRINT_EATING 'E'
-#define TIME_MULT 5
+#define TIME_MULT 10
 
 #define LEFT_CHOPSTICK(p) (chopstick[p])
 #define RIGHT_CHOPSTICK(p) (chopstick[(p + 1) % phyloCount])
@@ -24,8 +24,8 @@ typedef struct phylo{
 }phylo_t;
 
 
-static int evenPhylo(int argc, char ** argv);
-static int oddPhylo(int argc, char ** argv);
+static void evenPhylo(int argc, char ** argv);
+static void oddPhylo(int argc, char ** argv);
 static void createPhylosopher();
 static void removePhylosopher();
 static void init(uint16_t initPhyloCount);
@@ -70,11 +70,11 @@ void phylo(int argcount, char * args[]){
     freeResources();
 }
 
-static int evenPhylo(int argc, char ** argv){
+static void evenPhylo(int argc, char ** argv){
     
     uint16_t phyloID = atoi(argv[0]);
     if(phyloID % 2 != 0)
-        return 1;
+        return;
 
     while(phylosophers[phyloID].run){
         sleep(2 * TIME_MULT);
@@ -91,14 +91,13 @@ static int evenPhylo(int argc, char ** argv){
         releaseLeftChop(phyloID);
         phylosophers[phyloID].state = THINKING;
     }
-    return 0;
 }
 
-static int oddPhylo(int argc, char ** argv){
+static void oddPhylo(int argc, char ** argv){
     
     uint16_t phyloID = atoi(argv[0]);
     if(phyloID % 2 == 0)
-        return 1;
+        return;
 
     while(phylosophers[phyloID].run){
         sleep(2 * TIME_MULT);
@@ -115,7 +114,6 @@ static int oddPhylo(int argc, char ** argv){
         releaseRightChop(phyloID);
         phylosophers[phyloID].state = THINKING;
     }
-    return 0;
 }   
 
 static void createPhylosopher(){

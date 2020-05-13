@@ -4,6 +4,7 @@
 #include <memoryManager.h>
 #include <screenDriver.h>
 #include <lib.h>
+#include <sem.h>
 
 enum powersOfTwo{KILO = 10, MEGA = 20, GIGA = 30};
 #define MIN_POWER 6 //Min size 64 bytes (politica)
@@ -42,19 +43,20 @@ static list_t listArray[MAX_BUCKET_COUNT];
 static uint32_t availableMemory;
 static uint8_t bucketCount;
 
-void initMM(void * heap_baseInit, uint32_t heap_sizeInit){
-    heap_base = heap_baseInit;
-    // printhex((uint64_t)heap_baseInit);
-    // putchar('\n');
-    heap_size = availableMemory = heap_sizeInit;
-    // printhex(heap_size);
-    // putchar('\n');
-    bucketCount = intLog2(heap_size) - MIN_POWER + 1;
-    // printint(bucketCount);
-    // putchar('\n');
+static int16_t mutex;
 
-    if(bucketCount < 1) //TODO
-        return; //Que  devolvemos??? 
+int initMM(void * heap_baseInit, uint32_t heap_sizeInit){
+    mutex = createSem("mutex_MM", 1);
+    if(mutex == -1)
+        return -1;
+
+    heap_base = heap_baseInit;
+    heap_size = availableMemory = heap_sizeInit;
+    bucketCount = intLog2(heap_size) - MIN_POWER + 1;
+
+    //Heap size demasiado chico
+    if(bucketCount < 1) 
+        return -1;  
     
     if(bucketCount > MAX_BUCKET_COUNT) //Si el espacio es mas grande que 1 GiB, lo truncamos
         bucketCount = MAX_BUCKET_COUNT;
@@ -79,9 +81,13 @@ void * malloc2(unsigned bytes){
 
     uint8_t bucket = getBucket(bytes);
 
+    semWait(mutex);
+
     int parentBucket = getFirstAvBucket(bucket);
-    if(parentBucket == -1)
+    if(parentBucket == -1){
+        semPost(mutex);
         return NULL;
+    }
 
     list_t *ptr;
     for(ptr = list_pop(&listArray[parentBucket]); bucket < parentBucket ; parentBucket--){
@@ -90,11 +96,10 @@ void * malloc2(unsigned bytes){
     }
     ptr->isFree = 0;
 
-    availableMemory -= BINARY_POWER(bucket + MIN_POWER);
-    // printString("Memoria libre:");
-    // printhex(availableMemory);
-    // putchar('\n');
+    semPost(mutex);
 
+    availableMemory -= BINARY_POWER(bucket + MIN_POWER);
+   
     return (void *)(ptr + 1);
 }
 
@@ -103,12 +108,16 @@ int free2(void * ap){
         return 1;
 
     list_t* bp = (list_t*)ap - 1;
+
+    semWait(mutex);
     
     bp->isFree = 1;
 
     availableMemory += BINARY_POWER(bp->level + MIN_POWER);
     
     insertNodeAndJoinSpace(bp);
+
+    semPost(mutex);
 
     return 0;
 }

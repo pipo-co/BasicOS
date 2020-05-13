@@ -119,9 +119,6 @@ typedef void (*shellFunction)(int, char**);
     //Test Agodios
     extern void test_mm();
     extern void test_processes();
-
-    // Pruebas
-    static void prueba(int argc, char ** argv);
 //End
 
 static void semTester();
@@ -230,7 +227,7 @@ static void processInstruction(char * userInput){
         shellFunction function = getFunction(arguments[0]);
 
         if(function != NULL){
-            if(initializeProccess((int (*)(int,char**))function, !background, argCount, arguments, 0) == 0)
+            if(initializeProccess(function, !background, argCount, arguments, 0) == 0)
                 println("There was a problem creating the new process");
             return;
         }
@@ -252,16 +249,15 @@ static void loadFunctions(){
     loadFunction("printmem", printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
     loadFunction("triggerException0", triggerException0, "Triggers Exception number 0 \n");
     loadFunction("triggerException6", triggerException6, "Triggers Exception number 6 \n");
-    loadFunction("arkanoid", arkanoid, "Arkanoid Game! Args: No args for new game. -c to continue last game.\n");
     loadFunction("beep", playSound, "Plays a beep \n");
     loadFunction("dumpMM", (shellFunction)dumpMM, "Memory Manager Dump \n");
-    loadFunction("dumpScheduler", (shellFunction)dumpScheduler,"Scheduler Dump \n");
+    loadFunction("ps", (shellFunction)dumpScheduler,"Scheduler Dump \n");
     loadFunction("block", cmdBlock,"Block process given it's PID \n");
     loadFunction("unblock", cmdUnblock,"Unblock process given it's PID \n");
     loadFunction("kill", cmdKill,"Kill process given it's PID \n");
     loadFunction("getpid", (shellFunction)cmdGetPID,"Return running process PID \n");
-    loadFunction("changePriority", cmdChangeProcessPriority,"Change process priority given it's PID \n");
-    loadFunction("Lavander", (shellFunction)Lavander, "Plays an indie game's music");
+    loadFunction("nice", cmdChangeProcessPriority,"Change process priority given it's PID \n");
+
     loadFunction("openSem", cmdCreateSem, "Create new Semaphore or Open an existing one \n");
     loadFunction("closeSem", cmdRemoveSem, "Close an existing semaphore \n");
     loadFunction("semWait", cmdSemWait, "Sem Wait \n");
@@ -280,8 +276,8 @@ static void loadFunctions(){
     loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler \n");
     loadFunction("semtest", (shellFunction)semTester, "Sem Test \n");
     loadFunction("phylo", phylo, "Dining philosophers \n");
-    loadFunction("prueba", prueba, "Sem Test \n");
     loadFunction("shell", (shellFunction)startShell, "Sem Test \n");
+    //loadFunction("Lavander", (shellFunction)Lavander, "Plays an indie game's music");
     // loadFunction("Elisa", (shellFunction)forElisa, "Music for a student\n");semTester
     // loadFunction("Evangelion", (shellFunction)Evangelion, "Evangelion theme\n"); 
     // loadFunction("SadMusic", (shellFunction)Sadness, "Music to listen when you are sad");
@@ -385,7 +381,7 @@ static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], u
         strcat(name, defaultPipeName);
 
         // Inicializamos el proceso a la derecha del pipe, por eso la funcion es i + 1.
-        childPid[i + 1] = initializeProccess((int (*)(int,char**))functionsArray[i + 1], 0, auxArgc, auxArgv, stdFd);
+        childPid[i + 1] = initializeProccess(functionsArray[i + 1], 0, auxArgc, auxArgv, stdFd);
 
         // Configuramos los fd del siguiente proceso a inicializar.
         // Su salida es la entrada del proceso creado anteriormente.
@@ -399,14 +395,14 @@ static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], u
     // Es el correspondiente a i = 0.
     auxArgc = ((1 < pipeCount)? pipeLocation[1] : argc) - pipeLocation[0] - 1;
     auxArgv = arguments + pipeLocation[0] + 1;
-    childPid[1] = initializeProccess((int (*)(int,char**))functionsArray[1], 0, auxArgc, auxArgv, stdFd);
+    childPid[1] = initializeProccess(functionsArray[1], 0, auxArgc, auxArgv, stdFd);
 
     // El primer proceso es un caso particular pues no tiene pipe a su izquierda.
     // Su entrada, si es que usa, debera ser el teclado.
     // Este es el unico proceso que podria ser fg. Esto fue indicado por parametro.
     stdFd[1] = stdFd[0];
     stdFd[0] = 0;
-    childPid[0] = initializeProccess((int (*)(int,char**))functionsArray[0], isFg, pipeLocation[0], arguments, stdFd);
+    childPid[0] = initializeProccess(functionsArray[0], isFg, pipeLocation[0], arguments, stdFd);
 
     // Libera los pipes creados, de izquierda a derecha.
     // Para eso, se asegura mediante un wait que los hijos hayan terminado de usar el recurso.
@@ -721,15 +717,6 @@ static void semTester(){
         println("Error!");
     println("Hola, me desbloquearon, otro fav(post) y me bloqueo!");
     removeSem(sem);
-}
-
-static void prueba(int argc, char ** argv){
-    char c;
-    while((c = getChar()) != EOF)
-        putchar(c);
-
-    print(argv[0]);
-    putchar('\n');
 }
 
 static void loop(int argc, char ** argv){
