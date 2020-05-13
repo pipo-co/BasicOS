@@ -33,8 +33,6 @@ typedef void (*shellFunction)(int, char**);
     //Cantidad de funciones disponibles
     int functionsSize = 0;
 
-    //int cursorTick = 0;
-
 //End
 //Protoripos
     //Funciones para el cargado del fuctionArray. Carga todos los modulos disponibles.
@@ -52,10 +50,6 @@ typedef void (*shellFunction)(int, char**);
     static int getPipeLocations(char * arguments[], int argc, uint16_t pipeLocation[]);
     static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], uint16_t pipeCount, int isFg);
 
-    //Funciones auxiliares para tener un cursor parpadeante. 
-    //static void tickCursor();
-    //static void turnOffCursor();
-    
     //Modulos - Funciones ejecutables desde la shell
     //inforeg: imprimir el valor de todos los registros
     extern void getRegs(int argcount, char * args[]);
@@ -99,7 +93,6 @@ typedef void (*shellFunction)(int, char**);
     static void cmdKill(int argcount, char * args[]);
     static void cmdGetPID();
     static void cmdChangeProcessPriority(int argcount, char * args[]);
-    static void loop(int argc, char ** argv);
 
     //Semaphore Commands
     static void cmdCreateSem(int argcount, char * args[]);
@@ -117,13 +110,12 @@ typedef void (*shellFunction)(int, char**);
     static void cat(int argc, char ** argv);
     static void wc();
     static void filter();
+    static void loop(int argc, char ** argv);
 
     //Test Agodios
     extern void test_mm();
     extern void test_processes();
 //End
-
-static void semTester();
 
 void startShell(){
     //Se cargan los modulos
@@ -152,22 +144,11 @@ static int readUserInput(char * buffer, int maxSize){
     
     int counter = 0;
     char c;
-    
-    //int currentTimerTick;
-    //int lastTimerTick = -1;
-    
-    while((counter < maxSize - 1) && (c = getChar()) != '\n' ){
 
-        /*//Parpadeo del cursor.
-        currentTimerTick = getTicksElapsed();
-        if(currentTimerTick != lastTimerTick && currentTimerTick % 10 == 0){
-            tickCursor();
-            lastTimerTick = currentTimerTick;
-        }*/
+    while((counter < maxSize - 1) && (c = getChar()) != '\n' ){
 
         //Procesado de la tecla presionada
         if(c){
-            //turnOffCursor();
 
             if(c == EOF)
                 return 0;
@@ -194,7 +175,7 @@ static int readUserInput(char * buffer, int maxSize){
             }
         }
     }
-    //turnOffCursor();
+
     buffer[counter++] = '\0';
     putchar('\n');
     return 1;
@@ -242,49 +223,62 @@ static void processInstruction(char * userInput){
 
 //Cargado de los modulos
 static void loadFunctions(){
-    loadFunction("inforeg", getRegs, "Prints all the registers \n");
-    loadFunction("ticks", ticksElpased, "Prints ticks elapsed from start. Arg: -s for seconds elapsed \n");
-    loadFunction("printArgs", printArgs, "Prints all its arguments\n ");
-    loadFunction("help", help, "Prints the description of all functions \n");
-    loadFunction("clock", printCurrentTime, "Prints the current time. Args: -h prints current hours.  -m prints current minutes.  -s prints current seconds.\n");
-    loadFunction("printmem", printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
-    loadFunction("triggerException0", triggerException0, "Triggers Exception number 0 \n");
-    loadFunction("triggerException6", triggerException6, "Triggers Exception number 6 \n");
-    loadFunction("beep", playSound, "Plays a beep \n");
-    
-    loadFunction("mem", (shellFunction)dumpMM, "Prints Memory Manager State \n");
-    loadFunction("ps", (shellFunction)dumpScheduler,"Prints Scheduler State \n");
-    loadFunction("block", cmdBlock,"Block process given it's PID \n");
-    loadFunction("unblock", cmdUnblock,"Unblock process given it's PID \n");
-    loadFunction("kill", cmdKill,"Kill process given it's PID \n");
-    loadFunction("getpid", (shellFunction)cmdGetPID,"Return running process PID \n");
-    loadFunction("nice", cmdChangeProcessPriority,"Change process priority given it's PID \n");
+    // Funciones remanentes del tp de Arqui
+    loadFunction("inforeg", getRegs, "Prints all the registers");
+    loadFunction("ticks", ticksElpased, "Prints ticks elapsed from start. Arg: -s for seconds elapsed");
+    loadFunction("printArgs", printArgs, "Prints all its arguments");
+    loadFunction("help", help, "Prints the description of all functions");
+    loadFunction("clock", printCurrentTime, "Prints the current time. Args: -h prints current hours.  -m prints current minutes.  -s prints current seconds");
+    loadFunction("printmem", printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.Address in hexadecimal and 0 is not valid" );
+    loadFunction("triggerException0", triggerException0, "Triggers Exception number 0");
+    loadFunction("triggerException6", triggerException6, "Triggers Exception number 6");
+    loadFunction("beep", playSound, "Plays a beep");
+    loadFunction("arkanoid", arkanoid, "Arkanoid game! Not supported in current version, do not use");
 
-    loadFunction("openSem", cmdCreateSem, "Create new Semaphore or Open an existing one \n");
-    loadFunction("closeSem", cmdRemoveSem, "Close an existing semaphore \n");
-    loadFunction("semWait", cmdSemWait, "Sem Wait \n");
-    loadFunction("semPost", cmdSemPost, "Sem Post \n");
-    loadFunction("dumpSem", (shellFunction)dumpSem, "Semaphores Dump \n");
-    loadFunction("openPipe", cmdOpenPipe, "Create new Pipe or open an existing one \n");
-    loadFunction("writePipe", cmdWritePipe, "Write String to pipe \n");
-    loadFunction("readPipe", cmdReadPipe, "Read Char from Pipe \n");
-    loadFunction("closePipe", cmdClosePipe, "Close Existing pipe \n");
-    loadFunction("dumpPipes", (shellFunction)dumpPipes, "Pipes Dump \n");
-    loadFunction("loop", loop, "Prints PID every certain amount of ticks \n");
-    loadFunction("cat", cat, "Prints stdIn as it comes. You can configure the endkey, ESC by default \n");
-    loadFunction("wc", (shellFunction)wc, "Prints how many lines had it's stdIn \n");
-    loadFunction("filter", (shellFunction)filter, "Prints stdIn whithout vowels \n");
-    loadFunction("testMM", (shellFunction)test_mm, "Test MM \n");
-    loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler \n");
-    loadFunction("semtest", (shellFunction)semTester, "Sem Test \n");
-    loadFunction("phylo", phylo, "Dining philosophers \n");
-    loadFunction("shell", (shellFunction)startShell, "Sem Test \n");
-    //loadFunction("Lavander", (shellFunction)Lavander, "Plays an indie game's music");
-    // loadFunction("Elisa", (shellFunction)forElisa, "Music for a student\n");semTester
-    // loadFunction("Evangelion", (shellFunction)Evangelion, "Evangelion theme\n"); 
-    // loadFunction("SadMusic", (shellFunction)Sadness, "Music to listen when you are sad");
-    // loadFunction("Victory", (shellFunction)Victory, "Music to listen when you win");
-    // loadFunction("Defeat", (shellFunction)Defeat, "Music to listen when you are happyn't");
+    
+    // Dumps de utilidades de kernel
+    loadFunction("mem", (shellFunction)dumpMM, "Prints Memory Manager State");
+    loadFunction("ps", (shellFunction)dumpScheduler,"Prints Scheduler State");
+    loadFunction("sem", (shellFunction)dumpSem, "Prints Semaphores State");
+    loadFunction("pipe", (shellFunction)dumpPipes, "Prints Pipes State");
+
+    // Funcionalidades brindadas por scheduler
+    loadFunction("block", cmdBlock,"Block process given it's PID");
+    loadFunction("unblock", cmdUnblock,"Unblock process given it's PID");
+    loadFunction("kill", cmdKill,"Kill process given it's PID");
+    loadFunction("getpid", (shellFunction)cmdGetPID,"Return running process PID");
+    loadFunction("nice", cmdChangeProcessPriority,"Change process priority given it's PID");
+
+    // Funcionalidades brindadas por semaforos
+    loadFunction("openSem", cmdCreateSem, "Create new Semaphore or Open an existing one");
+    loadFunction("closeSem", cmdRemoveSem, "Close an existing semaphore");
+    loadFunction("semWait", cmdSemWait, "Sem Wait");
+    loadFunction("semPost", cmdSemPost, "Sem Post");
+    
+    // Funcionalidades brindadas por Pipe
+    loadFunction("openPipe", cmdOpenPipe, "Create new Pipe or open an existing one");
+    loadFunction("writePipe", cmdWritePipe, "Write String to Pipe");
+    loadFunction("readPipe", cmdReadPipe, "Read Char from Pipe");
+    loadFunction("closePipe", cmdClosePipe, "Close Existing Pipe");
+    
+    // Funciones de IPC
+    loadFunction("loop", loop, "Prints PID every certain amount of ticks");
+    loadFunction("cat", cat, "Prints stdIn as it comes. You can configure the endkey, ESC by default");
+    loadFunction("wc", (shellFunction)wc, "Prints how many lines had it's stdIn");
+    loadFunction("filter", (shellFunction)filter, "Prints stdIn filtering it's vowels");
+    loadFunction("phylo", phylo, "Dining Philosophers problem");
+
+    // Test brindados por la catedra
+    loadFunction("testMM", (shellFunction)test_mm, "Test MM");
+    loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler");
+
+    //Funciones de musica
+    loadFunction("Lavander", (shellFunction)Lavander, "Plays an indie game's music");
+    loadFunction("Elisa", (shellFunction)forElisa, "Music for a student");
+    loadFunction("Evangelion", (shellFunction)Evangelion, "Evangelion theme"); 
+    loadFunction("SadMusic", (shellFunction)Sadness, "Music to listen when you are sad");
+    loadFunction("Victory", (shellFunction)Victory, "Music to listen when you win");
+    loadFunction("Defeat", (shellFunction)Defeat, "Music to listen when you are happyn't");
 }
 
 static void loadFunction(char * string, shellFunction fn, char * desc){
@@ -293,21 +287,6 @@ static void loadFunction(char * string, shellFunction fn, char * desc){
     functions[functionsSize].description = desc;
     functionsSize++;
 }
-
-// static void tickCursor(){
-//     if(cursorTick)
-//         putchar('\b');
-//     else
-//         putcharf(' ', 0, CURSOR_COLOR);
-    
-//     cursorTick = !cursorTick;
-// }
-
-// static void turnOffCursor(){
-//     if(cursorTick)
-//         putchar('\b');
-//     cursorTick = 0;
-// }
 
 static int getPipeLocations(char * arguments[], int argc, uint16_t pipeLocation[]){
     static char * pipe = "|";
@@ -461,8 +440,10 @@ static void help(int argcount, char * args[]){
     if(argcount >= 1){
         for (int i = 0; i < functionsSize; i++){
             if(strcmp(functions[i].name, args[0])){
-                print("Function ");
-                println(functions[i].name);
+                print(" ");
+                //print("Function ");
+                print(functions[i].name);
+                print(":  ");
                 println(functions[i].description);
                 return;
             }
@@ -472,8 +453,10 @@ static void help(int argcount, char * args[]){
     }
 
     for (int i = 0; i < functionsSize; i++){
-        print("Function ");
-        println(functions[i].name);
+        print(" ");
+        //print("Function ");
+        print(functions[i].name);
+        print(":  ");
         println(functions[i].description);
     }
 }
@@ -708,17 +691,6 @@ static void cmdClosePipe(int argcount, char * args[]){
         return;
     }
     closePipe(atoi(args[0]));
-}
-
-
-static void semTester(){
-    uint16_t sem = createSem("nachocapo", 0);
-    printint(sem); putchar('\n');
-    println("Hola, un post y me bloqueo");
-    if(semWait(sem) == -1)
-        println("Error!");
-    println("Hola, me desbloquearon, otro fav(post) y me bloqueo!");
-    removeSem(sem);
 }
 
 static void loop(int argc, char ** argv){
