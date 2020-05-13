@@ -130,7 +130,7 @@ static uint64_t swapProccess(uint64_t rsp){
 
             if(runningProccessNode->proccess.state == KILLED)
                 removeProccess(runningProccessNode);
-            else if(runningProccessNode->proccess.state == BLOCKED)
+            else if(runningProccessNode->proccess.state == BLOCKED) //PVS indica que la condicion es siempre verdadera pero nos parece mejor dejarlo por claridad
                 processEnqueue(&activeProccesses, runningProccessNode);
             
             runningProccessNode = processDequeue(&activeProccesses);

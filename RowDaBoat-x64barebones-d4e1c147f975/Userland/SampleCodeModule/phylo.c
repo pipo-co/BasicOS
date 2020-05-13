@@ -14,7 +14,7 @@
 #define TIME_MULT 10
 
 #define LEFT_CHOPSTICK(p) (chopstick[p])
-#define RIGHT_CHOPSTICK(p) (chopstick[(p + 1) % phyloCount])
+#define RIGHT_CHOPSTICK(p) (chopstick[((p) + 1) % phyloCount])
 
 enum state {EATING, THINKING};
 

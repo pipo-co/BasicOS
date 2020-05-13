@@ -20,3 +20,6 @@ memoryManager.out
 RowDaBoat-x64barebones-d4e1c147f975/proRun.ps1
 test.c
 RowDaBoat-x64barebones-d4e1c147f975/proDebug.ps1
+RowDaBoat-x64barebones-d4e1c147f975/out.cppOut
+RowDaBoat-x64barebones-d4e1c147f975/pvs.sh
+RowDaBoat-x64barebones-d4e1c147f975/report.tasks

@@ -5,9 +5,9 @@
 #include <music.h>
 
 //Defines
-    #define MIN_SCREEN_WIDTH 2*BRICKS_WIDTH
-    #define MAX_SCREEN_WIDTH MAX_BRICKS_PER_ROW*BRICKS_WIDTH
-    #define MIN_SCREEN_HEIGHT GUI_HEIGHT + 3*BRICKS_HEIGHT + 2*BRICKS_HEIGHT + 8*RADIUS
+    #define MIN_SCREEN_WIDTH (2*BRICKS_WIDTH)
+    #define MAX_SCREEN_WIDTH (MAX_BRICKS_PER_ROW*BRICKS_WIDTH)
+    #define MIN_SCREEN_HEIGHT (GUI_HEIGHT + 3*BRICKS_HEIGHT + 2*BRICKS_HEIGHT + 8*RADIUS)
     
     #define MIN_BRICKS_PER_ROW 2
     #define MAX_BRICKS_PER_ROW 64
@@ -139,7 +139,7 @@ void startArkanoid(enum gameMode mode){
             return;
         }
 
-        if(mode == NEW_GAME || (mode == CONTINUE && gameStarted == 0))
+        if(mode == NEW_GAME || gameStarted == 0)
             initVariables();
         else if(gameOver()){
             endGame();
@@ -385,7 +385,7 @@ static void initBall(){
             for (int j = 0; j < BAR_HEIGHT; j++){
                 if(i%BAR_WIDTH <=4 || j%BAR_HEIGHT<=4)
                     drawPixel(x+i,y+j,0x4587f7);
-                else if(i%BAR_WIDTH >=128 || j%BAR_HEIGHT>=28)
+                else if( j%BAR_HEIGHT>=28)
                     drawPixel(x+i,y+j,0x1c5cc9);
                 else
                     drawPixel(x+i,y+j,0x2b66cc);

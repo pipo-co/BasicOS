@@ -18,8 +18,8 @@ typedef struct pipe{
     char name[MAX_NAME];
     uint16_t head;
     uint16_t tail;
-    uint16_t readSem;
-    uint16_t writeSem;
+    int32_t readSem;
+    int32_t writeSem;
     uint16_t connectedCount;
     uint8_t active;
 }pipe_t;
@@ -28,7 +28,7 @@ typedef struct pipes{
     pipe_t pipeArray[MAX_PIPE];
     uint16_t firstInactive;
     uint16_t size;
-    uint16_t creationMutex;
+    int32_t creationMutex;
 }pipes_t;
 
 static pipes_t pipes;
@@ -238,7 +238,7 @@ static int32_t getPipeId(char * name){
 
     for(uint16_t activePipeCount = 0; activePipeCount < pipes.size; i++){
         if(pipes.pipeArray[i].active){
-            if(strcmp(name, pipes.pipeArray[i].name))
+            if(strcmp(name, pipes.pipeArray[i].name)) //a diferencia de strcmp de string.h, strcmp devuelve !=0 si los strings son iguales
                 return i;
             activePipeCount++;
         }

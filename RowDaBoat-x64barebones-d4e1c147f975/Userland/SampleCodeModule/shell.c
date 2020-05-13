@@ -176,7 +176,6 @@ static int readUserInput(char * buffer, int maxSize){
                 if(gameAlreadyStarted()){
                     startArkanoid(CONTINUE);
                     buffer[0] = 0;
-                    counter = 0;
                     return 1;
                 }
             }

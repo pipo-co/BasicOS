@@ -5,7 +5,7 @@
 #include <usrlib.h>
 
 #define MAX_BLOCKS 128
-#define MAX_MEMORY 128 * 1024 * 1024 * 8 / 10 //Should be around 80% of memory managed by the MM
+#define MAX_MEMORY (128 * 1024 * 1024 * 8 / 10) //Should be around 80% of memory managed by the MM
 
 typedef struct MM_rq{
   void *address;

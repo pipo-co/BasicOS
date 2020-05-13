@@ -25,7 +25,7 @@ void init_screen(){
 } 
 
 void setCursorPos(unsigned int x, unsigned int y){
-    if(x < 0 || x >= screenWidth || y < 0 || y >= screenHeight)
+    if( x >= screenWidth || y >= screenHeight)
         return;
 
     cursorPosX = x;

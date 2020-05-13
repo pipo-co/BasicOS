@@ -50,7 +50,7 @@ extern unsigned char getKeyboardScancode();
 //Variables
     static int shiftActivated = 0;
     static int capsLock = 0;
-    static uint16_t charAvailableSem;
+    static int32_t charAvailableSem;
 
     //Buffer con los codigos ascii de las teclas precionadas, forma de cola (FIFO)
     char keyBuffer[BUFFER_SIZE];
@@ -58,7 +58,7 @@ extern unsigned char getKeyboardScancode();
 //End Variables
 
 int initKeyboardDriver(){
-    if((charAvailableSem = createSem("keyboard_counter", 0)) == -1)
+    if( (charAvailableSem = createSem("keyboard_counter", 0)) == -1)
         return -1;
     return 0;
 }

@@ -175,7 +175,7 @@ static int32_t getSemIndexFromName(char * name){
     for(uint16_t activeSemCount = 0; activeSemCount < semaphores.size; i++){
         if(semaphores.semArray[i].active){
             activeSemCount++;
-            if(strcmp(name, semaphores.semArray[i].name))
+            if(strcmp(name, semaphores.semArray[i].name)) //a diferencia de strcmp de string.h, strcmp devuelve !=0 si los strings son iguales
                 return i;
         }
     }

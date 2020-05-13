@@ -10,7 +10,7 @@
 
 enum powersOfTwo{KILO = 10, MEGA = 20, GIGA = 30};
 #define MIN_POWER 6 //Min size 64 bytes (politica)
-#define MAX_BUCKET_COUNT 30 - MIN_POWER //maximo que maneja el MM es 1 GiB (politica arbitraria)
+#define MAX_BUCKET_COUNT (30 - MIN_POWER) //maximo que maneja el MM es 1 GiB (politica arbitraria)
 
 #define BINARY_POWER(x) (1 << (x))
 

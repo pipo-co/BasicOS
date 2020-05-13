@@ -4,6 +4,9 @@
 #include <music.h>
 #include <usrlib.h>
 
+
+//Este archivo tiene warnings de PVS studio pero no corresponden a ningun error
+
 void Victory(){
     /* 
     Director's cut :D aKa marito

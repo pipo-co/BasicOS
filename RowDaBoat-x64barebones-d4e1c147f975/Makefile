@@ -24,4 +24,13 @@ clean:
 	cd Kernel; make clean
 	cd Userland; make clean
 
+CPP_SOURCES=$(shell find . -name '*.c')
+CPP_OUT=$(CPP_SOURCES:.c=.cpp)
+
+cpp: $(CPP_OUT)
+
+%.cpp: %.c
+	cppcheck --quiet --enable=all --force --inconclusive  $< 2>> out.cppOut
+
+
 .PHONY: bootloader image collections kernel userland all clean buddy kernelBuddy
