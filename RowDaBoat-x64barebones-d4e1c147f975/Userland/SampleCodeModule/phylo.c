@@ -2,7 +2,7 @@
 #include <usrlib.h>
 #include <stddef.h>
 
-#define MAX_PHIL 50
+#define MAX_PHIL 40
 #define MIN_PHIL 2
 #define SEM_NAME "_phyl"
 #define NAME_LEN 20
@@ -22,12 +22,11 @@ typedef struct phylo{
 }phylo_t;
 
 
-
 static int evenPhylo(int argc, char ** argv);
 static int oddPhylo(int argc, char ** argv);
 static void createPhylosopher();
 static void removePhylosopher();
-static void init();
+static void init(uint16_t initPhyloCount);
 static void guaranteeThinkingPhylo(uint16_t phylo);
 static void updateAndPrintTableState(uint16_t phyloId, enum state newState);
 static void freeResources();
@@ -38,7 +37,6 @@ static void releaseRightChop(uint16_t phyloID);
 static void releaseLeftChop(uint16_t phyloID);
 
 
-
 static sem_t chopstick[MAX_PHIL];
 
 static phylo_t phylosophers[MAX_PHIL];
@@ -46,8 +44,13 @@ static uint16_t phyloCount;
 
 static char tableState[MAX_PHIL + 1];
 
-void phylo(){
-    init();
+void phylo(int argcount, char * args[]){
+    uint16_t initPhyloCount = MIN_PHIL;
+
+    if(argcount > 0)
+        initPhyloCount = atoi(args[0]);
+
+    init(initPhyloCount);
     
     char c;
     while((c = getChar()) != EOF){
@@ -70,6 +73,7 @@ static int evenPhylo(int argc, char ** argv){
         return 1;
 
     while(1){
+        // Matamos HUNGRY??
         phylosophers[phyloID].state = HUNGRY;
         takeLeftChop(phyloID);
         takeRightChop(phyloID);
@@ -115,6 +119,9 @@ static int oddPhylo(int argc, char ** argv){
 }   
 
 static void createPhylosopher(){
+    if(phyloCount >= MAX_PHIL)
+        return;
+
     char phyloName[NAME_LEN];
     char phyloID[NAME_LEN];
     uint16_t phylo = phyloCount;
@@ -132,11 +139,6 @@ static void createPhylosopher(){
     phyloCount++;
 
     unblock(phylosophers[phylo - 1].pid);
-
-    // if(phylosophers[phyloCount-1].state != THINKING){
-    //     semWait(chopstick[phylo]);
-    //     semPost(chopstick[0]);
-    // }
 
     char* argv[] = {phyloName, phyloID};
     phylosophers[phylo].pid = initializeProccess((phylo % 2 == 0)? evenPhylo : oddPhylo, 0, 2, argv, NULL);
@@ -163,28 +165,32 @@ static void removePhylosopher(){
     removeSem(chopstick[phylo]);
 }
 
-static void init(){
+static void init(uint16_t initPhyloCount){
     char phyloName[NAME_LEN];
     char phyloID[NAME_LEN];
 
-    phyloCount = MIN_PHIL;
+    if(initPhyloCount > MAX_PHIL)
+        initPhyloCount = MAX_PHIL;
 
-    for(uint16_t i = 0; i < MIN_PHIL; i++){
+    else if(initPhyloCount < MIN_PHIL)
+        initPhyloCount = MIN_PHIL;
+
+    phyloCount = initPhyloCount;
+
+    for(uint16_t i = 0; i < initPhyloCount; i++){
         uintToBase(i, phyloName, 10);
         strcat(phyloName, SEM_NAME);
         chopstick[i] = createSem(phyloName, 1);
         tableState[i] = PRINT_THINKING;
     }
 
-    for(uint16_t i = 0; i < MIN_PHIL; i++){
+    for(uint16_t i = 0; i < initPhyloCount; i++){
         
         uintToBase(i, phyloName, 10);
         strcat(phyloName, SEM_NAME);
         uintToBase(i, phyloID, 10);
 
         phylosophers[i].state = THINKING;
-
-        println(phyloName);
 
         char* argv[] = {phyloName, phyloID};
         phylosophers[i].pid = initializeProccess((i % 2 == 0)? evenPhylo : oddPhylo, 0, 2, argv, NULL);

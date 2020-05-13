@@ -1,6 +1,6 @@
 #ifndef __PHYLO_H__
 #define __PHYLO_H__
 
-void phylo();
+void phylo(int argcount, char * args[]);
 
 #endif

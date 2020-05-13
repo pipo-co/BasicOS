@@ -279,7 +279,7 @@ static void loadFunctions(){
     loadFunction("testMM", (shellFunction)test_mm, "Test MM \n");
     loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler \n");
     loadFunction("semtest", (shellFunction)semTester, "Sem Test \n");
-    loadFunction("phylo", (shellFunction)phylo, "Dining philosophers \n");
+    loadFunction("phylo", phylo, "Dining philosophers \n");
     loadFunction("prueba", prueba, "Sem Test \n");
     loadFunction("shell", (shellFunction)startShell, "Sem Test \n");
     // loadFunction("Elisa", (shellFunction)forElisa, "Music for a student\n");semTester
