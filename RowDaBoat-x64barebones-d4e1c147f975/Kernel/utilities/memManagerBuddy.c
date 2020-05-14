@@ -127,8 +127,7 @@ int free2(void * ap){
 }
 
 uint32_t getAvailableMemory(){
-    //El espacio libre no es el espacio que puede pdir el usuario. Habria que desconatr el tamaño que ocupan los headers nenecsarios para aprovecharlo
-    //Se podria restar sizeof(list_t) cada vez que se agrega una entrada a listArray y sumar la misma cantidad cuando se junta con su buddy
+    
     return availableMemory;
 }
 

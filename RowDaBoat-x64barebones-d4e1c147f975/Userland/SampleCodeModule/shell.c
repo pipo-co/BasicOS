@@ -115,6 +115,9 @@ typedef void (*shellFunction)(int, char**);
     //Test Agodios
     extern void test_mm();
     extern void test_processes();
+    extern void test_prio();
+    extern void test_sync();
+    extern void test_no_sync();
 //End
 
 void startShell(){
@@ -271,6 +274,10 @@ static void loadFunctions(){
     // Test brindados por la catedra
     loadFunction("testMM", (shellFunction)test_mm, "Test MM");
     loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler");
+    loadFunction("testPrio", (shellFunction)test_prio, "Test Scheduler Priorities");
+    loadFunction("testSync", (shellFunction)test_sync, "Test Synchronization");
+    loadFunction("testNoSync", (shellFunction)test_no_sync, "Test Wrong Synchronization");
+    
 
     //Funciones de musica
     loadFunction("Lavander", (shellFunction)Lavander, "Plays an indie game's music");

@@ -6,7 +6,7 @@
 
 int initMM(void * heap_baseInit, uint32_t heap_sizeInit);
 
-//Heavily inspired in C malloc
+//Heavily inspired in C malloc. Retorna NULL si no encuentra espacio suficiente.
 void * malloc2(uint32_t bytes);
 
 int free2(void * ap);

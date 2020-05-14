@@ -20,7 +20,7 @@ typedef struct pidQueue{
 }pidQueue_t;
 
 typedef struct semaphore{
-    uint16_t counter;
+    uint64_t counter;
     char name[NAME_SIZE];
     pidQueue_t blockedProcessesPidQueue;
     uint16_t dependantProcessesCount;

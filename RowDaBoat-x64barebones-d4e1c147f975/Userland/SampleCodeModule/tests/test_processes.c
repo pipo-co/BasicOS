@@ -5,29 +5,26 @@
 #include <usrlib.h>
 
 //TO BE INCLUDED
-void endless_loop(){
+void endless_loop_proc(){
   while(1);
 }
 
-uint64_t my_create_process(char * name){
+uint64_t my_create_process_proc(char * name){
   char * argv[1];
   argv[0] = name;
-  return initializeProccess((void (*)(int, char**))endless_loop, 0, 1, argv, 0);
+  return initializeProccess((void (*)(int, char**))endless_loop_proc, 0, 1, argv, 0);
 }
 
-uint64_t my_kill(uint64_t pid){
-  kill(pid);
-  return 0;
+int my_kill_proc(uint64_t pid){
+  return kill(pid);
 }
 
-uint64_t my_block(uint64_t pid){
-  block(pid);
-  return 0;
+int my_block_proc(uint64_t pid){
+  return block(pid);
 }
 
-uint64_t my_unblock(uint64_t pid){
-  unblock(pid);
-  return 0;
+int my_unblock_proc(uint64_t pid){
+  return unblock(pid);
 }
 
 #define MAX_PROCESSES 10 //Should be around 80% of the the processes handled by the kernel //32000
@@ -51,7 +48,7 @@ void test_processes(){
 
     // Create MAX_PROCESSES processes
     for(rq = 0; rq < MAX_PROCESSES; rq++){
-      p_rqs[rq].pid = my_create_process("endless_loop");  // TODO: Port this call as required
+      p_rqs[rq].pid = my_create_process_proc("endless_loop");  // TODO: Port this call as required
 
       if (p_rqs[rq].pid == 0){                           // TODO: Port this as required
         print("Error creating process\n");               // TODO: Port this as required
@@ -71,7 +68,7 @@ void test_processes(){
         switch(action){
           case 0:
             if (p_rqs[rq].state == RUNNING || p_rqs[rq].state == BLOCKED){
-              if (my_kill(p_rqs[rq].pid) == -1){          // TODO: Port this as required
+              if (my_kill_proc(p_rqs[rq].pid) == -1){          // TODO: Port this as required
                 print("Error killing process\n");        // TODO: Port this as required
                 return;
               }
@@ -82,7 +79,7 @@ void test_processes(){
 
           case 1:
             if (p_rqs[rq].state == RUNNING){
-              if(my_block(p_rqs[rq].pid) == -1){          // TODO: Port this as required
+              if(my_block_proc(p_rqs[rq].pid) == -1){          // TODO: Port this as required
                 print("Error blocking process\n");       // TODO: Port this as required
                 return;
               }
@@ -95,7 +92,7 @@ void test_processes(){
       // Randomly unblocks processes
       for(rq = 0; rq < MAX_PROCESSES; rq++)
         if (p_rqs[rq].state == BLOCKED && GetUniform(2) % 2){
-          if(my_unblock(p_rqs[rq].pid) == -1){            // TODO: Port this as required
+          if(my_unblock_proc(p_rqs[rq].pid) == -1){            // TODO: Port this as required
             print("Error unblocking process\n");         // TODO: Port this as required
             return;
           }
