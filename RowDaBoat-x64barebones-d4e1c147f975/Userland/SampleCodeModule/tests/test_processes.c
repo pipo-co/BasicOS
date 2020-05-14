@@ -27,7 +27,7 @@ int my_unblock_proc(uint64_t pid){
   return unblock(pid);
 }
 
-#define MAX_PROCESSES 10 //Should be around 80% of the the processes handled by the kernel //32000
+#define MAX_PROCESSES 20 //Should be around 80% of the the processes handled by the kernel //32000
 
 enum State {ERROR, RUNNING, BLOCKED, KILLED};
 
