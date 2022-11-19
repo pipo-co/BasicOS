@@ -1,14 +1,17 @@
-//kernel.c
-//Archivo original, el amyor cambio fue sacar todos los print que 
-// realizaba al inicializar el kernel.
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
 #include <stdint.h>
-#include <string.h>
 #include <lib.h>
 #include <moduleLoader.h>
 #include <idtLoader.h>
 #include <exceptions.h>
 #include <screenDriver.h>
+#include <memoryManager.h>
+#include <scheduler.h>
+#include <sem.h>
+#include <pipe.h>
+#include <keyboardDriver.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -16,11 +19,14 @@ extern uint8_t data;
 extern uint8_t bss;
 extern uint8_t endOfKernelBinary;
 extern uint8_t endOfKernel;
+extern void _hlt();
 
 static const uint64_t PageSize = 0x1000;
 
 static void * const sampleCodeModuleAddress = (void*)0x400000;
 static void * const sampleDataModuleAddress = (void*)0x500000;
+static void * const heapBaseAddress = (void*)0x600000;	//Posicion de memoria 6MiB, 1 MiB despues despues del comienzo de la seccion de datos de Userland.
+#define HEAP_SIZE (128 * 1024 * 1024) //128 MiB 
 
 typedef int (*EntryPoint)();
 
@@ -50,9 +56,35 @@ void * initializeKernelBinary(){
 }
 
 int main(){
-	//Funciones de inicializacion de video, de la IDT y del controlador de excepciones.
+	//Funciones de inicializacion de video, de la IDT, del Memory Manager, del scheduler y del controlador de excepciones.
 	init_screen();
+
 	load_idt();
+
+	if(initMM(heapBaseAddress, HEAP_SIZE) == -1){
+		println("Error initializing Memory Manager");
+		return -1;	
+	}
+	
+	if(initPipes() == -1){
+		println("Error initializing Pipes");
+		return -1;	
+	}
+
+	if(initKeyboardDriver() == -1){
+		println("Error initializing Keyboard Driver");
+		return -1;	
+	}
+
 	initExceptionHandler((uint64_t)sampleCodeModuleAddress, getSP()); 
-	return ((EntryPoint)sampleCodeModuleAddress)();
+
+	initScheduler();
+
+	char * argv[] = {"Sample Code Module"};
+	initializeProccess(sampleCodeModuleAddress, 1, 1, argv, NULL);
+
+	_hlt(); //Hace el sti y hlt. Primer TimerTick
+
+	println("No deberiamos llegar aca");
+	return 0;
 }

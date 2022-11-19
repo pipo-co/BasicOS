@@ -1,3 +1,6 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include <screenDriver.h>
 
 unsigned int cursorPosX = 0;
@@ -23,7 +26,7 @@ void init_screen(){
 } 
 
 void setCursorPos(unsigned int x, unsigned int y){
-    if(x < 0 || x >= screenWidth || y < 0 || y >= screenHeight)
+    if( x >= screenWidth || y >= screenHeight)
         return;
 
     cursorPosX = x;

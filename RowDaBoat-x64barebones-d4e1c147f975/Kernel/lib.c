@@ -1,6 +1,8 @@
-//lib.c
-//Archivo original con el agregado de uintToBase y strilen.
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include <stdint.h>
+#include <screenDriver.h>
 
 void * memset(void * destination, int32_t c, uint64_t length){
 	uint8_t chr = (uint8_t)c;
@@ -88,4 +90,56 @@ int strilen(char * s){
 		rta++;
 
 	return rta;
+}
+
+void printint(uint64_t value){
+	char buffer[40];
+	uintToBase(value,buffer,10);
+	printString(buffer);
+}
+
+void printhex(uint64_t value){
+	char buffer[40];
+	uintToBase(value,buffer,16);
+	printString(buffer);
+}
+
+uint8_t intLog2(uint64_t n){
+    uint8_t rta = 0;
+
+    while(n > 0){
+        rta++;
+        n >>= 1;
+    }
+    return rta - 1;
+}
+
+int strcmp(char * s1, char * s2){
+	while(*s1 != 0 && *s2 != 0 && *s1 == *s2){
+		s1++;
+		s2++;
+	}
+
+	return *s1 == 0 && *s2 == 0;
+}
+
+char * strcat(char *dest,  char *src){
+	char *p;
+    char *q;
+
+    for (q = dest; *q != '\0'; q++);
+    
+    for(p = src; *p != '\0'; p++, q++)
+       *q = *p;
+    
+    *q = '\0';
+
+	return dest;
+}
+
+void strncpy(char * dest, char * source, uint32_t n){
+	int i;
+	for(i = 0; i < n - 1 && source[i] != 0; i++)
+		dest[i] = source[i];
+	dest[i] = 0;
 }

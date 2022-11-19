@@ -1,5 +1,8 @@
 ;usrlibAsm.asm
 GLOBAL getRegs
+GLOBAL _hlt
+GLOBAL _cli
+GLOBAL _sti
 EXTERN printRegs
 
 SECTION .text
@@ -37,6 +40,22 @@ SECTION .text
 	pop rcx
 	pop rbx
 %endmacro
+
+_hlt:
+	sti
+	hlt
+	ret
+;
+
+_cli:
+	cli
+	ret
+;
+
+_sti:
+	sti
+	ret
+;
 
 ;funcion para obtener los valores de todos los registros y asi poder imprimirlos (inforeg)
 getRegs:

@@ -11,6 +11,32 @@ GLOBAL verticalPixelCount
 GLOBAL horizontalPixelCount
 GLOBAL getTime
 GLOBAL sysBeep
+GLOBAL malloc2
+GLOBAL free2
+GLOBAL getDynamicMemLeft
+GLOBAL dumpMM
+GLOBAL exit
+GLOBAL kill
+GLOBAL getPID
+GLOBAL initializeProccess
+GLOBAL dumpScheduler
+GLOBAL changeProccessPriority
+GLOBAL block
+GLOBAL unblock
+GLOBAL createSem
+GLOBAL semWait
+GLOBAL semPost
+GLOBAL removeSem
+GLOBAL dumpSem
+GLOBAL openPipe
+GLOBAL writePipe
+GLOBAL readPipe
+GLOBAL closePipe
+GLOBAL dumpPipes
+GLOBAL writeStringPipe
+GLOBAL waitChild
+GLOBAL skipTurn
+
 
 %macro pushState 0
 	push rbx
@@ -48,11 +74,13 @@ GLOBAL sysBeep
 
 %macro sysCaller 1
     pushState
+	mov r9, r8
+	mov r8, rcx
 	mov rcx, rdx
 	mov rdx, rsi
 	mov rsi, rdi
 	mov rdi, %1
-    ;rdi, rsi, rdx, rcx
+    ;rdi, rsi, rdx, rcx, r8, r9
 
     int 80h
     popState
@@ -86,3 +114,78 @@ getTime:
 
 sysBeep:
 	sysCaller 8
+
+malloc2:
+	sysCaller 9
+
+free2:
+	sysCaller 10
+
+getDynamicMemLeft:
+	sysCaller 11
+
+dumpMM:
+	sysCaller 12
+
+exit:
+	sysCaller 13
+
+kill:
+	sysCaller 14
+
+getPID:
+	sysCaller 15
+
+initializeProccess:
+	sysCaller 16
+
+dumpScheduler:
+	sysCaller 17
+
+changeProccessPriority:
+	sysCaller 18
+
+block:
+	sysCaller 19
+
+unblock:
+	sysCaller 20
+
+createSem:
+	sysCaller 21
+
+semWait:
+	sysCaller 22
+
+semPost:
+	sysCaller 23
+
+removeSem:
+	sysCaller 24
+
+dumpSem:
+	sysCaller 25
+
+openPipe:
+	sysCaller 26
+
+writePipe:
+	sysCaller 27
+
+readPipe:
+	sysCaller 28
+
+closePipe:
+	sysCaller 29
+
+dumpPipes:
+	sysCaller 30
+
+writeStringPipe:
+	sysCaller 31
+
+waitChild:
+	sysCaller 32
+
+skipTurn:
+	sysCaller 33

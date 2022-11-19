@@ -20,9 +20,37 @@ extern uint8_t inb( uint16_t port);
 //Funcion para la realizacion de un out al mapa de entarda/salida.
 extern void outb( uint16_t port, uint8_t value);
 
+extern void _hlt();
+
+extern void _cli();
+
+extern void _sti();
+
 //Funcion auxiliar que permite obtener el valor del SP.
 extern uint64_t getSP();
 
+//Funciones para evitar que dos procesos ejecuten procesos dentro de esta misma region "critica" simultaneamente
+extern void enter_critical_region(uint8_t * lock);
+
+extern void leave_critical_region(uint8_t * lock);
+
+extern void callTimerTick();
+
 int strilen(char * s);
+
+void printint(uint64_t value);
+
+void printhex(uint64_t value);
+
+//Calcular el logaritmo en base 2 truncado a entero.
+uint8_t intLog2(uint64_t n);
+
+//Boolean. True if both strings are equal.
+int strcmp(char * s1, char * s2);
+
+char * strcat(char *dest , char *source);
+
+void strncpy(char * dest, char * source, uint32_t n);
+  
 
 #endif

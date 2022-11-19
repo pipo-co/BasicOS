@@ -1,23 +1,30 @@
-//shell.c
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
+#include <stddef.h>
 #include <shell.h>
 #include <usrlib.h>
 #include <arkanoid.h>
 #include <music.h>
+#include <phylo.h>
 
 //constantes para la definicion de arrays
-#define USER_INPUT_SIZE 50
-#define MAX_FUNCTIONS 20
-#define MAX_ARGUMENTS_SIZE 5
+#define USER_INPUT_SIZE 100
+#define MAX_FUNCTIONS 100
+#define MAX_ARGUMENTS_SIZE 20
+#define MAX_CONCAT_PIPES 10
 
-#define END_OF_EXECUTION_KEY 27
+#define EOF 27  // ESC
 #define GAME_RETURNING_KEY '\t'
 #define CURSOR_COLOR 0x00FF00
+
+typedef void (*shellFunction)(int, char**);
 
 //Vars
     //Estructura para el guardado de los modulos. Puntero a la funcion pertinente,
     // nombre con el cual se la llama y una breve descripcion de su funcionamiento. 
     typedef struct{
-        void (*function)(int argcount, char * args[]);
+        shellFunction function;
         char * name;
         char * description;
     }functionPackage;
@@ -26,22 +33,23 @@
     //Cantidad de funciones disponibles
     int functionsSize = 0;
 
-    int cursorTick = 0;
-
 //End
 //Protoripos
     //Funciones para el cargado del fuctionArray. Carga todos los modulos disponibles.
     static void loadFunctions();
-    static void loadFunction(char * string, void (*fn)(), char * desc);
+    static void loadFunction(char * string, shellFunction fn, char * desc);
+    static shellFunction getFunction(char * functionName);
 
     //Funciones utilizadas para la operacion de la shell.
     static int readUserInput(char * buffer, int maxSize);
     static void processInstruction(char * userInput);
 
-    //Funciones auxiliares para tener un cursor parpadeante. 
-    static void tickCursor();
-    static void turnOffCursor();
-    
+    //Funciones auxiliares funcionamiento pipes
+    static int getPipesFunctions(char * arguments[], uint16_t pipeLocation[], uint16_t pipeCount, shellFunction fArr[]);
+    static void freePipesResources(uint64_t childPid[], uint16_t pipesId[], uint16_t pipeCount, int isFg);
+    static int getPipeLocations(char * arguments[], int argc, uint16_t pipeLocation[]);
+    static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], uint16_t pipeCount, int isFg);
+
     //Modulos - Funciones ejecutables desde la shell
     //inforeg: imprimir el valor de todos los registros
     extern void getRegs(int argcount, char * args[]);
@@ -79,28 +87,53 @@
     //beep: emite un sonido breve.
     static void playSound(int argcount, char * args[]);
 
-    //canciones disponibles.
-    static void playLavander(int argcount, char * args[]);
-    static void playForElisa(int argcount, char * args[]);
-    static void playDefeat(int argcount, char * args[]);
-    static void playSadness(int argcount, char * args[]);
-    static void playVictory(int argcount, char * args[]);
-    static void playEvangelion(int argcount, char * args[]);
+    //Scheduler Commands
+    static void cmdBlock(int argcount, char * args[]);
+    static void cmdUnblock(int argcount, char * args[]);
+    static void cmdKill(int argcount, char * args[]);
+    static void cmdGetPID();
+    static void cmdChangeProcessPriority(int argcount, char * args[]);
+
+    //Semaphore Commands
+    static void cmdCreateSem(int argcount, char * args[]);
+    static void cmdRemoveSem(int argcount, char * args[]);
+    static void cmdSemWait(int argcount, char * args[]);
+    static void cmdSemPost(int argcount, char * args[]);
+
+    //Pipe Commands
+    static void cmdOpenPipe(int argcount, char * args[]);
+    static void cmdWritePipe(int argcount, char * args[]);
+    static void cmdReadPipe(int argcount, char * args[]);
+    static void cmdClosePipe(int argcount, char * args[]);
+
+    //IPC functions
+    static void cat(int argc, char ** argv);
+    static void wc();
+    static void filter();
+    static void loop(int argc, char ** argv);
+
+    //Test Agodios
+    extern void test_mm();
+    extern void test_processes();
+    extern void test_prio();
+    extern void test_sync();
+    extern void test_no_sync();
 //End
 
 void startShell(){
     //Se cargan los modulos
     loadFunctions();
-    clearScreen();
+    //clearScreen();
     setCursorPos(0,getScreenHeight() - 1);
     char userInput[USER_INPUT_SIZE];
+    /*  comentado help
     printf("Bienvenido a shell, estas son las funciones disponibles: \n", 0x5CFEE4, 0);
-    help(0,0);
+    help(0,0); */
     printf("Fleshy: $>", 0x5CFEE4, 0);
 
     //Se espera hasta que se reciba un enter y luego, se procesa el texto ingresado.
     //Si coincide con el nombre de una funcion se la ejecuta, sino se vuelve a modo lectura.
-    while(readUserInput(userInput,USER_INPUT_SIZE)){
+    while(readUserInput(userInput, USER_INPUT_SIZE)){
         processInstruction(userInput);
         setCursorPos(0,getScreenHeight() - 1);
         printf("Fleshy: $>", 0x5CFEE4, 0);
@@ -114,29 +147,19 @@ static int readUserInput(char * buffer, int maxSize){
     
     int counter = 0;
     char c;
-    int currentTimerTick;
-    int lastTimerTick = -1;
-    
+
     while((counter < maxSize - 1) && (c = getChar()) != '\n' ){
 
-        //Parpadeo del cursor.
-        currentTimerTick = getTicksElapsed();
-        if(currentTimerTick != lastTimerTick && currentTimerTick % 10 == 0){
-            tickCursor();
-            lastTimerTick = currentTimerTick;
-        }
         //Procesado de la tecla presionada
         if(c){
-            turnOffCursor();
 
-            if(c == END_OF_EXECUTION_KEY)
+            if(c == EOF)
                 return 0;
 
             if(c == GAME_RETURNING_KEY){ //Tecla para arrancar arkanoid si hay un juego empezado.
                 if(gameAlreadyStarted()){
                     startArkanoid(CONTINUE);
                     buffer[0] = 0;
-                    counter = 0;
                     return 1;
                 }
             }
@@ -155,7 +178,7 @@ static int readUserInput(char * buffer, int maxSize){
             }
         }
     }
-    turnOffCursor();
+
     buffer[counter++] = '\0';
     putchar('\n');
     return 1;
@@ -164,14 +187,37 @@ static int readUserInput(char * buffer, int maxSize){
 //Funcion encargada de procesar el texto recibido. Se guardan los argumentos en un array 
 // y se verifica si el texto ingresado valida con el nombre de una funcion para asi llamarla.
 static void processInstruction(char * userInput){
+    int background = 0;
     char * arguments[MAX_ARGUMENTS_SIZE];
-    int argCount = strtok(userInput,' ', arguments, MAX_ARGUMENTS_SIZE);
-    for (int i = 0; i < functionsSize; i++){
-        if(strcmp(arguments[0], functions[i].name)){
-            functions[i].function(argCount - 1, arguments + 1);
+    uint16_t pipeLocation[MAX_CONCAT_PIPES];
+
+    int argCount = strtok(userInput, ' ', arguments, MAX_ARGUMENTS_SIZE);
+
+    if(strcmp(arguments[argCount - 1], "&")){
+        background = 1;
+        argCount--;
+    }
+
+    int pipeCount = getPipeLocations(arguments, argCount, pipeLocation);
+
+    if(pipeCount == -1){
+        println("Incorrect use of pipes");
+        return;
+
+    } else if(pipeCount > 0){
+        processPipe(arguments, argCount, pipeLocation, pipeCount, !background);
+        return;
+        
+    } else {
+        shellFunction function = getFunction(arguments[0]);
+
+        if(function != NULL){
+            if(initializeProccess(function, !background, argCount, arguments, 0) == 0)
+                println("There was a problem creating the new process");
             return;
         }
     }
+    
     if(*userInput != 0){
         print(userInput);
         println(" not found");
@@ -180,49 +226,211 @@ static void processInstruction(char * userInput){
 
 //Cargado de los modulos
 static void loadFunctions(){
-    loadFunction("inforeg",&getRegs, "Prints all the registers \n");
-    loadFunction("ticks",&ticksElpased, "Prints ticks elapsed from start. Arg: -s for seconds elapsed \n");
-    loadFunction("printArgs",&printArgs, "Prints all its arguments\n ");
-    loadFunction("help",&help, "Prints the description of all functions \n");
-    loadFunction("clock",&printCurrentTime, "Prints the current time. Args: -h prints current hours.  -m prints current minutes.  -s prints current seconds.\n");
-    loadFunction("printmem",&printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.\nAddress in hexadecimal and 0 is not valid.\n" );
-    loadFunction("triggerException0",&triggerException0, "Triggers Exception number 0 \n");
-    loadFunction("triggerException6",&triggerException6, "Triggers Exception number 6 \n");
-    loadFunction("arkanoid", &arkanoid, "Arkanoid Game! Args: No args for new game. -c to continue last game.\n");
-    loadFunction("beep",&playSound, "Plays a beep \n");
-    loadFunction("Lavander",&playLavander, "Plays an indie game's music");
-    loadFunction("Elisa", &playForElisa, "Music for a student\n");
-    loadFunction("Evangelion", &playEvangelion, "Evangelion theme\n"); 
-    loadFunction("SadMusic", &playSadness, "Music to listen when you are sad");
-    loadFunction("Victory", &playVictory, "Music to listen when you win");
-    loadFunction("Defeat", &playDefeat, "Music to listen when you are happyn't");
+    // Funciones remanentes del tp de Arqui
+    loadFunction("inforeg", getRegs, "Prints all the registers");
+    loadFunction("ticks", ticksElpased, "Prints ticks elapsed from start. Arg: -s for seconds elapsed");
+    loadFunction("printArgs", printArgs, "Prints all its arguments");
+    loadFunction("help", help, "Prints the description of all functions");
+    loadFunction("clock", printCurrentTime, "Prints the current time. Args: -h prints current hours.  -m prints current minutes.  -s prints current seconds");
+    loadFunction("printmem", printmem, "Makes a 32 Bytes memory dump to screen from the address passed by argument.Address in hexadecimal and 0 is not valid" );
+    loadFunction("triggerException0", triggerException0, "Triggers Exception number 0");
+    loadFunction("triggerException6", triggerException6, "Triggers Exception number 6");
+    loadFunction("beep", playSound, "Plays a beep");
+    loadFunction("arkanoid", arkanoid, "Arkanoid game! Not supported in current version, do not use");
+
+    
+    // Dumps de utilidades de kernel
+    loadFunction("mem", (shellFunction)dumpMM, "Prints Memory Manager State");
+    loadFunction("ps", (shellFunction)dumpScheduler,"Prints Scheduler State");
+    loadFunction("sem", (shellFunction)dumpSem, "Prints Semaphores State");
+    loadFunction("pipe", (shellFunction)dumpPipes, "Prints Pipes State");
+
+    // Funcionalidades brindadas por scheduler
+    loadFunction("block", cmdBlock,"Block process given it's PID");
+    loadFunction("unblock", cmdUnblock,"Unblock process given it's PID");
+    loadFunction("kill", cmdKill,"Kill process given it's PID");
+    loadFunction("getpid", (shellFunction)cmdGetPID,"Return running process PID");
+    loadFunction("nice", cmdChangeProcessPriority,"Change process priority given it's PID");
+
+    // Funcionalidades brindadas por semaforos
+    loadFunction("openSem", cmdCreateSem, "Create new Semaphore or Open an existing one");
+    loadFunction("closeSem", cmdRemoveSem, "Close an existing semaphore");
+    loadFunction("semWait", cmdSemWait, "Sem Wait");
+    loadFunction("semPost", cmdSemPost, "Sem Post");
+    
+    // Funcionalidades brindadas por Pipe
+    loadFunction("openPipe", cmdOpenPipe, "Create new Pipe or open an existing one");
+    loadFunction("writePipe", cmdWritePipe, "Write String to Pipe");
+    loadFunction("readPipe", cmdReadPipe, "Read Char from Pipe");
+    loadFunction("closePipe", cmdClosePipe, "Close Existing Pipe");
+    
+    // Funciones de IPC
+    loadFunction("loop", loop, "Prints PID every certain amount of ticks");
+    loadFunction("cat", cat, "Prints stdIn as it comes. You can configure the endkey, ESC by default");
+    loadFunction("wc", (shellFunction)wc, "Prints how many lines had it's stdIn");
+    loadFunction("filter", (shellFunction)filter, "Prints stdIn filtering it's vowels");
+    loadFunction("phylo", phylo, "Dining Philosophers problem");
+
+    // Test brindados por la catedra
+    loadFunction("testMM", (shellFunction)test_mm, "Test MM");
+    loadFunction("testScheduler", (shellFunction)test_processes, "Test Scheduler");
+    loadFunction("testPrio", (shellFunction)test_prio, "Test Scheduler Priorities");
+    loadFunction("testSync", (shellFunction)test_sync, "Test Synchronization");
+    loadFunction("testNoSync", (shellFunction)test_no_sync, "Test Wrong Synchronization");
+    
+
+    //Funciones de musica
+    loadFunction("Lavander", (shellFunction)Lavander, "Plays an indie game's music");
+    loadFunction("Elisa", (shellFunction)forElisa, "Music for a student");
+    loadFunction("Evangelion", (shellFunction)Evangelion, "Evangelion theme"); 
+    loadFunction("SadMusic", (shellFunction)Sadness, "Music to listen when you are sad");
+    loadFunction("Victory", (shellFunction)Victory, "Music to listen when you win");
+    loadFunction("Defeat", (shellFunction)Defeat, "Music to listen when you are happyn't");
 }
 
-static void loadFunction(char * string, void (*fn)(), char * desc){
+static void loadFunction(char * string, shellFunction fn, char * desc){
     functions[functionsSize].function = fn;
     functions[functionsSize].name = string;
     functions[functionsSize].description = desc;
     functionsSize++;
 }
 
-static void tickCursor(){
-    if(cursorTick)
-        putchar('\b');
-    else
-        putcharf(' ', 0, CURSOR_COLOR);
-    
-    cursorTick = !cursorTick;
+static int getPipeLocations(char * arguments[], int argc, uint16_t pipeLocation[]){
+    static char * pipe = "|";
+
+    uint16_t count = 0;
+
+    if(strcmp(arguments[0], pipe) || strcmp(arguments[argc - 1], pipe)) //No se puede empezar o terminar con pipe
+        return -1;
+
+    for(uint16_t i = 1; i < argc; i++){
+        if(strcmp(arguments[i], pipe)){
+
+            if(strcmp(arguments[i+1], pipe)) //No puede haber dos pipes seguidos
+                return -1;
+                
+            pipeLocation[count++] = i;
+        }
+    }
+    return count;
 }
 
-static void turnOffCursor(){
-    if(cursorTick)
-        putchar('\b');
-    cursorTick = 0;
+static shellFunction getFunction(char * functionName){
+    for (int i = 0; i < functionsSize; i++) {
+        if(strcmp(functionName, functions[i].name)){
+            return functions[i].function;
+        }
+    }
+    return NULL;
 }
+
+static void processPipe(char * arguments[], int argc, uint16_t pipeLocation[], uint16_t pipeCount, int isFg){
+    shellFunction functionsArray[MAX_CONCAT_PIPES + 1];
+    uint64_t childPid[MAX_CONCAT_PIPES + 1];
+    uint16_t pipesId[MAX_CONCAT_PIPES];
+
+    // Inicializa functionsArray con los respectivos punteros a funcion de cada funcion de la shell, en orden.
+    // De haber algun nombre invalido, falla.
+    if(getPipesFunctions(arguments, pipeLocation, pipeCount, functionsArray) == -1){
+        println("One of the functions called between pipes is invalid");
+        return;
+    }
+
+    static char defaultPipeName[] = "_shellPipe";
+    char name[15]; // Buffer auxiliar para armar el nombre de los pipes
+    uint16_t stdFd[2]; // Array donde guardamos los fd de los nuevos procesos. IN = 0; OUT = 1;
+
+    int auxArgc;
+    char ** auxArgv;
+
+    // Inicializamos los procesos de derecha a izquierda
+
+    // Armamos el nombre del ultimo pipe (id_defaultPipeName)
+    uintToBase(pipeCount - 1, name, 10);
+    strcat(name, defaultPipeName);
+
+    // En pipesId me guardo los id de todos los pipes abiertos, para luego poder cerrarlos
+    // El ultimo proceso escribe a pantalla y recibe del pipe a su izquierda, el cual creamos
+    pipesId[pipeCount - 1] = openPipe(name);
+    stdFd[0] = pipesId[pipeCount - 1];
+    stdFd[1] = 0;
+       
+    for(uint16_t i = pipeCount - 1; i > 0; i--){
+
+        // La cantidad de argumentos es el indice del pipe a la derecha, menos el que esta a la izquierda menos 1
+        // Incluye el nombre de la funcion. Si es el ultimo, el pipe de la derecha vendria a ser equivalente a argc
+        auxArgc = ((i < pipeCount - 1)? pipeLocation[i+1] : argc) - pipeLocation[i] - 1;
+
+        // argv es el indice donde esta el nombre de la funcion, es decir, a la derecha del pipe.
+        auxArgv = arguments + pipeLocation[i] + 1;
+
+        // Armamos el nombre del pipe
+        uintToBase(i - 1, name, 10);
+        strcat(name, defaultPipeName);
+
+        // Inicializamos el proceso a la derecha del pipe, por eso la funcion es i + 1.
+        childPid[i + 1] = initializeProccess(functionsArray[i + 1], 0, auxArgc, auxArgv, stdFd);
+
+        // Configuramos los fd del siguiente proceso a inicializar.
+        // Su salida es la entrada del proceso creado anteriormente.
+        // Su entrada es el pipe a su izquierda que hay que crear.
+        pipesId[i - 1] = openPipe(name);
+        stdFd[1] = stdFd[0];
+        stdFd[0] = pipesId[i - 1];
+    }
+
+    // Para no abrir pipes demas, el segundo proceso debe ser creado a mano.
+    // Es el correspondiente a i = 0.
+    auxArgc = ((1 < pipeCount)? pipeLocation[1] : argc) - pipeLocation[0] - 1;
+    auxArgv = arguments + pipeLocation[0] + 1;
+    childPid[1] = initializeProccess(functionsArray[1], 0, auxArgc, auxArgv, stdFd);
+
+    // El primer proceso es un caso particular pues no tiene pipe a su izquierda.
+    // Su entrada, si es que usa, debera ser el teclado.
+    // Este es el unico proceso que podria ser fg. Esto fue indicado por parametro.
+    stdFd[1] = stdFd[0];
+    stdFd[0] = 0;
+    childPid[0] = initializeProccess(functionsArray[0], isFg, pipeLocation[0], arguments, stdFd);
+
+    // Libera los pipes creados, de izquierda a derecha.
+    // Para eso, se asegura mediante un wait que los hijos hayan terminado de usar el recurso.
+    freePipesResources(childPid, pipesId, pipeCount, isFg);
+}
+
+static int getPipesFunctions(char * arguments[], uint16_t pipeLocation[], uint16_t pipeCount, shellFunction fArr[]){
+
+    if((fArr[0] = getFunction(arguments[0])) == NULL)
+        return -1;
+
+    for(uint16_t p = 0; p < pipeCount; p++){
+        if((fArr[p + 1] = getFunction(arguments[pipeLocation[p] + 1])) == NULL)
+            return -1;
+    }
+    return 0;
+}
+
+static void freePipesResources(uint64_t childPid[], uint16_t pipesId[], uint16_t pipeCount, int isFg){
+
+    // Si es foreground, el wait ya lo hubiese hecho automaticamente
+    if(!isFg)
+        waitChild(childPid[0]);
+    
+    for(uint16_t i = 0; i < pipeCount; i++){
+
+        // Se le informa a los procesos del EOF mediante la convencion que establecio shell.
+        // Se asume que los procesos siguen esta convencion.
+        writePipe(pipesId[i], EOF);
+
+        waitChild(childPid[i + 1]);
+
+        closePipe(pipesId[i]);
+    }
+}
+
 
 //Modulos
 static void ticksElpased(int argcount, char * args[]){
-    if(strcmp(args[0],"-s"))
+    if(argcount > 0 && strcmp(args[0],"-s"))
         printint(getTicksElapsed() / 18);
     else
         printint(getTicksElapsed());
@@ -239,8 +447,10 @@ static void help(int argcount, char * args[]){
     if(argcount >= 1){
         for (int i = 0; i < functionsSize; i++){
             if(strcmp(functions[i].name, args[0])){
-                print("Function ");
-                println(functions[i].name);
+                print(" ");
+                //print("Function ");
+                print(functions[i].name);
+                print(":  ");
                 println(functions[i].description);
                 return;
             }
@@ -250,8 +460,10 @@ static void help(int argcount, char * args[]){
     }
 
     for (int i = 0; i < functionsSize; i++){
-        print("Function ");
-        println(functions[i].name);
+        print(" ");
+        //print("Function ");
+        print(functions[i].name);
+        print(":  ");
         println(functions[i].description);
     }
 }
@@ -358,26 +570,181 @@ static void arkanoid(int argcount, char * args[]){
         println("Wrong Arguments");
 }
 
-static void playLavander(int argcount, char * args[]){
-    Lavander();
+static void cmdBlock(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need process PID");
+        return;
+    }
+    block(atoi(args[0]));
 }
 
-static void playVictory(int argcount, char * args[]){
-    Victory();
+static void cmdUnblock(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need process PID");
+        return;
+    }
+    unblock(atoi(args[0]));
 }
 
-static void playForElisa(int argcount, char * args[]){
-    forElisa();
+static void cmdKill(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need process PID");
+        return;
+    }
+    kill(atoi(args[0]));
 }
 
-static void playEvangelion(int argcount, char * args[]){
-    Evangelion();
+static void cmdGetPID(){
+    printint(getPID());
+    putchar('\n');
 }
 
-static void playSadness(int argcount, char * args[]){
-    Sadness();
+static void cmdChangeProcessPriority(int argcount, char * args[]){
+    if(argcount < 2){
+        println("Need process PID and new Priority");
+        return;
+    }
+    changeProccessPriority(atoi(args[0]), atoi(args[1]));
 }
 
-static void playDefeat(int argcount, char * args[]){
-    Defeat();
+static void cmdCreateSem(int argcount, char * args[]){
+    if(argcount < 2){
+        println("Need semaphore name and initial value");
+        return;
+    }
+    
+    int32_t aux = createSem(args[0], atoi(args[1]));
+    if(aux == -1)
+        println("Error creating sem");
+    else {
+        print("Sem code: ");
+        printint(aux);
+        putchar('\n');
+    }    
+}
+
+static void cmdSemWait(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a semaphore valid code");
+        return;
+    }
+    
+    int aux = semWait(atoi(args[0]));
+    if(aux == -1)
+        println("Error in semWait");
+}
+
+static void cmdSemPost(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a semaphore valid code");
+        return;
+    }
+    
+    int aux = semPost(atoi(args[0]));
+    if(aux == -1)
+        println("Error in semPost");
+}
+
+static void cmdRemoveSem(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a semaphore valid code");
+        return;
+    }
+    removeSem(atoi(args[0]));
+}
+
+static void cmdOpenPipe(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a pipe name");
+        return;
+    }
+    int aux = openPipe(args[0]);
+    if(aux == -1)
+        println("Error creating pipe");
+    else {
+        print("Pipe code: ");
+        printint(aux);
+        putchar('\n');
+    }
+}
+
+static void cmdWritePipe(int argcount, char * args[]){
+    if(argcount < 2){
+        println("Need a pipe valid code and string to write");
+        return;
+    }
+    
+    int aux = writeStringPipe(atoi(args[0]), args[1]);
+    if(aux == -1)
+        println("Error in writePipe");
+}
+
+static void cmdReadPipe(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a pipe valid code");
+        return;
+    }
+    
+    char c = readPipe(atoi(args[0]));
+    if(c == 0)
+        println("Error in readPipe");
+    putchar(c);
+    putchar('\n');
+}
+
+static void cmdClosePipe(int argcount, char * args[]){
+    if(argcount < 1){
+        println("Need a pipe valid code");
+        return;
+    }
+    closePipe(atoi(args[0]));
+}
+
+static void loop(int argc, char ** argv){
+    uint16_t ticks;
+
+    if(argc > 0)
+        ticks = atoi(argv[0]);
+    else
+        ticks = 32;
+
+    while(1){
+        sleep(ticks);
+        printint(getPID());
+        putchar('\n');
+    }
+}
+
+static void cat(int argc, char ** argv){
+    char endChar;
+    if(argc > 0)
+        endChar = argv[0][0];
+    else
+        endChar = EOF;
+
+    char c;
+    while((c = getChar()) != endChar)
+        putchar(c);
+}
+
+static void wc(){
+    uint16_t counter = 1;
+    char c;
+
+    while((c = getChar()) != EOF){
+        if(c == '\n')
+            counter++;
+    }
+
+    printint(counter);
+    putchar('\n');
+}
+
+static void filter(){
+
+    char c;
+    while((c = getChar()) != EOF){
+        if(!isVowel(c))
+            putchar(c);
+    }
 }

@@ -1,6 +1,9 @@
-//usrlib.c
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include <stdint.h>
 #include <usrlib.h>
+#include <stddef.h>
 
 #define DEFAULT_FONT 0xFFFFFF
 #define DEFAULT_BACKGROUND 0X000000
@@ -99,10 +102,26 @@ int strlen(char * s){
 	return rta;
 }
 
+char * strcat(char *dest,  char *src){
+	char *p;
+    char *q;
+
+    for (q = dest; *q != '\0'; q++);
+    
+    for(p = src; *p != '\0'; p++, q++)
+       *q = *p;
+    
+    *q = '\0';
+
+	return dest;
+}
+
 int strtok(char * s, char delim, char * array[], int arraySize){
 	int arrayIndex = 0;
+
 	if(*s != delim && *s != '\0')
 		array[arrayIndex++] = s;
+		
 	while( *s != '\0' ){
 		if(*s == delim){
 			*s = 0;
@@ -146,4 +165,34 @@ uint64_t hexstringToInt(char * s){
 		rta += c*pow(16, i);
 	}
 	return rta;
+}
+
+int atoi(char * s){
+	if(s == NULL)
+		return 0;
+
+    int res = 0;
+
+    for (int i = 0; s[i] != '\0'; ++i) 
+        res = res * 10 + s[i] - '0';
+
+    return res; 
+}
+
+void sleep(uint16_t ticks){
+	ticks += getTicksElapsed();
+	while(ticks > getTicksElapsed())
+		_hlt();
+	return;
+}
+
+int isVowel(char c){
+    static char vocal[] = {'a', 'e', 'i', 'o', 'u'};
+    static char toMayus = 'a' - 'A';
+
+	for(int i = 0; i < 5; i++){
+		if(c == vocal[i] || c == vocal[i] - toMayus)
+			return 1;
+	}
+	return 0;
 }
